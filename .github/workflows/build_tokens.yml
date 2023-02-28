@@ -1,0 +1,32 @@
+name: Build Tokens
+
+on:
+  push:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Style Dictionary
+        run: npm run build-sd
+
+      - name: Upload files
+        uses: actions/upload-artifact@v3
+        with:
+          name: output
+          path: ./output
