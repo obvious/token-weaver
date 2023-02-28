@@ -15,6 +15,6 @@
     "pretest": "npm run compile",
     "posttest": "npm run lint",
     "transform-tokens": "token-transformer tokens/tokens.json tokens/sd_tokens.json --resolveReferences=false",
-    "build": "npm run compile && npm run transform-tokens && style-dictionary build --config ./dist/src/config.js"
+    "build": "npm run compile && npm run transform-tokens && node dist/src/index.js"
   }
 }

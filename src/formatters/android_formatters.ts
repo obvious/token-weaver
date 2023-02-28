@@ -1,6 +1,7 @@
 import {Dictionary, TransformedToken} from 'style-dictionary';
 import {camelCase} from 'camel-case';
 import {equalsCheck} from '../utils/utils';
+import {FormatterArguments} from 'style-dictionary/types/Format';
 
 function _themeTokens(dictionary: Dictionary): TransformedToken[] {
   return dictionary.allTokens.filter(token => {
@@ -18,9 +19,9 @@ function _themeTokenName(themeToken: String, category: String): String {
   return camelCase(themeToken.replace(`${category}_`, ''));
 }
 
-export function androidThemeFormat(dictionary: Dictionary): String {
-  const themeTokens = _themeTokens(dictionary);
-  const colorTokens = _colorTokens(dictionary);
+export function androidThemeFormat(args: FormatterArguments) {
+  const themeTokens = _themeTokens(args.dictionary);
+  const colorTokens = _colorTokens(args.dictionary);
 
   // TODO: Handle typography tokens
   const colorThemeItems = themeTokens
@@ -59,8 +60,8 @@ ${colorThemeItems}
 `;
 }
 
-export function androidThemeAttrsFormat(dictionary: Dictionary): String {
-  const themeTokens = _themeTokens(dictionary);
+export function androidThemeAttrsFormat(args: FormatterArguments) {
+  const themeTokens = _themeTokens(args.dictionary);
 
   const themeItems = themeTokens
     .filter(themeToken => {

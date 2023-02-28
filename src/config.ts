@@ -1,3 +1,4 @@
+import {Config} from 'style-dictionary';
 import {
   androidThemeFormat,
   androidThemeAttrsFormat,
@@ -8,7 +9,7 @@ import {
   iOSThemeProtocolFormatter,
 } from './formatters/ios_formatters';
 
-export = {
+export const config: Config = {
   source: ['tokens/sd_tokens.json'],
   format: {
     androidThemeFormat: androidThemeFormat,

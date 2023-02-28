@@ -1,4 +1,5 @@
 import {Dictionary, TransformedToken} from 'style-dictionary';
+import {FormatterArguments} from 'style-dictionary/types/Format';
 
 function _colorThemeTokens(dictionary: Dictionary): TransformedToken[] {
   return dictionary.allTokens.filter(token => {
@@ -12,8 +13,8 @@ function _colorTokens(dictionary: Dictionary): TransformedToken[] {
   });
 }
 
-export function iOSBaseColorsFormatter(dictionary: Dictionary): String {
-  const colorTokens = _colorTokens(dictionary);
+export function iOSBaseColorsFormatter(args: FormatterArguments) {
+  const colorTokens = _colorTokens(args.dictionary);
   const colorTokensCase = colorTokens
     .map(token => {
       return '   ' + `case ${token.name}`;
@@ -50,10 +51,8 @@ ${colorTokensWithHexCode}
 `;
 }
 
-export function iOSThemeColorsProtocolFormatter(
-  dictionary: Dictionary
-): String {
-  const colorThemeTokens = _colorThemeTokens(dictionary);
+export function iOSThemeColorsProtocolFormatter(args: FormatterArguments) {
+  const colorThemeTokens = _colorThemeTokens(args.dictionary);
   const themeColors = colorThemeTokens
     .map(token => {
       return '   ' + `var ${token.name}: BaseColor { get }`;
@@ -69,7 +68,7 @@ ${themeColors}
 }
 
 // TODO: Add support for typography
-export function iOSThemeProtocolFormatter(): String {
+export function iOSThemeProtocolFormatter() {
   return `// Do not edit directly
 public protocol Theme {
   var colors: ThemeColors { get }
