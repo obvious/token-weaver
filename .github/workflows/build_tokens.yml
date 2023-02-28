@@ -23,7 +23,7 @@ jobs:
         run: npm install
 
       - name: Run Style Dictionary
-        run: npm run build-sd
+        run: npm run build
 
       - name: Upload files
         uses: actions/upload-artifact@v3
