@@ -14,6 +14,8 @@ uses: obvious/weaver@v0.0.1
 with:
   tokens_path: 'tokens/tokens.json'
   output_path: 'output'
+
+// Raise PRs adding the generated files
 ```
 
 ### Inputs
