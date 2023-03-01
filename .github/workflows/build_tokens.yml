@@ -23,6 +23,7 @@ jobs:
         uses: ./
         with:
           tokens_path: 'tokens/tokens.json'
+          output_path: 'output'
 
       - name: Upload files
         uses: actions/upload-artifact@v3

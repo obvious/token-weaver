@@ -9,7 +9,7 @@ import {
   iOSThemeProtocolFormatter,
 } from './formatters/ios_formatters';
 
-export function config(tokensPath: String): Config {
+export function config(tokensPath: String, outputPath: String): Config {
   return {
     source: [tokensPath.toString()],
     format: {
@@ -22,7 +22,7 @@ export function config(tokensPath: String): Config {
     platforms: {
       android: {
         transformGroup: 'android',
-        buildPath: 'output/android/',
+        buildPath: `${outputPath}/android/`,
         files: [
           {
             destination: 'res/colors.xml',
@@ -40,7 +40,7 @@ export function config(tokensPath: String): Config {
       },
       ios: {
         transforms: ['name/ti/camel', 'color/hex'],
-        buildPath: 'output/ios/',
+        buildPath: `${outputPath}/iOS/`,
         files: [
           {
             destination: 'BaseColor.swift',

@@ -41,6 +41,11 @@ async function run() {
       process.env.GITHUB_WORKSPACE as string,
       getInput('tokens_path', {required: true})
     );
+    const outputPath = path.join(
+      process.env.GITHUB_WORKSPACE as string,
+      getInput('output_path', {required: true})
+    );
+
     const tokensOutput = await readFile(tokensInputPath, {
       encoding: 'utf-8',
       flag: 'r',
@@ -52,7 +57,7 @@ async function run() {
 
     // Run Style Dictionary
     StyleDictionary.extend(
-      config(styleDictionaryTokensPath)
+      config(styleDictionaryTokensPath, outputPath)
     ).buildAllPlatforms();
   } catch (e) {
     console.log(e);

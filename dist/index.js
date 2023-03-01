@@ -10,7 +10,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.config = void 0;
 const android_formatters_1 = __nccwpck_require__(9193);
 const ios_formatters_1 = __nccwpck_require__(2726);
-function config(tokensPath) {
+function config(tokensPath, outputPath) {
     return {
         source: [tokensPath.toString()],
         format: {
@@ -23,7 +23,7 @@ function config(tokensPath) {
         platforms: {
             android: {
                 transformGroup: 'android',
-                buildPath: 'output/android/',
+                buildPath: `${outputPath}/android/`,
                 files: [
                     {
                         destination: 'res/colors.xml',
@@ -41,7 +41,7 @@ function config(tokensPath) {
             },
             ios: {
                 transforms: ['name/ti/camel', 'color/hex'],
-                buildPath: 'output/ios/',
+                buildPath: `${outputPath}/iOS/`,
                 files: [
                     {
                         destination: 'BaseColor.swift',
@@ -30327,14 +30327,15 @@ async function transformAndWriteTokens(tokensOutput) {
 async function run() {
     try {
         // Transform tokens
-        const tokensInputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('tokens_path'));
+        const tokensInputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('tokens_path', { required: true }));
+        const outputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('output_path', { required: true }));
         const tokensOutput = await (0, promises_1.readFile)(tokensInputPath, {
             encoding: 'utf-8',
             flag: 'r',
         });
         const styleDictionaryTokensPath = await transformAndWriteTokens(tokensOutput);
         // Run Style Dictionary
-        StyleDictionary.extend((0, config_1.config)(styleDictionaryTokensPath)).buildAllPlatforms();
+        StyleDictionary.extend((0, config_1.config)(styleDictionaryTokensPath, outputPath)).buildAllPlatforms();
     }
     catch (e) {
         console.log(e);
