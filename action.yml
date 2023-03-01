@@ -4,7 +4,7 @@ inputs:
   tokens_path:
     description: 'Path to the Figma Token Studio `tokens.json` file'
     required: true
-    default: 'tokens/tokens.json'
+    default: ''
   output_path:
     description: 'Path to write the generated files to'
     required: true
