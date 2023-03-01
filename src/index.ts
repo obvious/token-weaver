@@ -36,7 +36,6 @@ async function transformAndWriteTokens(tokensOutput: String): Promise<String> {
 
 async function run() {
   try {
-    // Transform tokens
     const tokensInputPath = path.join(
       process.env.GITHUB_WORKSPACE as string,
       getInput('tokens_path', {required: true})
@@ -46,14 +45,13 @@ async function run() {
       getInput('output_path', {required: true})
     );
 
-    const tokensOutput = await readFile(tokensInputPath, {
+    // Transform tokens
+    const tokensData = await readFile(tokensInputPath, {
       encoding: 'utf-8',
       flag: 'r',
     });
 
-    const styleDictionaryTokensPath = await transformAndWriteTokens(
-      tokensOutput
-    );
+    const styleDictionaryTokensPath = await transformAndWriteTokens(tokensData);
 
     // Run Style Dictionary
     StyleDictionary.extend(

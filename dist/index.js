@@ -30326,14 +30326,14 @@ async function transformAndWriteTokens(tokensOutput) {
 }
 async function run() {
     try {
-        // Transform tokens
         const tokensInputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('tokens_path', { required: true }));
         const outputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('output_path', { required: true }));
-        const tokensOutput = await (0, promises_1.readFile)(tokensInputPath, {
+        // Transform tokens
+        const tokensData = await (0, promises_1.readFile)(tokensInputPath, {
             encoding: 'utf-8',
             flag: 'r',
         });
-        const styleDictionaryTokensPath = await transformAndWriteTokens(tokensOutput);
+        const styleDictionaryTokensPath = await transformAndWriteTokens(tokensData);
         // Run Style Dictionary
         StyleDictionary.extend((0, config_1.config)(styleDictionaryTokensPath, outputPath)).buildAllPlatforms();
     }
