@@ -17,6 +17,6 @@
     "pretest": "npm run compile",
     "posttest": "npm run lint",
     "transform-tokens": "token-transformer tokens/tokens.json tokens/sd_tokens.json --resolveReferences=false",
-    "build": "npm run compile && node dist/src/index.js"
+    "build": "npm run compile && node build/src/index.js"
   }
 }
