@@ -179,6 +179,16 @@ function _colorTokens(dictionary) {
         return token.path.includes('color');
     });
 }
+function _swiftImports(imports) {
+    if (typeof imports === 'undefined') {
+        imports = ['UIKit'];
+    }
+    return imports
+        .map(value => {
+        return `import ${value}`;
+    })
+        .join('\n');
+}
 function iOSBaseColorsFormatter(args) {
     const colorTokens = _colorTokens(args.dictionary);
     const colorTokensCase = colorTokens
@@ -192,7 +202,8 @@ function iOSBaseColorsFormatter(args) {
             `case .${token.name}:\n       return UIColor(rgbHex: "${token.value}")`);
     })
         .join('\n');
-    return `import UIKit
+    const imports = _swiftImports(args.options.imports);
+    return `${imports}
 
 // Do not edit directly
 // Represet all colors supported by the DLS
@@ -220,7 +231,10 @@ function iOSThemeColorsProtocolFormatter(args) {
         return '   ' + `var ${token.name}: BaseColor { get }`;
     })
         .join('\n');
-    return `// Do not edit directly
+    const imports = _swiftImports(args.options.imports);
+    return `${imports}
+
+// Do not edit directly
 public protocol ThemeColors {
 
 ${themeColors}
@@ -229,8 +243,11 @@ ${themeColors}
 }
 exports.iOSThemeColorsProtocolFormatter = iOSThemeColorsProtocolFormatter;
 // TODO: Add support for typography
-function iOSThemeProtocolFormatter() {
-    return `// Do not edit directly
+function iOSThemeProtocolFormatter(args) {
+    const imports = _swiftImports(args.options.imports);
+    return `${imports}
+
+// Do not edit directly
 public protocol Theme {
   var colors: ThemeColors { get }
 }

@@ -13,6 +13,18 @@ function _colorTokens(dictionary: Dictionary): TransformedToken[] {
   });
 }
 
+function _swiftImports(imports: string[] | undefined): string {
+  if (typeof imports === 'undefined') {
+    imports = ['UIKit'];
+  }
+
+  return imports
+    .map(value => {
+      return `import ${value}`;
+    })
+    .join('\n');
+}
+
 export function iOSBaseColorsFormatter(args: FormatterArguments) {
   const colorTokens = _colorTokens(args.dictionary);
   const colorTokensCase = colorTokens
@@ -30,7 +42,8 @@ export function iOSBaseColorsFormatter(args: FormatterArguments) {
     })
     .join('\n');
 
-  return `import UIKit
+  const imports = _swiftImports(args.options.imports);
+  return `${imports}
 
 // Do not edit directly
 // Represet all colors supported by the DLS
@@ -59,7 +72,10 @@ export function iOSThemeColorsProtocolFormatter(args: FormatterArguments) {
     })
     .join('\n');
 
-  return `// Do not edit directly
+  const imports = _swiftImports(args.options.imports);
+  return `${imports}
+
+// Do not edit directly
 public protocol ThemeColors {
 
 ${themeColors}
@@ -68,8 +84,11 @@ ${themeColors}
 }
 
 // TODO: Add support for typography
-export function iOSThemeProtocolFormatter() {
-  return `// Do not edit directly
+export function iOSThemeProtocolFormatter(args: FormatterArguments) {
+  const imports = _swiftImports(args.options.imports);
+  return `${imports}
+
+// Do not edit directly
 public protocol Theme {
   var colors: ThemeColors { get }
 }
