@@ -12,7 +12,7 @@ const android_formatters_1 = __nccwpck_require__(9193);
 const ios_formatters_1 = __nccwpck_require__(2726);
 function config(tokensPath, outputPath) {
     return {
-        source: [tokensPath.toString()],
+        source: [tokensPath],
         format: {
             androidThemeFormat: android_formatters_1.androidThemeFormat,
             androidThemeAttrsFormat: android_formatters_1.androidThemeAttrsFormat,
@@ -30337,7 +30337,7 @@ async function transformAndWriteTokens(tokensOutput) {
     const tempDirectoryPath = 'build/tokens';
     await (0, promises_1.mkdir)(tempDirectoryPath, { recursive: true });
     const styleDictionaryTokensPath = `${tempDirectoryPath}/sd_tokens.json`;
-    const styleDictionaryTokens = transformTokens(JSON.parse(tokensOutput.toString()), [], [], transformerOptions);
+    const styleDictionaryTokens = transformTokens(JSON.parse(tokensOutput), [], [], transformerOptions);
     await (0, promises_1.writeFile)(styleDictionaryTokensPath, JSON.stringify(styleDictionaryTokens, null, 2));
     return styleDictionaryTokensPath;
 }

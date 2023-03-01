@@ -1,2 +1,2 @@
 import { Config } from 'style-dictionary';
-export declare function config(tokensPath: String): Config;
+export declare function config(tokensPath: string): Config;

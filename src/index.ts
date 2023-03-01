@@ -5,7 +5,7 @@ import {getInput} from '@actions/core';
 import * as path from 'path';
 const {transformTokens} = require('token-transformer');
 
-async function transformAndWriteTokens(tokensOutput: String): Promise<String> {
+async function transformAndWriteTokens(tokensOutput: string): Promise<string> {
   const transformerOptions = {
     expandTypography: false,
     expandShadow: false,
@@ -21,7 +21,7 @@ async function transformAndWriteTokens(tokensOutput: String): Promise<String> {
 
   const styleDictionaryTokensPath = `${tempDirectoryPath}/sd_tokens.json`;
   const styleDictionaryTokens = transformTokens(
-    JSON.parse(tokensOutput.toString()),
+    JSON.parse(tokensOutput),
     [],
     [],
     transformerOptions

@@ -15,7 +15,7 @@ function _colorTokens(dictionary: Dictionary): TransformedToken[] {
   });
 }
 
-function _themeTokenName(themeToken: String, category: String): String {
+function _themeTokenName(themeToken: string, category: string): string {
   return camelCase(themeToken.replace(`${category}_`, ''));
 }
 
@@ -38,7 +38,7 @@ export function androidThemeFormat(args: FormatterArguments) {
 
       const themeColorTokenName = _themeTokenName(
         'color_' + themeToken.name,
-        themeToken.attributes?.category as String
+        themeToken.attributes?.category as string
       );
 
       return (
@@ -75,10 +75,10 @@ export function androidThemeAttrsFormat(args: FormatterArguments) {
       const themeTokenType = themeToken.original.type;
       const themeTokenName = _themeTokenName(
         `${themeTokenType}_` + themeToken.name,
-        themeToken.attributes?.category as String
+        themeToken.attributes?.category as string
       );
 
-      let themeTokenFormat: String;
+      let themeTokenFormat: string;
 
       switch (themeTokenType) {
         case 'color':

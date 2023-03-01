@@ -9,9 +9,9 @@ import {
   iOSThemeProtocolFormatter,
 } from './formatters/ios_formatters';
 
-export function config(tokensPath: String, outputPath: String): Config {
+export function config(tokensPath: string, outputPath: string): Config {
   return {
-    source: [tokensPath.toString()],
+    source: [tokensPath],
     format: {
       androidThemeFormat: androidThemeFormat,
       androidThemeAttrsFormat: androidThemeAttrsFormat,
