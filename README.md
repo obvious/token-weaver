@@ -24,7 +24,7 @@ you can download the [Node JS]
 
 - Generate the DLS styles files using the following command
   ```bash
-  npm run build
+  npm run build-styles
   ```
 
 - You can find the generated files in `output` directory

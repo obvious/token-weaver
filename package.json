@@ -13,6 +13,6 @@
     "clean": "gts clean",
     "compile": "tsc",
     "fix": "gts fix",
-    "build": "npm run compile && node build/src/index.js"
+    "build-styles": "npm run compile && node build/src/index.js"
   }
 }
