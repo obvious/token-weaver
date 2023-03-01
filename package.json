@@ -17,7 +17,6 @@
     "clean": "gts clean",
     "compile": "tsc",
     "fix": "gts fix",
-    "build-styles": "node dist/index.js",
     "package": "npm run compile && ncc build --source-map --license licenses.txt"
   }
 }
