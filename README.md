@@ -1,5 +1,7 @@
 # Weaver
 
+![CI-MAIN](https://github.com/obvious/weaver/actions/workflows/ci.yml/badge.svg?branch=main)
+
 Weaver is a tool to transform the [Figma Token Studio] tokens to platform specific theme files
 using [Amazon Style Dictionary]
 
