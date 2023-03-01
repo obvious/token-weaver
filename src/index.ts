@@ -1,6 +1,7 @@
 import * as StyleDictionary from 'style-dictionary';
 import {config} from './config';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
+import {getInput} from '@actions/core';
 import * as path from 'path';
 const {transformTokens} = require('token-transformer');
 
@@ -36,9 +37,11 @@ async function transformAndWriteTokens(tokensOutput: String): Promise<String> {
 async function run() {
   try {
     // Transform tokens
-    // TODO: Fetch tokens path dynamically
-    const tokensPath = path.resolve(__dirname, '../tokens/tokens.json');
-    const tokensOutput = await readFile(tokensPath, {
+    const tokensInputPath = path.join(
+      process.env.GITHUB_WORKSPACE as string,
+      getInput('tokens_path', {required: true})
+    );
+    const tokensOutput = await readFile(tokensInputPath, {
       encoding: 'utf-8',
       flag: 'r',
     });

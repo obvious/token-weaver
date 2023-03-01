@@ -19,11 +19,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run Style Dictionary
-        run: npm run build-styles
+      - name: Run Weaver
+        uses: ./
+        with:
+          tokens_path: 'tokens/tokens.json'
 
       - name: Upload files
         uses: actions/upload-artifact@v3
