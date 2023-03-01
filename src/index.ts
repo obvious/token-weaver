@@ -36,7 +36,8 @@ async function transformAndWriteTokens(tokensOutput: String): Promise<String> {
 async function run() {
   try {
     // Transform tokens
-    const tokensPath = path.resolve(__dirname, '../../tokens/tokens.json');
+    // TODO: Fetch tokens path dynamically
+    const tokensPath = path.resolve(__dirname, '../tokens/tokens.json');
     const tokensOutput = await readFile(tokensPath, {
       encoding: 'utf-8',
       flag: 'r',
