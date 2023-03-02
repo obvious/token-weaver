@@ -35,6 +35,16 @@ export function config(tokensPath: string, outputPath: string): Config {
           {
             destination: 'res/theme_attrs.xml',
             format: 'androidThemeAttrsFormat',
+            options: {
+              type: 'color',
+            },
+          },
+          {
+            destination: 'res/theme_typography_attrs.xml',
+            format: 'androidThemeAttrsFormat',
+            options: {
+              type: 'typography',
+            },
           },
         ],
       },

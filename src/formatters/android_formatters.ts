@@ -1,7 +1,12 @@
 import {camelCase} from 'camel-case';
 import {equalsCheck} from '../utils/utils';
 import {FormatterArguments} from 'style-dictionary/types/Format';
-import {_colorTokens, _themeColorTokens} from './common';
+import {
+  _colorTokens,
+  _themeColorTokens,
+  _themeTypographyTokens,
+} from './common';
+import {TransformedToken} from 'style-dictionary';
 
 function _themeTokenName(themeToken: string, category: string): string {
   return camelCase(themeToken.replace(`${category}_`, ''));
@@ -67,9 +72,23 @@ ${colorThemeItems}
 }
 
 export function androidThemeAttrsFormat(args: FormatterArguments) {
-  const themeColorTokens = _themeColorTokens(args.dictionary);
+  let themeTokens: TransformedToken[];
+  let themeAttrsStyleableName: string;
 
-  const themeItems = themeColorTokens
+  switch (args.options.type) {
+    case 'color':
+      themeTokens = _themeColorTokens(args.dictionary);
+      themeAttrsStyleableName = 'DlsTheme';
+      break;
+    case 'typography':
+      themeTokens = _themeTypographyTokens(args.dictionary);
+      themeAttrsStyleableName = 'DlsTypography';
+      break;
+    default:
+      throw new Error(`Unknown attrs type: ${args.options.type}`);
+  }
+
+  const themeItems = themeTokens
     .map(themeToken => {
       const themeTokenType = themeToken.original.type;
       const themeTokenName = _themeTokenName(
@@ -90,7 +109,7 @@ export function androidThemeAttrsFormat(args: FormatterArguments) {
 <!-- Do not edit directly -->
 <resources>
 
-  <declare-styleable name="DlsThemeColors">
+  <declare-styleable name="${themeAttrsStyleableName}">
 ${themeItems}
   </declare-styleable>
 </resources>

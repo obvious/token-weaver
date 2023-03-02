@@ -36,6 +36,16 @@ function config(tokensPath, outputPath) {
                     {
                         destination: 'res/theme_attrs.xml',
                         format: 'androidThemeAttrsFormat',
+                        options: {
+                            type: 'color',
+                        },
+                    },
+                    {
+                        destination: 'res/theme_typography_attrs.xml',
+                        format: 'androidThemeAttrsFormat',
+                        options: {
+                            type: 'typography',
+                        },
                     },
                 ],
             },
@@ -126,8 +136,21 @@ ${colorThemeItems}
 }
 exports.androidThemeFormat = androidThemeFormat;
 function androidThemeAttrsFormat(args) {
-    const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
-    const themeItems = themeColorTokens
+    let themeTokens;
+    let themeAttrsStyleableName;
+    switch (args.options.type) {
+        case 'color':
+            themeTokens = (0, common_1._themeColorTokens)(args.dictionary);
+            themeAttrsStyleableName = 'DlsTheme';
+            break;
+        case 'typography':
+            themeTokens = (0, common_1._themeTypographyTokens)(args.dictionary);
+            themeAttrsStyleableName = 'DlsTypography';
+            break;
+        default:
+            throw new Error(`Unknown attrs type: ${args.options.type}`);
+    }
+    const themeItems = themeTokens
         .map(themeToken => {
         var _a;
         const themeTokenType = themeToken.original.type;
@@ -141,7 +164,7 @@ function androidThemeAttrsFormat(args) {
 <!-- Do not edit directly -->
 <resources>
 
-  <declare-styleable name="DlsThemeColors">
+  <declare-styleable name="${themeAttrsStyleableName}">
 ${themeItems}
   </declare-styleable>
 </resources>
@@ -158,13 +181,19 @@ exports.androidThemeAttrsFormat = androidThemeAttrsFormat;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports._colorTokens = exports._themeColorTokens = void 0;
+exports._colorTokens = exports._themeTypographyTokens = exports._themeColorTokens = void 0;
 function _themeColorTokens(dictionary) {
     return dictionary.allTokens.filter(token => {
         return token.path.includes('theme') && token.original.type === 'color';
     });
 }
 exports._themeColorTokens = _themeColorTokens;
+function _themeTypographyTokens(dictionary) {
+    return dictionary.allTokens.filter(token => {
+        return token.path.includes('theme') && token.original.type === 'typography';
+    });
+}
+exports._themeTypographyTokens = _themeTypographyTokens;
 function _colorTokens(dictionary) {
     return dictionary.allTokens.filter(token => {
         return token.path.includes('color');
