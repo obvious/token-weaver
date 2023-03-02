@@ -87,6 +87,20 @@ function _colorTokens(dictionary) {
 function _themeTokenName(themeToken, category) {
     return (0, camel_case_1.camelCase)(themeToken.replace(`${category}_`, ''));
 }
+function _themeTokenFormat(themeTokenType) {
+    let themeTokenFormat;
+    switch (themeTokenType) {
+        case 'color':
+            themeTokenFormat = 'color';
+            break;
+        case 'typography':
+            themeTokenFormat = 'reference';
+            break;
+        default:
+            throw new Error(`Unknown token type detected: ${themeTokenType}, please report this to Obvious to add support`);
+    }
+    return themeTokenFormat;
+}
 function androidThemeFormat(args) {
     const themeColorTokens = _themeColorTokens(args.dictionary);
     const colorTokens = _colorTokens(args.dictionary);
@@ -127,17 +141,7 @@ function androidThemeAttrsFormat(args) {
         var _a;
         const themeTokenType = themeToken.original.type;
         const themeTokenName = _themeTokenName(`${themeTokenType}_` + themeToken.name, (_a = themeToken.attributes) === null || _a === void 0 ? void 0 : _a.category);
-        let themeTokenFormat;
-        switch (themeTokenType) {
-            case 'color':
-                themeTokenFormat = 'color';
-                break;
-            case 'typography':
-                themeTokenFormat = 'reference';
-                break;
-            default:
-                throw new Error(`Unknown token type detected: ${themeTokenType}, please report this to Obvious to add support`);
-        }
+        const themeTokenFormat = _themeTokenFormat(themeTokenType);
         return ('    ' + `<attr name="${themeTokenName}" format="${themeTokenFormat}"/>`);
     })
         .join('\n');

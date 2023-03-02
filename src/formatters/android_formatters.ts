@@ -19,6 +19,24 @@ function _themeTokenName(themeToken: string, category: string): string {
   return camelCase(themeToken.replace(`${category}_`, ''));
 }
 
+function _themeTokenFormat(themeTokenType: string): string {
+  let themeTokenFormat: string;
+  switch (themeTokenType) {
+    case 'color':
+      themeTokenFormat = 'color';
+      break;
+    case 'typography':
+      themeTokenFormat = 'reference';
+      break;
+    default:
+      throw new Error(
+        `Unknown token type detected: ${themeTokenType}, please report this to Obvious to add support`
+      );
+  }
+
+  return themeTokenFormat;
+}
+
 export function androidThemeFormat(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
   const colorTokens = _colorTokens(args.dictionary);
@@ -71,20 +89,7 @@ export function androidThemeAttrsFormat(args: FormatterArguments) {
         themeToken.attributes?.category as string
       );
 
-      let themeTokenFormat: string;
-
-      switch (themeTokenType) {
-        case 'color':
-          themeTokenFormat = 'color';
-          break;
-        case 'typography':
-          themeTokenFormat = 'reference';
-          break;
-        default:
-          throw new Error(
-            `Unknown token type detected: ${themeTokenType}, please report this to Obvious to add support`
-          );
-      }
+      const themeTokenFormat = _themeTokenFormat(themeTokenType);
 
       return (
         '    ' + `<attr name="${themeTokenName}" format="${themeTokenFormat}"/>`
