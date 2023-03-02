@@ -1,19 +1,7 @@
-import {Dictionary, TransformedToken} from 'style-dictionary';
 import {camelCase} from 'camel-case';
 import {equalsCheck} from '../utils/utils';
 import {FormatterArguments} from 'style-dictionary/types/Format';
-
-function _themeColorTokens(dictionary: Dictionary): TransformedToken[] {
-  return dictionary.allTokens.filter(token => {
-    return token.path.includes('theme') && token.original.type === 'color';
-  });
-}
-
-function _colorTokens(dictionary: Dictionary): TransformedToken[] {
-  return dictionary.allTokens.filter(token => {
-    return token.path.includes('color');
-  });
-}
+import {_colorTokens, _themeColorTokens} from './common';
 
 function _themeTokenName(themeToken: string, category: string): string {
   return camelCase(themeToken.replace(`${category}_`, ''));

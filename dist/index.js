@@ -74,16 +74,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.androidThemeAttrsFormat = exports.androidThemeFormat = void 0;
 const camel_case_1 = __nccwpck_require__(3638);
 const utils_1 = __nccwpck_require__(2440);
-function _themeColorTokens(dictionary) {
-    return dictionary.allTokens.filter(token => {
-        return token.path.includes('theme') && token.original.type === 'color';
-    });
-}
-function _colorTokens(dictionary) {
-    return dictionary.allTokens.filter(token => {
-        return token.path.includes('color');
-    });
-}
+const common_1 = __nccwpck_require__(6520);
 function _themeTokenName(themeToken, category) {
     return (0, camel_case_1.camelCase)(themeToken.replace(`${category}_`, ''));
 }
@@ -102,8 +93,8 @@ function _themeTokenFormat(themeTokenType) {
     return themeTokenFormat;
 }
 function androidThemeFormat(args) {
-    const themeColorTokens = _themeColorTokens(args.dictionary);
-    const colorTokens = _colorTokens(args.dictionary);
+    const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
+    const colorTokens = (0, common_1._colorTokens)(args.dictionary);
     // TODO: Handle typography tokens
     const colorThemeItems = themeColorTokens
         .filter(themeToken => {
@@ -135,7 +126,7 @@ ${colorThemeItems}
 }
 exports.androidThemeFormat = androidThemeFormat;
 function androidThemeAttrsFormat(args) {
-    const themeColorTokens = _themeColorTokens(args.dictionary);
+    const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
     const themeItems = themeColorTokens
         .map(themeToken => {
         var _a;
@@ -161,23 +152,37 @@ exports.androidThemeAttrsFormat = androidThemeAttrsFormat;
 
 /***/ }),
 
-/***/ 2726:
+/***/ 6520:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
-function _colorThemeTokens(dictionary) {
+exports._colorTokens = exports._themeColorTokens = void 0;
+function _themeColorTokens(dictionary) {
     return dictionary.allTokens.filter(token => {
         return token.path.includes('theme') && token.original.type === 'color';
     });
 }
+exports._themeColorTokens = _themeColorTokens;
 function _colorTokens(dictionary) {
     return dictionary.allTokens.filter(token => {
         return token.path.includes('color');
     });
 }
+exports._colorTokens = _colorTokens;
+//# sourceMappingURL=common.js.map
+
+/***/ }),
+
+/***/ 2726:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
+const common_1 = __nccwpck_require__(6520);
 function _swiftImports(imports) {
     if (typeof imports === 'undefined') {
         imports = ['UIKit'];
@@ -189,7 +194,7 @@ function _swiftImports(imports) {
         .join('\n');
 }
 function iOSBaseColorsFormatter(args) {
-    const colorTokens = _colorTokens(args.dictionary);
+    const colorTokens = (0, common_1._colorTokens)(args.dictionary);
     const colorTokensCase = colorTokens
         .map(token => {
         return '   ' + `case ${token.name}`;
@@ -224,8 +229,8 @@ ${colorTokensWithHexCode}
 }
 exports.iOSBaseColorsFormatter = iOSBaseColorsFormatter;
 function iOSThemeColorsProtocolFormatter(args) {
-    const colorThemeTokens = _colorThemeTokens(args.dictionary);
-    const themeColors = colorThemeTokens
+    const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
+    const themeColors = themeColorTokens
         .map(token => {
         return '   ' + `var ${token.name}: BaseColor { get }`;
     })

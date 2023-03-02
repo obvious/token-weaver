@@ -1,17 +1,5 @@
-import {Dictionary, TransformedToken} from 'style-dictionary';
 import {FormatterArguments} from 'style-dictionary/types/Format';
-
-function _colorThemeTokens(dictionary: Dictionary): TransformedToken[] {
-  return dictionary.allTokens.filter(token => {
-    return token.path.includes('theme') && token.original.type === 'color';
-  });
-}
-
-function _colorTokens(dictionary: Dictionary): TransformedToken[] {
-  return dictionary.allTokens.filter(token => {
-    return token.path.includes('color');
-  });
-}
+import {_colorTokens, _themeColorTokens} from './common';
 
 function _swiftImports(imports: string[] | undefined): string {
   if (typeof imports === 'undefined') {
@@ -65,8 +53,8 @@ ${colorTokensWithHexCode}
 }
 
 export function iOSThemeColorsProtocolFormatter(args: FormatterArguments) {
-  const colorThemeTokens = _colorThemeTokens(args.dictionary);
-  const themeColors = colorThemeTokens
+  const themeColorTokens = _themeColorTokens(args.dictionary);
+  const themeColors = themeColorTokens
     .map(token => {
       return '   ' + `var ${token.name}: BaseColor { get }`;
     })
