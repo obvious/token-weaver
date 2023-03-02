@@ -64,7 +64,7 @@ export function iOSThemeColorsProtocolFormatter(args: FormatterArguments) {
   return `${imports}
 
 // Do not edit directly
-public protocol ThemeColors {
+public protocol ThemeColor {
 
 ${themeColors}
 }
@@ -78,7 +78,7 @@ export function iOSThemeProtocolFormatter(args: FormatterArguments) {
 
 // Do not edit directly
 public protocol Theme {
-  var colors: ThemeColors { get }
+  var colors: ThemeColor { get }
 }
 `;
 }
