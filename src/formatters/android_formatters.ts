@@ -3,9 +3,9 @@ import {camelCase} from 'camel-case';
 import {equalsCheck} from '../utils/utils';
 import {FormatterArguments} from 'style-dictionary/types/Format';
 
-function _themeTokens(dictionary: Dictionary): TransformedToken[] {
+function _themeColorTokens(dictionary: Dictionary): TransformedToken[] {
   return dictionary.allTokens.filter(token => {
-    return token.path.includes('theme');
+    return token.path.includes('theme') && token.original.type === 'color';
   });
 }
 
@@ -20,11 +20,11 @@ function _themeTokenName(themeToken: string, category: string): string {
 }
 
 export function androidThemeFormat(args: FormatterArguments) {
-  const themeTokens = _themeTokens(args.dictionary);
+  const themeColorTokens = _themeColorTokens(args.dictionary);
   const colorTokens = _colorTokens(args.dictionary);
 
   // TODO: Handle typography tokens
-  const colorThemeItems = themeTokens
+  const colorThemeItems = themeColorTokens
     .filter(themeToken => {
       return themeToken.original.type === 'color';
     })
@@ -61,16 +61,9 @@ ${colorThemeItems}
 }
 
 export function androidThemeAttrsFormat(args: FormatterArguments) {
-  const themeTokens = _themeTokens(args.dictionary);
+  const themeColorTokens = _themeColorTokens(args.dictionary);
 
-  const themeItems = themeTokens
-    .filter(themeToken => {
-      // TODO: Remove this once decent coverage of token types is achieved
-      return (
-        themeToken.original.type === 'color' ||
-        themeToken.original.type === 'typography'
-      );
-    })
+  const themeItems = themeColorTokens
     .map(themeToken => {
       const themeTokenType = themeToken.original.type;
       const themeTokenName = _themeTokenName(
@@ -104,7 +97,7 @@ export function androidThemeAttrsFormat(args: FormatterArguments) {
 <!-- Do not edit directly -->
 <resources>
 
-  <declare-styleable name="DlsTheme">
+  <declare-styleable name="DlsThemeColors">
 ${themeItems}
   </declare-styleable>
 </resources>

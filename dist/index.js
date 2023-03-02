@@ -74,9 +74,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.androidThemeAttrsFormat = exports.androidThemeFormat = void 0;
 const camel_case_1 = __nccwpck_require__(3638);
 const utils_1 = __nccwpck_require__(2440);
-function _themeTokens(dictionary) {
+function _themeColorTokens(dictionary) {
     return dictionary.allTokens.filter(token => {
-        return token.path.includes('theme');
+        return token.path.includes('theme') && token.original.type === 'color';
     });
 }
 function _colorTokens(dictionary) {
@@ -88,10 +88,10 @@ function _themeTokenName(themeToken, category) {
     return (0, camel_case_1.camelCase)(themeToken.replace(`${category}_`, ''));
 }
 function androidThemeFormat(args) {
-    const themeTokens = _themeTokens(args.dictionary);
+    const themeColorTokens = _themeColorTokens(args.dictionary);
     const colorTokens = _colorTokens(args.dictionary);
     // TODO: Handle typography tokens
-    const colorThemeItems = themeTokens
+    const colorThemeItems = themeColorTokens
         .filter(themeToken => {
         return themeToken.original.type === 'color';
     })
@@ -121,13 +121,8 @@ ${colorThemeItems}
 }
 exports.androidThemeFormat = androidThemeFormat;
 function androidThemeAttrsFormat(args) {
-    const themeTokens = _themeTokens(args.dictionary);
-    const themeItems = themeTokens
-        .filter(themeToken => {
-        // TODO: Remove this once decent coverage of token types is achieved
-        return (themeToken.original.type === 'color' ||
-            themeToken.original.type === 'typography');
-    })
+    const themeColorTokens = _themeColorTokens(args.dictionary);
+    const themeItems = themeColorTokens
         .map(themeToken => {
         var _a;
         const themeTokenType = themeToken.original.type;
@@ -151,7 +146,7 @@ function androidThemeAttrsFormat(args) {
 <!-- Do not edit directly -->
 <resources>
 
-  <declare-styleable name="DlsTheme">
+  <declare-styleable name="DlsThemeColors">
 ${themeItems}
   </declare-styleable>
 </resources>
