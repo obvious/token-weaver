@@ -3,6 +3,7 @@ name: Build Tokens
 on:
   push:
     branches: [ "main" ]
+    paths: [ "tokens/tokens.json" ]
 
   workflow_dispatch:
 
