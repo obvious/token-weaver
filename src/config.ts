@@ -57,7 +57,7 @@ export function config(tokensPath: string, outputPath: string): Config {
             format: 'iOSBaseColorsFormatter',
           },
           {
-            destination: 'ThemeColor.swift',
+            destination: 'ThemeColors.swift',
             format: 'iOSThemeColorsProtocolFormatter',
           },
           {
