@@ -1,11 +1,10 @@
-# Weaver
+# Weaver [WIP]
 
 ![CI-MAIN](https://github.com/obvious/weaver/actions/workflows/ci.yml/badge.svg?branch=main)
 ![CHECK-DIST](https://github.com/obvious/weaver/actions/workflows/check_dist.yml/badge.svg)
 [![Code Style: Google](https://img.shields.io/badge/code%20style-google-blueviolet.svg)](https://github.com/google/gts)
 
 Weaver is a [GitHub Action] to transform the [Figma Token Studio] tokens to platform specific theme files
-using [Amazon Style Dictionary]
 
 ## Usage
 
@@ -22,6 +21,10 @@ with:
 
 - `tokens_path` (**Required**): Path to the Figma Token Studio `tokens.json` file
 - `output_path` (**Required**): Path to write the generated files to
+
+#### Expected JSON Structure
+
+TBD
 
 ### Output
 
@@ -66,8 +69,6 @@ npm run fix
 ```
 
 [Figma Token Studio]: https://tokens.studio/
-
-[Amazon Style Dictionary]: https://amzn.github.io/style-dictionary/#/
 
 [Node JS]: https://nodejs.org/en/download/
 
