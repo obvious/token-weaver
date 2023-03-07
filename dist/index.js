@@ -58,7 +58,7 @@ function config(tokensPath, outputPath) {
                         format: 'iOSBaseColorsFormatter',
                     },
                     {
-                        destination: 'ThemeColor.swift',
+                        destination: 'ThemeColors.swift',
                         format: 'iOSThemeColorsProtocolFormatter',
                     },
                     {
@@ -268,7 +268,7 @@ function iOSThemeColorsProtocolFormatter(args) {
     return `${imports}
 
 // Do not edit directly
-public protocol ThemeColor {
+public protocol ThemeColors {
 
 ${themeColors}
 }
@@ -282,7 +282,7 @@ function iOSThemeProtocolFormatter(args) {
 
 // Do not edit directly
 public protocol Theme {
-  public var colors: ThemeColor { get }
+  public var colors: ThemeColors { get }
 }
 `;
 }
