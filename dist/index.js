@@ -20,6 +20,11 @@ function config(tokensPath, outputPath) {
             iOSThemeColorsProtocolFormatter: ios_formatters_1.iOSThemeColorsProtocolFormatter,
             iOSThemeProtocolFormatter: ios_formatters_1.iOSThemeProtocolFormatter,
         },
+        fileHeader: {
+            customHeader: defaultMessage => {
+                return ['Do not edit directly'];
+            },
+        },
         platforms: {
             android: {
                 transformGroup: 'android',
@@ -28,6 +33,9 @@ function config(tokensPath, outputPath) {
                     {
                         destination: 'res/colors.xml',
                         format: 'android/colors',
+                        options: {
+                            fileHeader: 'customHeader',
+                        },
                     },
                     {
                         destination: 'res/base_theme.xml',
@@ -58,7 +66,7 @@ function config(tokensPath, outputPath) {
                         format: 'iOSBaseColorsFormatter',
                     },
                     {
-                        destination: 'ThemeColors.swift',
+                        destination: 'ThemeColor.swift',
                         format: 'iOSThemeColorsProtocolFormatter',
                     },
                     {
@@ -105,10 +113,12 @@ function _themeTokenFormat(themeTokenType) {
 function androidThemeFormat(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
     const colorTokens = (0, common_1._colorTokens)(args.dictionary);
+    console.log(colorTokens);
     // TODO: Handle typography tokens
     const colorThemeItems = themeColorTokens
         .filter(themeToken => {
-        return themeToken.original.type === 'color';
+        return (themeToken.original.type === 'color' &&
+            !themeToken.original.value.startsWith('linear-gradient'));
     })
         .map(themeToken => {
         var _a;
@@ -128,7 +138,7 @@ function androidThemeFormat(args) {
 <!-- Do not edit directly -->
 <resources>
 
-  <style name="Base.Theme.Dls" parent="">
+  <style name="Base.Theme.Dls" parent="Theme.MaterialComponents.DayNight.NoActionBar">
 ${colorThemeItems}
   </style>
 </resources>
@@ -268,7 +278,7 @@ function iOSThemeColorsProtocolFormatter(args) {
     return `${imports}
 
 // Do not edit directly
-public protocol ThemeColors {
+public protocol ThemeColor {
 
 ${themeColors}
 }
@@ -282,7 +292,7 @@ function iOSThemeProtocolFormatter(args) {
 
 // Do not edit directly
 public protocol Theme {
-  public var colors: ThemeColors { get }
+  public var colors: ThemeColor { get }
 }
 `;
 }

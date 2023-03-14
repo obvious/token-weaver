@@ -3,7 +3,6 @@ name: Build Tokens
 on:
   push:
     branches: [ "main" ]
-    paths: [ "tokens/tokens.json" ]
 
   workflow_dispatch:
 
@@ -15,19 +14,46 @@ jobs:
       pull-requests: write
       contents: write
 
+    env:
+      GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          path: 'weaver'
+
+      - uses: actions/checkout@v3
+        with:
+          repository: obvious/Plaid
+          fetch-depth: 0
+          path: 'plaid'
+          token: ${{ secrets.ACCESS_TOKEN }}
 
       - name: Run Weaver
-        uses: ./
+        uses: ./weaver/
         with:
-          tokens_path: 'tokens/tokens.json'
-          output_path: 'output'
+          tokens_path: '/weaver/tokens/tokens.json'
+          output_path: '/weaver/output'
 
-      - name: Upload files
-        uses: actions/upload-artifact@v3
-        with:
-          name: output
-          path: ./output
+      - name: Move files to repo
+        run: |
+          rm -rf plaid/lib/src/main/java/in/obvious/plaid/theme/res/values/theme_base.xml
+
+          mv weaver/output/android/res/theme_attrs.xml plaid/lib/src/main/java/in/obvious/plaid/theme/res/values/attrs.xml
+          mv weaver/output/android/res/theme_typography_attrs.xml plaid/lib/src/main/java/in/obvious/plaid/typography/res/values/attrs.xml
+          mv weaver/output/android/res/base_theme.xml plaid/lib/src/main/java/in/obvious/plaid/theme/res/values/theme_dls.xml
+          mv weaver/output/android/res/colors.xml plaid/lib/src/main/res/values/colors.xml
+
+      - name: Raise PR
+        run: |
+          cd plaid
+
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
+          git checkout -b design/theme-token-changes
+          git commit -am "Theme token changes"
+          git push -uf origin design/theme-token-changes
+
+          gh pr create --fill

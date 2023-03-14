@@ -34,10 +34,14 @@ export function androidThemeFormat(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
   const colorTokens = _colorTokens(args.dictionary);
 
+  console.log(colorTokens);
   // TODO: Handle typography tokens
   const colorThemeItems = themeColorTokens
     .filter(themeToken => {
-      return themeToken.original.type === 'color';
+      return (
+        themeToken.original.type === 'color' &&
+        !themeToken.original.value.startsWith('linear-gradient')
+      );
     })
     .map(themeToken => {
       const colorValue = colorTokens.filter(colorToken => {
@@ -64,7 +68,7 @@ export function androidThemeFormat(args: FormatterArguments) {
 <!-- Do not edit directly -->
 <resources>
 
-  <style name="Base.Theme.Dls" parent="">
+  <style name="Base.Theme.Dls" parent="Theme.MaterialComponents.DayNight.NoActionBar">
 ${colorThemeItems}
   </style>
 </resources>

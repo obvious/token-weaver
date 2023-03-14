@@ -19,6 +19,11 @@ export function config(tokensPath: string, outputPath: string): Config {
       iOSThemeColorsProtocolFormatter: iOSThemeColorsProtocolFormatter,
       iOSThemeProtocolFormatter: iOSThemeProtocolFormatter,
     },
+    fileHeader: {
+      customHeader: defaultMessage => {
+        return ['Do not edit directly'];
+      },
+    },
     platforms: {
       android: {
         transformGroup: 'android',
@@ -27,6 +32,9 @@ export function config(tokensPath: string, outputPath: string): Config {
           {
             destination: 'res/colors.xml',
             format: 'android/colors',
+            options: {
+              fileHeader: 'customHeader',
+            },
           },
           {
             destination: 'res/base_theme.xml',
@@ -57,7 +65,7 @@ export function config(tokensPath: string, outputPath: string): Config {
             format: 'iOSBaseColorsFormatter',
           },
           {
-            destination: 'ThemeColors.swift',
+            destination: 'ThemeColor.swift',
             format: 'iOSThemeColorsProtocolFormatter',
           },
           {
