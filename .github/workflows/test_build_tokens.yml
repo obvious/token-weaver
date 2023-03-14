@@ -3,7 +3,7 @@ name: Build Tokens
 on:
   push:
     branches: [ "main" ]
-    paths: [ "tokens/tokens.json" ]
+    paths: [ "sample_tokens" ]
 
   workflow_dispatch:
 
@@ -23,7 +23,7 @@ jobs:
       - name: Run Weaver
         uses: ./
         with:
-          tokens_path: 'tokens/tokens.json'
+          tokens_path: 'sample_tokens'
           output_path: 'output'
 
       - name: Upload files

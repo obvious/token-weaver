@@ -1,0 +1,22 @@
+{
+  "primary": {
+    "value": "{color.red.300}",
+    "type": "color"
+  },
+  "primary_dark": {
+    "value": "{color.red.600}",
+    "type": "color"
+  },
+  "primary_subtle": {
+    "value": "{color.red.100}",
+    "type": "color"
+  },
+  "text_primary": {
+    "value": "{color.white}",
+    "type": "color"
+  },
+  "bg_primary": {
+    "value": "{color.black}",
+    "type": "color"
+  }
+}

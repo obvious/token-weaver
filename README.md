@@ -11,7 +11,7 @@ Weaver is a [GitHub Action] to transform the [Figma Token Studio] tokens to plat
 ```yaml
 uses: obvious/weaver@v0.0.1
 with:
-  tokens_path: 'tokens/tokens.json'
+  tokens_path: 'tokens'
   output_path: 'output'
 
 # Raise PRs adding the generated files
