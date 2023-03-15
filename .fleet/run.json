@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "type": "command",
+      "name": "Package",
+      "program": "npm",
+      "workingDir": "$PROJECT_DIR$/",
+      "args": ["run", "package"],
+    },
+    {
+      "type": "command",
+      "name": "Format",
+      "program": "npm",
+      "workingDir": "$PROJECT_DIR$/",
+      "args": ["run", "fix"],
+    },
+    {
+      "type": "command",
+      "name": "Install",
+      "program": "npm",
+      "workingDir": "$PROJECT_DIR$/",
+      "args": ["install"],
+    },
+  ]
+}
