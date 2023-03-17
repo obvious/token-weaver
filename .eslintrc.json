@@ -7,7 +7,7 @@
       "allowModules": ["style-dictionary", "camel-case"]
     }],
     "node/no-extraneous-import": ["error", {
-      "allowModules": ["camel-case"],
+      "allowModules": ["camel-case", "capital-case", "snake-case"],
       "resolvePaths": [],
       "tryExtensions": []
     }]
