@@ -58,7 +58,7 @@ function coreTokensConfig(tokensPath, outputPath) {
                 ],
             },
             ios: {
-                transforms: ['attribute/cti', 'name/cti/camel', 'color/UIColor'],
+                transforms: ['attribute/cti', 'name/cti/camel', 'color/UIColorSwift'],
                 buildPath: `${outputPath}/ios/`,
                 files: [
                     {
