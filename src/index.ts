@@ -9,6 +9,7 @@ import {Config} from 'style-dictionary';
 import {
   androidThemeAttrsFormat,
   androidThemeFormat,
+  androidTypographyFormat,
 } from './formatters/android_formatters';
 import {
   iOSBaseColorsFormatter,
@@ -19,6 +20,7 @@ import {
 } from './formatters/ios_formatters';
 import {registerTransforms} from '@tokens-studio/sd-transforms';
 import {getInput} from '@actions/core';
+import {transformTypographyForXml} from './transformers/android_xml_tyopgraphy';
 
 run().catch(error => console.log('Failed to run weaver: ', error));
 
@@ -94,7 +96,8 @@ async function generateCoreTokens(
   runStyleDictionary(
     coreTokensConfig(
       [`${inputPath}/theme_tokens.json`, `${inputPath}/core.json`],
-      path.join(outputPath, 'core')
+      path.join(outputPath, 'core'),
+      projectName
     )
   );
 }
@@ -124,9 +127,13 @@ function runStyleDictionary(config: Config) {
 async function configStyleDictionary(projectName: string, version: string) {
   // Formats
   StyleDictionary.registerFormat({
-    name: 'androidThemeAttrsFormat',
-    formatter: args => androidThemeAttrsFormat(args),
+    name: 'androidTypographyFormat',
+    formatter: args => androidTypographyFormat(args),
   })
+    .registerFormat({
+      name: 'androidThemeAttrsFormat',
+      formatter: args => androidThemeAttrsFormat(args),
+    })
     .registerFormat({
       name: 'androidThemeFormat',
       formatter: args => androidThemeFormat(args),
@@ -158,6 +165,15 @@ async function configStyleDictionary(projectName: string, version: string) {
 
   // Transforms
   await registerTransforms(StyleDictionary);
+
+  StyleDictionary.registerTransform({
+    name: 'weaver/typography/xml',
+    type: 'value',
+    transitive: true,
+    matcher: token => token.type === 'typography',
+    transformer: token =>
+      transformTypographyForXml(projectName, token.name, token.value),
+  });
 
   // File Headers
   StyleDictionary.registerFileHeader({

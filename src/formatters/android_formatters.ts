@@ -32,6 +32,23 @@ function _themeTokenFormat(themeTokenType: string): string {
   return themeTokenFormat;
 }
 
+export function androidTypographyFormat(args: FormatterArguments) {
+  const textStyles = args.dictionary.allTokens
+    .map(token => token.value)
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+
+${xmlFileHeader(args.file)}
+<resources>
+
+<style name="TextAppearance.${args.file.className}" parent="" />
+
+${textStyles}
+</resources>
+`;
+}
+
 // TODO: Add support for typography
 export function androidThemeFormat(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
