@@ -3,7 +3,6 @@ import {FormatterArguments} from 'style-dictionary/types/Format';
 import {_themeColorTokens, _themeTypographyTokens} from './common';
 import {File, TransformedToken} from 'style-dictionary';
 import {snakeCase} from 'snake-case';
-import {capitalCase} from 'capital-case';
 import * as StyleDictionary from 'style-dictionary';
 
 const {fileHeader} = StyleDictionary.formatHelpers;
@@ -33,6 +32,7 @@ function _themeTokenFormat(themeTokenType: string): string {
   return themeTokenFormat;
 }
 
+// TODO: Add support for typography
 export function androidThemeFormat(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
   const themeColorItems = themeColorTokens
@@ -50,24 +50,6 @@ export function androidThemeFormat(args: FormatterArguments) {
     })
     .join('\n');
 
-  const themeTypographyTokens = _themeTypographyTokens(args.dictionary);
-  const themeTypographyItems = themeTypographyTokens.map(themeToken => {
-    const themeTypographyTokenName = camelCase('typography_' + themeToken.name);
-
-    const typographyRef =
-      `TextAppearance.${args.options.projectName}.` +
-      capitalCase(
-        themeToken.original.value
-          .replace(/[{}]/g, '')
-          .replace('typography.', '')
-      );
-
-    return (
-      '    ' +
-      `<item name="${themeTypographyTokenName}">@style/${typographyRef}</item>`
-    );
-  });
-
   return `<?xml version="1.0" encoding="UTF-8"?>
 
 ${xmlFileHeader(args.file)}
@@ -77,7 +59,6 @@ ${xmlFileHeader(args.file)}
     args.file.className
   }" parent="">
 ${themeColorItems}
-${themeTypographyItems}
   </style>
 </resources>
 `;
