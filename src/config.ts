@@ -121,7 +121,8 @@ export function themesConfig(
           {
             destination: `res/${themeName}_theme.xml`,
             format: 'androidThemeFormat',
-            filter: token => token.type === 'color',
+            filter: token =>
+              token.type === 'color' || token.type === 'typography',
             className: `${formattedThemeName}`,
             options: {
               projectName: projectName,

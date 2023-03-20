@@ -120,7 +120,7 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
                     {
                         destination: `res/${themeName}_theme.xml`,
                         format: 'androidThemeFormat',
-                        filter: token => token.type === 'color',
+                        filter: token => token.type === 'color' || token.type === 'typography',
                         className: `${formattedThemeName}`,
                         options: {
                             projectName: projectName,
@@ -173,6 +173,7 @@ exports.androidThemeAttrsFormat = exports.androidThemeFormat = exports.androidTy
 const camel_case_1 = __nccwpck_require__(3638);
 const common_1 = __nccwpck_require__(6520);
 const snake_case_1 = __nccwpck_require__(6213);
+const capital_case_1 = __nccwpck_require__(8824);
 const StyleDictionary = __nccwpck_require__(7189);
 const { fileHeader } = StyleDictionary.formatHelpers;
 function xmlFileHeader(file) {
@@ -211,7 +212,6 @@ ${textStyles}
 `;
 }
 exports.androidTypographyFormat = androidTypographyFormat;
-// TODO: Add support for typography
 function androidThemeFormat(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
     const themeColorItems = themeColorTokens
@@ -222,6 +222,16 @@ function androidThemeFormat(args) {
             `<item name="${themeColorTokenName}">@color/${colorRefName}</item>`);
     })
         .join('\n');
+    const themeTypographyTokens = (0, common_1._themeTypographyTokens)(args.dictionary);
+    const themeTypographyItems = themeTypographyTokens.map(themeToken => {
+        const themeTypographyTokenName = (0, camel_case_1.camelCase)('typography_' + themeToken.name);
+        const typographyRef = `TextAppearance.${args.options.projectName}.` +
+            (0, capital_case_1.capitalCase)(themeToken.original.value
+                .replace(/[{}]/g, '')
+                .replace('typography.', ''));
+        return ('    ' +
+            `<item name="${themeTypographyTokenName}">@style/${typographyRef}</item>`);
+    });
     return `<?xml version="1.0" encoding="UTF-8"?>
 
 ${xmlFileHeader(args.file)}
@@ -229,6 +239,7 @@ ${xmlFileHeader(args.file)}
 
   <style name="Theme.${args.options.projectName}.${args.file.className}" parent="">
 ${themeColorItems}
+${themeTypographyItems}
   </style>
 </resources>
 `;
