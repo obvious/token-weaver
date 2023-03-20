@@ -12,6 +12,7 @@ import {
 } from './formatters/android_formatters';
 import {
   iOSBaseColorsFormatter,
+  iOSThemeColorsFormatter,
   iOSThemeColorsProtocolFormatter,
   iOSThemeProtocolFormatter,
 } from './formatters/ios_formatters';
@@ -144,6 +145,10 @@ async function configStyleDictionary(projectName: string, version: string) {
     .registerFormat({
       name: 'iOSThemeProtocolFormatter',
       formatter: args => iOSThemeProtocolFormatter(args),
+    })
+    .registerFormat({
+      name: 'iOSThemeColorsFormatter',
+      formatter: args => iOSThemeColorsFormatter(args),
     });
 
   // Transforms

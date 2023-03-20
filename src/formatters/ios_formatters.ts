@@ -2,6 +2,7 @@ import {FormatterArguments} from 'style-dictionary/types/Format';
 import {_themeColorTokens} from './common';
 import {File} from 'style-dictionary';
 import * as StyleDictionary from 'style-dictionary';
+import camelCase from 'camelcase';
 
 const {fileHeader} = StyleDictionary.formatHelpers;
 
@@ -87,6 +88,29 @@ export function iOSThemeProtocolFormatter(args: FormatterArguments) {
 ${swiftFileHeader(args.file)}
 public protocol Theme {
   public var colors: ThemeColors { get }
+}
+`;
+}
+
+export function iOSThemeColorsFormatter(args: FormatterArguments) {
+  const themeColorTokens = _themeColorTokens(args.dictionary);
+  const themeColorItems = themeColorTokens
+    .map(themeToken => {
+      const originalColorRef = themeToken.original.value.replace(/[{}]/g, '');
+      const colorRefName = camelCase(originalColorRef);
+
+      return (
+        '   ' + `public var ${themeToken.name}: BaseColor = .${colorRefName}`
+      );
+    })
+    .join('\n');
+
+  const imports = _swiftImports(args.options.imports);
+  return `${imports}
+
+${swiftFileHeader(args.file)}
+public class ${args.file.className} : ${args.options.implements} {
+${themeColorItems}
 }
 `;
 }

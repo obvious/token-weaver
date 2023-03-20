@@ -115,6 +115,22 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
                     },
                 ],
             },
+            ios: {
+                transforms: ['attribute/cti', 'name/cti/camel'],
+                buildPath: `${outputPath}/ios/`,
+                files: [
+                    {
+                        destination: `${formattedThemeName}ThemeColors.swift`,
+                        format: 'iOSThemeColorsFormatter',
+                        filter: token => token.type === 'color',
+                        className: `${formattedThemeName}ThemeColors`,
+                        options: {
+                            implements: 'ThemeColors',
+                            fileHeader: 'weaverFileHeader',
+                        },
+                    },
+                ],
+            },
         },
     };
 }
@@ -261,9 +277,10 @@ exports._colorTokens = _colorTokens;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
+exports.iOSThemeColorsFormatter = exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
 const common_1 = __nccwpck_require__(6520);
 const StyleDictionary = __nccwpck_require__(7189);
+const camelcase_1 = __nccwpck_require__(1362);
 const { fileHeader } = StyleDictionary.formatHelpers;
 function _swiftImports(imports) {
     if (typeof imports === 'undefined') {
@@ -345,6 +362,25 @@ public protocol Theme {
 `;
 }
 exports.iOSThemeProtocolFormatter = iOSThemeProtocolFormatter;
+function iOSThemeColorsFormatter(args) {
+    const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
+    const themeColorItems = themeColorTokens
+        .map(themeToken => {
+        const originalColorRef = themeToken.original.value.replace(/[{}]/g, '');
+        const colorRefName = (0, camelcase_1.default)(originalColorRef);
+        return ('   ' + `public var ${themeToken.name}: BaseColor = .${colorRefName}`);
+    })
+        .join('\n');
+    const imports = _swiftImports(args.options.imports);
+    return `${imports}
+
+${swiftFileHeader(args.file)}
+public class ${args.file.className} : ${args.options.implements} {
+${themeColorItems}
+}
+`;
+}
+exports.iOSThemeColorsFormatter = iOSThemeColorsFormatter;
 //# sourceMappingURL=ios_formatters.js.map
 
 /***/ }),
@@ -2963,6 +2999,90 @@ var __createBinding;
     exporter("__classPrivateFieldSet", __classPrivateFieldSet);
     exporter("__classPrivateFieldIn", __classPrivateFieldIn);
 });
+
+
+/***/ }),
+
+/***/ 1362:
+/***/ ((module) => {
+
+"use strict";
+
+
+const preserveCamelCase = string => {
+	let isLastCharLower = false;
+	let isLastCharUpper = false;
+	let isLastLastCharUpper = false;
+
+	for (let i = 0; i < string.length; i++) {
+		const character = string[i];
+
+		if (isLastCharLower && /[a-zA-Z]/.test(character) && character.toUpperCase() === character) {
+			string = string.slice(0, i) + '-' + string.slice(i);
+			isLastCharLower = false;
+			isLastLastCharUpper = isLastCharUpper;
+			isLastCharUpper = true;
+			i++;
+		} else if (isLastCharUpper && isLastLastCharUpper && /[a-zA-Z]/.test(character) && character.toLowerCase() === character) {
+			string = string.slice(0, i - 1) + '-' + string.slice(i - 1);
+			isLastLastCharUpper = isLastCharUpper;
+			isLastCharUpper = false;
+			isLastCharLower = true;
+		} else {
+			isLastCharLower = character.toLowerCase() === character && character.toUpperCase() !== character;
+			isLastLastCharUpper = isLastCharUpper;
+			isLastCharUpper = character.toUpperCase() === character && character.toLowerCase() !== character;
+		}
+	}
+
+	return string;
+};
+
+const camelCase = (input, options) => {
+	if (!(typeof input === 'string' || Array.isArray(input))) {
+		throw new TypeError('Expected the input to be `string | string[]`');
+	}
+
+	options = Object.assign({
+		pascalCase: false
+	}, options);
+
+	const postProcess = x => options.pascalCase ? x.charAt(0).toUpperCase() + x.slice(1) : x;
+
+	if (Array.isArray(input)) {
+		input = input.map(x => x.trim())
+			.filter(x => x.length)
+			.join('-');
+	} else {
+		input = input.trim();
+	}
+
+	if (input.length === 0) {
+		return '';
+	}
+
+	if (input.length === 1) {
+		return options.pascalCase ? input.toUpperCase() : input.toLowerCase();
+	}
+
+	const hasUpperCase = input !== input.toLowerCase();
+
+	if (hasUpperCase) {
+		input = preserveCamelCase(input);
+	}
+
+	input = input
+		.replace(/^[_.\- ]+/, '')
+		.toLowerCase()
+		.replace(/[_.\- ]+(\w|$)/g, (_, p1) => p1.toUpperCase())
+		.replace(/\d+(\w|$)/g, m => m.toUpperCase());
+
+	return postProcess(input);
+};
+
+module.exports = camelCase;
+// TODO: Remove this for the next major release
+module.exports["default"] = camelCase;
 
 
 /***/ }),
@@ -37035,6 +37155,10 @@ async function configStyleDictionary(projectName, version) {
         .registerFormat({
         name: 'iOSThemeProtocolFormatter',
         formatter: args => (0, ios_formatters_1.iOSThemeProtocolFormatter)(args),
+    })
+        .registerFormat({
+        name: 'iOSThemeColorsFormatter',
+        formatter: args => (0, ios_formatters_1.iOSThemeColorsFormatter)(args),
     });
     // Transforms
     await (0, sd_transforms_1.registerTransforms)(StyleDictionary);

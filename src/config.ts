@@ -116,6 +116,22 @@ export function themesConfig(
           },
         ],
       },
+      ios: {
+        transforms: ['attribute/cti', 'name/cti/camel'],
+        buildPath: `${outputPath}/ios/`,
+        files: [
+          {
+            destination: `${formattedThemeName}ThemeColors.swift`,
+            format: 'iOSThemeColorsFormatter',
+            filter: token => token.type === 'color',
+            className: `${formattedThemeName}ThemeColors`,
+            options: {
+              implements: 'ThemeColors',
+              fileHeader: 'weaverFileHeader',
+            },
+          },
+        ],
+      },
     },
   };
 }
