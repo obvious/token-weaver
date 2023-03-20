@@ -65,7 +65,7 @@ export function iOSThemeColorsProtocolFormatter(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
   const themeColors = themeColorTokens
     .map(token => {
-      return '   ' + `public var ${token.name}: BaseColor { get }`;
+      return '   ' + `var ${token.name}: BaseColor { get }`;
     })
     .join('\n');
 
@@ -87,7 +87,7 @@ export function iOSThemeProtocolFormatter(args: FormatterArguments) {
 
 ${swiftFileHeader(args.file)}
 public protocol Theme {
-  public var colors: ThemeColors { get }
+  var colors: ThemeColors { get }
 }
 `;
 }

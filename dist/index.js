@@ -346,7 +346,7 @@ function iOSThemeColorsProtocolFormatter(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
     const themeColors = themeColorTokens
         .map(token => {
-        return '   ' + `public var ${token.name}: BaseColor { get }`;
+        return '   ' + `var ${token.name}: BaseColor { get }`;
     })
         .join('\n');
     const imports = _swiftImports(args.options.imports);
@@ -367,7 +367,7 @@ function iOSThemeProtocolFormatter(args) {
 
 ${swiftFileHeader(args.file)}
 public protocol Theme {
-  public var colors: ThemeColors { get }
+  var colors: ThemeColors { get }
 }
 `;
 }
