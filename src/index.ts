@@ -14,6 +14,7 @@ import {
   iOSBaseColorsFormatter,
   iOSThemeColorsFormatter,
   iOSThemeColorsProtocolFormatter,
+  iOSThemeFormatter,
   iOSThemeProtocolFormatter,
 } from './formatters/ios_formatters';
 import {registerTransforms} from '@tokens-studio/sd-transforms';
@@ -149,6 +150,10 @@ async function configStyleDictionary(projectName: string, version: string) {
     .registerFormat({
       name: 'iOSThemeColorsFormatter',
       formatter: args => iOSThemeColorsFormatter(args),
+    })
+    .registerFormat({
+      name: 'iOSThemeFormatter',
+      formatter: args => iOSThemeFormatter(args),
     });
 
   // Transforms

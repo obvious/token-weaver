@@ -114,3 +114,15 @@ ${themeColorItems}
 }
 `;
 }
+
+// TODO: Add support for typography
+export function iOSThemeFormatter(args: FormatterArguments) {
+  const imports = _swiftImports(args.options.imports);
+  return `${imports}
+
+${swiftFileHeader(args.file)}
+public class ${args.file.className} : ${args.options.implements} {
+   public var colors: ThemeColors = ${args.options.themeColorsClass}()
+}
+`;
+}

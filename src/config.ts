@@ -130,6 +130,16 @@ export function themesConfig(
               fileHeader: 'weaverFileHeader',
             },
           },
+          {
+            destination: `${formattedThemeName}Theme.swift`,
+            format: 'iOSThemeFormatter',
+            className: `${formattedThemeName}Theme`,
+            options: {
+              implements: 'Theme',
+              themeColorsClass: `${formattedThemeName}ThemeColors`,
+              fileHeader: 'weaverFileHeader',
+            },
+          },
         ],
       },
     },

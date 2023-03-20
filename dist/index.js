@@ -129,6 +129,16 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
                             fileHeader: 'weaverFileHeader',
                         },
                     },
+                    {
+                        destination: `${formattedThemeName}Theme.swift`,
+                        format: 'iOSThemeFormatter',
+                        className: `${formattedThemeName}Theme`,
+                        options: {
+                            implements: 'Theme',
+                            themeColorsClass: `${formattedThemeName}ThemeColors`,
+                            fileHeader: 'weaverFileHeader',
+                        },
+                    },
                 ],
             },
         },
@@ -277,7 +287,7 @@ exports._colorTokens = _colorTokens;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.iOSThemeColorsFormatter = exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
+exports.iOSThemeFormatter = exports.iOSThemeColorsFormatter = exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
 const common_1 = __nccwpck_require__(6520);
 const StyleDictionary = __nccwpck_require__(7189);
 const camelcase_1 = __nccwpck_require__(1362);
@@ -381,6 +391,18 @@ ${themeColorItems}
 `;
 }
 exports.iOSThemeColorsFormatter = iOSThemeColorsFormatter;
+// TODO: Add support for typography
+function iOSThemeFormatter(args) {
+    const imports = _swiftImports(args.options.imports);
+    return `${imports}
+
+${swiftFileHeader(args.file)}
+public class ${args.file.className} : ${args.options.implements} {
+   public var colors: ThemeColors = ${args.options.themeColorsClass}()
+}
+`;
+}
+exports.iOSThemeFormatter = iOSThemeFormatter;
 //# sourceMappingURL=ios_formatters.js.map
 
 /***/ }),
@@ -37159,6 +37181,10 @@ async function configStyleDictionary(projectName, version) {
         .registerFormat({
         name: 'iOSThemeColorsFormatter',
         formatter: args => (0, ios_formatters_1.iOSThemeColorsFormatter)(args),
+    })
+        .registerFormat({
+        name: 'iOSThemeFormatter',
+        formatter: args => (0, ios_formatters_1.iOSThemeFormatter)(args),
     });
     // Transforms
     await (0, sd_transforms_1.registerTransforms)(StyleDictionary);
