@@ -3,7 +3,8 @@ import {capitalCase} from 'capital-case';
 
 export function coreTokensConfig(
   tokensPath: string[],
-  outputPath: string
+  outputPath: string,
+  projectName: string
 ): Config {
   return {
     source: tokensPath,
@@ -15,6 +16,7 @@ export function coreTokensConfig(
           'color/hex8android',
           'size/remToSp',
           'size/remToDp',
+          'weaver/typography/xml',
         ],
         buildPath: `${outputPath}/android/`,
         files: [
@@ -24,6 +26,19 @@ export function coreTokensConfig(
             filter: {
               attributes: {
                 category: 'color',
+              },
+            },
+            options: {
+              fileHeader: 'weaverFileHeader',
+            },
+          },
+          {
+            destination: 'res/typography.xml',
+            format: 'androidTypographyFormat',
+            className: projectName,
+            filter: {
+              attributes: {
+                category: 'typography',
               },
             },
             options: {
@@ -106,7 +121,8 @@ export function themesConfig(
           {
             destination: `res/${themeName}_theme.xml`,
             format: 'androidThemeFormat',
-            filter: token => token.type === 'color',
+            filter: token =>
+              token.type === 'color' || token.type === 'typography',
             className: `${formattedThemeName}`,
             options: {
               projectName: projectName,

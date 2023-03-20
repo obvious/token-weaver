@@ -9,7 +9,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.themesConfig = exports.coreTokensConfig = void 0;
 const capital_case_1 = __nccwpck_require__(8824);
-function coreTokensConfig(tokensPath, outputPath) {
+function coreTokensConfig(tokensPath, outputPath, projectName) {
     return {
         source: tokensPath,
         platforms: {
@@ -20,6 +20,7 @@ function coreTokensConfig(tokensPath, outputPath) {
                     'color/hex8android',
                     'size/remToSp',
                     'size/remToDp',
+                    'weaver/typography/xml',
                 ],
                 buildPath: `${outputPath}/android/`,
                 files: [
@@ -29,6 +30,19 @@ function coreTokensConfig(tokensPath, outputPath) {
                         filter: {
                             attributes: {
                                 category: 'color',
+                            },
+                        },
+                        options: {
+                            fileHeader: 'weaverFileHeader',
+                        },
+                    },
+                    {
+                        destination: 'res/typography.xml',
+                        format: 'androidTypographyFormat',
+                        className: projectName,
+                        filter: {
+                            attributes: {
+                                category: 'typography',
                             },
                         },
                         options: {
@@ -106,7 +120,7 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
                     {
                         destination: `res/${themeName}_theme.xml`,
                         format: 'androidThemeFormat',
-                        filter: token => token.type === 'color',
+                        filter: token => token.type === 'color' || token.type === 'typography',
                         className: `${formattedThemeName}`,
                         options: {
                             projectName: projectName,
@@ -155,10 +169,11 @@ exports.themesConfig = themesConfig;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.androidThemeAttrsFormat = exports.androidThemeFormat = void 0;
+exports.androidThemeAttrsFormat = exports.androidThemeFormat = exports.androidTypographyFormat = void 0;
 const camel_case_1 = __nccwpck_require__(3638);
 const common_1 = __nccwpck_require__(6520);
 const snake_case_1 = __nccwpck_require__(6213);
+const capital_case_1 = __nccwpck_require__(8824);
 const StyleDictionary = __nccwpck_require__(7189);
 const { fileHeader } = StyleDictionary.formatHelpers;
 function xmlFileHeader(file) {
@@ -181,7 +196,22 @@ function _themeTokenFormat(themeTokenType) {
     }
     return themeTokenFormat;
 }
-// TODO: Add support for typography
+function androidTypographyFormat(args) {
+    const textStyles = args.dictionary.allTokens
+        .map(token => token.value)
+        .join('\n');
+    return `<?xml version="1.0" encoding="UTF-8"?>
+
+${xmlFileHeader(args.file)}
+<resources>
+
+<style name="TextAppearance.${args.file.className}" parent="" />
+
+${textStyles}
+</resources>
+`;
+}
+exports.androidTypographyFormat = androidTypographyFormat;
 function androidThemeFormat(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
     const themeColorItems = themeColorTokens
@@ -192,6 +222,16 @@ function androidThemeFormat(args) {
             `<item name="${themeColorTokenName}">@color/${colorRefName}</item>`);
     })
         .join('\n');
+    const themeTypographyTokens = (0, common_1._themeTypographyTokens)(args.dictionary);
+    const themeTypographyItems = themeTypographyTokens.map(themeToken => {
+        const themeTypographyTokenName = (0, camel_case_1.camelCase)('typography_' + themeToken.name);
+        const typographyRef = `TextAppearance.${args.options.projectName}.` +
+            (0, capital_case_1.capitalCase)(themeToken.original.value
+                .replace(/[{}]/g, '')
+                .replace('typography.', ''));
+        return ('    ' +
+            `<item name="${themeTypographyTokenName}">@style/${typographyRef}</item>`);
+    });
     return `<?xml version="1.0" encoding="UTF-8"?>
 
 ${xmlFileHeader(args.file)}
@@ -199,6 +239,7 @@ ${xmlFileHeader(args.file)}
 
   <style name="Theme.${args.options.projectName}.${args.file.className}" parent="">
 ${themeColorItems}
+${themeTypographyItems}
   </style>
 </resources>
 `;
@@ -393,6 +434,56 @@ public class ${args.file.className} : ${args.options.implements} {
 }
 exports.iOSThemeFormatter = iOSThemeFormatter;
 //# sourceMappingURL=ios_formatters.js.map
+
+/***/ }),
+
+/***/ 3102:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.transformTypographyForXml = void 0;
+const capital_case_1 = __nccwpck_require__(8824);
+// TODO: Handle percentage based letter spacing
+function formatValue(value, propName) {
+    let val;
+    switch (propName) {
+        case 'lineHeight':
+        case 'android:textSize':
+            val = parseFloat(value).toFixed(2) + 'sp';
+            break;
+        default:
+            val = value;
+    }
+    return val;
+}
+function textStyleItem(textStyleProperty, value) {
+    return `  <item name="${textStyleProperty}">${formatValue(value, textStyleProperty)}</item>\n`;
+}
+function transformTypographyForXml(projectName, name, value) {
+    if (value === undefined) {
+        return value;
+    }
+    const textAppearanceName = (0, capital_case_1.capitalCase)(name.replace('typography_', ''));
+    const textStylePropertiesMapping = new Map([
+        ['lineHeight', 'lineHeight'],
+        ['fontSize', 'android:textSize'],
+        ['letterSpacing', 'android:letterSpacing'],
+    ]);
+    /**
+     * Constructs a text appearance XML, e.g.
+     * <style name="TextAppearance.App.Heading1">
+     *    <item name="android:textSize">24sp</item>
+     * </style>
+     */
+    return `${Object.entries(value).reduce((acc, [propName, val]) => {
+        const textStyleProperty = textStylePropertiesMapping.get(propName);
+        return `${acc}${textStyleProperty ? textStyleItem(textStyleProperty, val) : ''}`;
+    }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}</style>\n`;
+}
+exports.transformTypographyForXml = transformTypographyForXml;
+//# sourceMappingURL=android_xml_tyopgraphy.js.map
 
 /***/ }),
 
@@ -37086,6 +37177,7 @@ const android_formatters_1 = __nccwpck_require__(9193);
 const ios_formatters_1 = __nccwpck_require__(2726);
 const sd_transforms_1 = __nccwpck_require__(7986);
 const core_1 = __nccwpck_require__(2186);
+const android_xml_tyopgraphy_1 = __nccwpck_require__(3102);
 run().catch(error => console.log('Failed to run weaver: ', error));
 async function run() {
     // Get input and output path
@@ -37131,7 +37223,7 @@ async function generateCoreTokens(inputPath, outputPath, projectName, themes) {
     }
     // Write temp file with unified theme tokens to use it for Style Dictionary
     await (0, promises_1.writeFile)(path.join(inputPath, 'theme_tokens.json'), JSON.stringify(themeTokens));
-    runStyleDictionary((0, config_1.coreTokensConfig)([`${inputPath}/theme_tokens.json`, `${inputPath}/core.json`], path.join(outputPath, 'core')));
+    runStyleDictionary((0, config_1.coreTokensConfig)([`${inputPath}/theme_tokens.json`, `${inputPath}/core.json`], path.join(outputPath, 'core'), projectName));
 }
 async function generateThemes(inputPath, outputPath, projectName, themes) {
     for (const theme of themes) {
@@ -37144,6 +37236,10 @@ function runStyleDictionary(config) {
 async function configStyleDictionary(projectName, version) {
     // Formats
     StyleDictionary.registerFormat({
+        name: 'androidTypographyFormat',
+        formatter: args => (0, android_formatters_1.androidTypographyFormat)(args),
+    })
+        .registerFormat({
         name: 'androidThemeAttrsFormat',
         formatter: args => (0, android_formatters_1.androidThemeAttrsFormat)(args),
     })
@@ -37177,6 +37273,13 @@ async function configStyleDictionary(projectName, version) {
     });
     // Transforms
     await (0, sd_transforms_1.registerTransforms)(StyleDictionary);
+    StyleDictionary.registerTransform({
+        name: 'weaver/typography/xml',
+        type: 'value',
+        transitive: true,
+        matcher: token => token.type === 'typography',
+        transformer: token => (0, android_xml_tyopgraphy_1.transformTypographyForXml)(projectName, token.name, token.value),
+    });
     // File Headers
     StyleDictionary.registerFileHeader({
         name: 'weaverFileHeader',
