@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
-    "style-dictionary": "^3.7.2",
-    "token-transformer": "^0.0.30"
+    "@tokens-studio/sd-transforms": "^0.5.1",
+    "style-dictionary": "^3.7.2"
   },
   "scripts": {
     "lint": "gts lint",

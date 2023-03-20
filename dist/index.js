@@ -7,70 +7,144 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.config = void 0;
-const android_formatters_1 = __nccwpck_require__(9193);
-const ios_formatters_1 = __nccwpck_require__(2726);
-function config(tokensPath, outputPath) {
+exports.themesConfig = exports.coreTokensConfig = void 0;
+const capital_case_1 = __nccwpck_require__(8824);
+function coreTokensConfig(tokensPath, outputPath) {
     return {
-        source: [tokensPath],
-        format: {
-            androidThemeFormat: android_formatters_1.androidThemeFormat,
-            androidThemeAttrsFormat: android_formatters_1.androidThemeAttrsFormat,
-            iOSBaseColorsFormatter: ios_formatters_1.iOSBaseColorsFormatter,
-            iOSThemeColorsProtocolFormatter: ios_formatters_1.iOSThemeColorsProtocolFormatter,
-            iOSThemeProtocolFormatter: ios_formatters_1.iOSThemeProtocolFormatter,
-        },
+        source: tokensPath,
         platforms: {
             android: {
-                transformGroup: 'android',
+                transforms: [
+                    'attribute/cti',
+                    'name/cti/snake',
+                    'color/hex8android',
+                    'size/remToSp',
+                    'size/remToDp',
+                ],
                 buildPath: `${outputPath}/android/`,
                 files: [
                     {
                         destination: 'res/colors.xml',
-                        format: 'android/colors',
-                    },
-                    {
-                        destination: 'res/base_theme.xml',
-                        format: 'androidThemeFormat',
+                        format: 'android/resources',
+                        filter: {
+                            attributes: {
+                                category: 'color',
+                            },
+                        },
+                        options: {
+                            fileHeader: 'weaverFileHeader',
+                        },
                     },
                     {
                         destination: 'res/theme_attrs.xml',
                         format: 'androidThemeAttrsFormat',
+                        className: 'ThemeAttrs',
+                        filter: token => token.type === 'color',
                         options: {
-                            type: 'color',
+                            attrsType: 'color',
+                            fileHeader: 'weaverFileHeader',
                         },
                     },
                     {
                         destination: 'res/theme_typography_attrs.xml',
                         format: 'androidThemeAttrsFormat',
+                        className: 'TypographyAttrs',
+                        filter: token => token.type === 'typography',
                         options: {
-                            type: 'typography',
+                            attrsType: 'typography',
+                            fileHeader: 'weaverFileHeader',
                         },
                     },
                 ],
             },
             ios: {
-                transforms: ['name/ti/camel', 'color/hex'],
-                buildPath: `${outputPath}/iOS/`,
+                transforms: ['attribute/cti', 'name/cti/camel', 'color/UIColorSwift'],
+                buildPath: `${outputPath}/ios/`,
                 files: [
                     {
                         destination: 'BaseColor.swift',
                         format: 'iOSBaseColorsFormatter',
+                        filter: {
+                            attributes: {
+                                category: 'color',
+                            },
+                        },
+                        options: {
+                            fileHeader: 'weaverFileHeader',
+                        },
                     },
                     {
                         destination: 'ThemeColors.swift',
                         format: 'iOSThemeColorsProtocolFormatter',
+                        filter: token => token.type === 'color',
+                        options: {
+                            fileHeader: 'weaverFileHeader',
+                        },
                     },
                     {
                         destination: 'Theme.swift',
                         format: 'iOSThemeProtocolFormatter',
+                        options: {
+                            fileHeader: 'weaverFileHeader',
+                        },
                     },
                 ],
             },
         },
     };
 }
-exports.config = config;
+exports.coreTokensConfig = coreTokensConfig;
+function themesConfig(tokensPath, outputPath, themeName, projectName) {
+    const formattedThemeName = (0, capital_case_1.capitalCase)(themeName);
+    return {
+        source: tokensPath,
+        platforms: {
+            android: {
+                transformGroup: 'android',
+                buildPath: `${outputPath}/android/`,
+                files: [
+                    {
+                        destination: `res/${themeName}_theme.xml`,
+                        format: 'androidThemeFormat',
+                        filter: token => token.type === 'color',
+                        className: `${formattedThemeName}`,
+                        options: {
+                            projectName: projectName,
+                            fileHeader: 'weaverFileHeader',
+                        },
+                    },
+                ],
+            },
+            ios: {
+                transforms: ['attribute/cti', 'name/cti/camel'],
+                buildPath: `${outputPath}/ios/`,
+                files: [
+                    {
+                        destination: `${formattedThemeName}ThemeColors.swift`,
+                        format: 'iOSThemeColorsFormatter',
+                        filter: token => token.type === 'color',
+                        className: `${formattedThemeName}ThemeColors`,
+                        options: {
+                            implements: 'ThemeColors',
+                            fileHeader: 'weaverFileHeader',
+                        },
+                    },
+                    {
+                        destination: `${formattedThemeName}Theme.swift`,
+                        format: 'iOSThemeFormatter',
+                        className: `${formattedThemeName}Theme`,
+                        options: {
+                            implements: 'Theme',
+                            themeColorsClass: `${formattedThemeName}ThemeColors`,
+                            fileHeader: 'weaverFileHeader',
+                        },
+                    },
+                ],
+            },
+        },
+    };
+}
+exports.themesConfig = themesConfig;
 //# sourceMappingURL=config.js.map
 
 /***/ }),
@@ -83,10 +157,15 @@ exports.config = config;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.androidThemeAttrsFormat = exports.androidThemeFormat = void 0;
 const camel_case_1 = __nccwpck_require__(3638);
-const utils_1 = __nccwpck_require__(2440);
 const common_1 = __nccwpck_require__(6520);
-function _themeTokenName(themeToken, category) {
-    return (0, camel_case_1.camelCase)(themeToken.replace(`${category}_`, ''));
+const snake_case_1 = __nccwpck_require__(6213);
+const StyleDictionary = __nccwpck_require__(7189);
+const { fileHeader } = StyleDictionary.formatHelpers;
+function xmlFileHeader(file) {
+    return fileHeader({
+        file: file,
+        commentStyle: 'xml',
+    });
 }
 function _themeTokenFormat(themeTokenType) {
     let themeTokenFormat;
@@ -102,34 +181,24 @@ function _themeTokenFormat(themeTokenType) {
     }
     return themeTokenFormat;
 }
+// TODO: Add support for typography
 function androidThemeFormat(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
-    const colorTokens = (0, common_1._colorTokens)(args.dictionary);
-    // TODO: Handle typography tokens
-    const colorThemeItems = themeColorTokens
-        .filter(themeToken => {
-        return themeToken.original.type === 'color';
-    })
+    const themeColorItems = themeColorTokens
         .map(themeToken => {
-        var _a;
-        const colorValue = colorTokens.filter(colorToken => {
-            const themeColorPath = themeToken.original.value
-                .replace(/[{}']+/g, '')
-                .split('.');
-            return (0, utils_1.equalsCheck)(colorToken.path, themeColorPath);
-        })[0];
-        const themeColorTokenName = _themeTokenName('color_' + themeToken.name, (_a = themeToken.attributes) === null || _a === void 0 ? void 0 : _a.category);
+        const themeColorTokenName = (0, camel_case_1.camelCase)('color_' + themeToken.name);
+        const colorRefName = (0, snake_case_1.snakeCase)(themeToken.original.value.replace(/[{}]/g, ''));
         return ('    ' +
-            `<item name="${themeColorTokenName}">@color/${colorValue.name}</item>`);
+            `<item name="${themeColorTokenName}">@color/${colorRefName}</item>`);
     })
         .join('\n');
     return `<?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Do not edit directly -->
+${xmlFileHeader(args.file)}
 <resources>
 
-  <style name="Base.Theme.Dls" parent="">
-${colorThemeItems}
+  <style name="Theme.${args.options.projectName}.${args.file.className}" parent="">
+${themeColorItems}
   </style>
 </resources>
 `;
@@ -137,36 +206,29 @@ ${colorThemeItems}
 exports.androidThemeFormat = androidThemeFormat;
 function androidThemeAttrsFormat(args) {
     let themeTokens;
-    let themeAttrsStyleableName;
-    switch (args.options.type) {
+    switch (args.options.attrsType) {
         case 'color':
             themeTokens = (0, common_1._themeColorTokens)(args.dictionary);
-            themeAttrsStyleableName = 'DlsTheme';
             break;
         case 'typography':
             themeTokens = (0, common_1._themeTypographyTokens)(args.dictionary);
-            themeAttrsStyleableName = 'DlsTypography';
             break;
         default:
             throw new Error(`Unknown attrs type: ${args.options.type}`);
     }
     const themeItems = themeTokens
         .map(themeToken => {
-        var _a;
         const themeTokenType = themeToken.original.type;
-        const themeTokenName = _themeTokenName(`${themeTokenType}_` + themeToken.name, (_a = themeToken.attributes) === null || _a === void 0 ? void 0 : _a.category);
+        const themeTokenName = (0, camel_case_1.camelCase)(`${themeTokenType}_` + themeToken.name);
         const themeTokenFormat = _themeTokenFormat(themeTokenType);
-        return ('    ' + `<attr name="${themeTokenName}" format="${themeTokenFormat}"/>`);
+        return `  <attr name="${themeTokenName}" format="${themeTokenFormat}"/>`;
     })
         .join('\n');
     return `<?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Do not edit directly -->
+${xmlFileHeader(args.file)}
 <resources>
-
-  <declare-styleable name="${themeAttrsStyleableName}">
 ${themeItems}
-  </declare-styleable>
 </resources>
 `;
 }
@@ -184,19 +246,23 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports._colorTokens = exports._themeTypographyTokens = exports._themeColorTokens = void 0;
 function _themeColorTokens(dictionary) {
     return dictionary.allTokens.filter(token => {
-        return token.path.includes('theme') && token.original.type === 'color';
+        var _a;
+        return (token.original.type === 'color' && ((_a = token.attributes) === null || _a === void 0 ? void 0 : _a.category) !== 'color');
     });
 }
 exports._themeColorTokens = _themeColorTokens;
 function _themeTypographyTokens(dictionary) {
     return dictionary.allTokens.filter(token => {
-        return token.path.includes('theme') && token.original.type === 'typography';
+        var _a;
+        return (token.original.type === 'typography' &&
+            ((_a = token.attributes) === null || _a === void 0 ? void 0 : _a.category) !== 'typography');
     });
 }
 exports._themeTypographyTokens = _themeTypographyTokens;
 function _colorTokens(dictionary) {
     return dictionary.allTokens.filter(token => {
-        return token.path.includes('color');
+        var _a;
+        return ((_a = token.attributes) === null || _a === void 0 ? void 0 : _a.category) === 'color';
     });
 }
 exports._colorTokens = _colorTokens;
@@ -210,8 +276,11 @@ exports._colorTokens = _colorTokens;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
+exports.iOSThemeFormatter = exports.iOSThemeColorsFormatter = exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
 const common_1 = __nccwpck_require__(6520);
+const StyleDictionary = __nccwpck_require__(7189);
+const camelcase_1 = __nccwpck_require__(1362);
+const { fileHeader } = StyleDictionary.formatHelpers;
 function _swiftImports(imports) {
     if (typeof imports === 'undefined') {
         imports = ['UIKit'];
@@ -222,8 +291,14 @@ function _swiftImports(imports) {
     })
         .join('\n');
 }
+function swiftFileHeader(file) {
+    return fileHeader({
+        file: file,
+        commentStyle: 'short',
+    });
+}
 function iOSBaseColorsFormatter(args) {
-    const colorTokens = (0, common_1._colorTokens)(args.dictionary);
+    const colorTokens = args.dictionary.allTokens;
     const colorTokensCase = colorTokens
         .map(token => {
         return '   ' + `case ${token.name}`;
@@ -231,14 +306,13 @@ function iOSBaseColorsFormatter(args) {
         .join('\n');
     const colorTokensWithHexCode = colorTokens
         .map(token => {
-        return ('    ' +
-            `case .${token.name}:\n       return UIColor(rgbHex: "${token.value}")`);
+        return '    ' + `case .${token.name}:\n       return ${token.value}`;
     })
         .join('\n');
     const imports = _swiftImports(args.options.imports);
     return `${imports}
 
-// Do not edit directly
+${swiftFileHeader(args.file)}
 // Represet all colors supported by the DLS
 public enum BaseColor {
 
@@ -261,13 +335,13 @@ function iOSThemeColorsProtocolFormatter(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
     const themeColors = themeColorTokens
         .map(token => {
-        return '   ' + `public var ${token.name}: BaseColor { get }`;
+        return '   ' + `var ${token.name}: BaseColor { get }`;
     })
         .join('\n');
     const imports = _swiftImports(args.options.imports);
     return `${imports}
 
-// Do not edit directly
+${swiftFileHeader(args.file)}
 public protocol ThemeColors {
 
 ${themeColors}
@@ -280,29 +354,45 @@ function iOSThemeProtocolFormatter(args) {
     const imports = _swiftImports(args.options.imports);
     return `${imports}
 
-// Do not edit directly
+${swiftFileHeader(args.file)}
 public protocol Theme {
-  public var colors: ThemeColors { get }
+  var colors: ThemeColors { get }
 }
 `;
 }
 exports.iOSThemeProtocolFormatter = iOSThemeProtocolFormatter;
-//# sourceMappingURL=ios_formatters.js.map
+function iOSThemeColorsFormatter(args) {
+    const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
+    const themeColorItems = themeColorTokens
+        .map(themeToken => {
+        const originalColorRef = themeToken.original.value.replace(/[{}]/g, '');
+        const colorRefName = (0, camelcase_1.default)(originalColorRef);
+        return ('   ' + `public var ${themeToken.name}: BaseColor = .${colorRefName}`);
+    })
+        .join('\n');
+    const imports = _swiftImports(args.options.imports);
+    return `${imports}
 
-/***/ }),
-
-/***/ 2440:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.equalsCheck = void 0;
-function equalsCheck(a, b) {
-    return a.length === b.length && a.every((v, i) => v === b[i]);
+${swiftFileHeader(args.file)}
+public class ${args.file.className} : ${args.options.implements} {
+${themeColorItems}
 }
-exports.equalsCheck = equalsCheck;
-//# sourceMappingURL=utils.js.map
+`;
+}
+exports.iOSThemeColorsFormatter = iOSThemeColorsFormatter;
+// TODO: Add support for typography
+function iOSThemeFormatter(args) {
+    const imports = _swiftImports(args.options.imports);
+    return `${imports}
+
+${swiftFileHeader(args.file)}
+public class ${args.file.className} : ${args.options.implements} {
+   public var colors: ThemeColors = ${args.options.themeColorsClass}()
+}
+`;
+}
+exports.iOSThemeFormatter = iOSThemeFormatter;
+//# sourceMappingURL=ios_formatters.js.map
 
 /***/ }),
 
@@ -2920,6 +3010,90 @@ var __createBinding;
     exporter("__classPrivateFieldSet", __classPrivateFieldSet);
     exporter("__classPrivateFieldIn", __classPrivateFieldIn);
 });
+
+
+/***/ }),
+
+/***/ 1362:
+/***/ ((module) => {
+
+"use strict";
+
+
+const preserveCamelCase = string => {
+	let isLastCharLower = false;
+	let isLastCharUpper = false;
+	let isLastLastCharUpper = false;
+
+	for (let i = 0; i < string.length; i++) {
+		const character = string[i];
+
+		if (isLastCharLower && /[a-zA-Z]/.test(character) && character.toUpperCase() === character) {
+			string = string.slice(0, i) + '-' + string.slice(i);
+			isLastCharLower = false;
+			isLastLastCharUpper = isLastCharUpper;
+			isLastCharUpper = true;
+			i++;
+		} else if (isLastCharUpper && isLastLastCharUpper && /[a-zA-Z]/.test(character) && character.toLowerCase() === character) {
+			string = string.slice(0, i - 1) + '-' + string.slice(i - 1);
+			isLastLastCharUpper = isLastCharUpper;
+			isLastCharUpper = false;
+			isLastCharLower = true;
+		} else {
+			isLastCharLower = character.toLowerCase() === character && character.toUpperCase() !== character;
+			isLastLastCharUpper = isLastCharUpper;
+			isLastCharUpper = character.toUpperCase() === character && character.toLowerCase() !== character;
+		}
+	}
+
+	return string;
+};
+
+const camelCase = (input, options) => {
+	if (!(typeof input === 'string' || Array.isArray(input))) {
+		throw new TypeError('Expected the input to be `string | string[]`');
+	}
+
+	options = Object.assign({
+		pascalCase: false
+	}, options);
+
+	const postProcess = x => options.pascalCase ? x.charAt(0).toUpperCase() + x.slice(1) : x;
+
+	if (Array.isArray(input)) {
+		input = input.map(x => x.trim())
+			.filter(x => x.length)
+			.join('-');
+	} else {
+		input = input.trim();
+	}
+
+	if (input.length === 0) {
+		return '';
+	}
+
+	if (input.length === 1) {
+		return options.pascalCase ? input.toUpperCase() : input.toLowerCase();
+	}
+
+	const hasUpperCase = input !== input.toLowerCase();
+
+	if (hasUpperCase) {
+		input = preserveCamelCase(input);
+	}
+
+	input = input
+		.replace(/^[_.\- ]+/, '')
+		.toLowerCase()
+		.replace(/[_.\- ]+(\w|$)/g, (_, p1) => p1.toUpperCase())
+		.replace(/\d+(\w|$)/g, m => m.toUpperCase());
+
+	return postProcess(input);
+};
+
+module.exports = camelCase;
+// TODO: Remove this for the next major release
+module.exports["default"] = camelCase;
 
 
 /***/ }),
@@ -27879,27 +28053,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 4837:
-/***/ ((module) => {
-
-/*! For license information please see transform.js.LICENSE.txt */
-(()=>{var e={299:(e,t,r)=>{"use strict";var n=r(798);function o(e){return!0===n(e)&&"[object Object]"===Object.prototype.toString.call(e)}e.exports=function(e){var t,r;return!1!==o(e)&&"function"==typeof(t=e.constructor)&&!1!==o(r=t.prototype)&&!1!==r.hasOwnProperty("isPrototypeOf")}},798:e=>{"use strict";e.exports=function(e){return null!=e&&"object"==typeof e&&!1===Array.isArray(e)}},998:(e,t,r)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});const n=r(110),o=r(830),i=["em","ex","ch","rem","vw","vh","vmin","vmax","px","mm","cm","in","pt","pc","Q","vm"],a=["deg","grad","turn","rad"],s=["s","ms"],u=["Hz","kHz"],c=["dpi","dpcm","dppm"],l=["fr"],p=i.map((e=>e.toLowerCase())),f=a.map((e=>e.toLowerCase())),h=s.map((e=>e.toLowerCase())),d=u.map((e=>e.toLowerCase())),v=c.map((e=>e.toLowerCase())),y=l.map((e=>e.toLowerCase()));function m(e,t,r,n){const{source:o}=t;return new e(r,n,o)}t.newPunctuator=function(e,t){if(","===e.value||")"===e.value)return m(o.Punctuator,e,e.value,t);throw new Error(`illegal argument error "${e.value}"`)},t.newOperator=function(e,t){return m(o.Operator,e,e.value,t)},t.newString=function(e,t){return m(o.StringNode,e,e.value,t)},t.newWordNode=function(e,t){return function(e,t){if("word"===e.type){const r=n(e.value);if(r){const n=function(e,t,r){const{source:n}=t;if(!e.unit)return new o.NumberValue(e.number,r,n);const m=e.unit.toLowerCase();function g(t,o){const i=new t(e.number,o,r,n);return o!==e.unit&&(i.raws.unit={raw:e.unit,value:o}),i}let b;return(b=p.indexOf(m))>=0?g(o.LengthValue,i[b]):(b=f.indexOf(m))>=0?g(o.AngleValue,a[b]):(b=h.indexOf(m))>=0?g(o.TimeValue,s[b]):(b=d.indexOf(m))>=0?g(o.FrequencyValue,u[b]):(b=v.indexOf(m))>=0?g(o.ResolutionValue,c[b]):(b=y.indexOf(m))>=0?g(o.FlexValue,l[b]):"%"===m?g(o.PercentageValue,"%"):null}(r,e,t);if(n)return n}}return m(o.Word,e,e.value,t)}(e,t)},t.newFunction=function(e,t,r){return new o.FunctionNode(e.value,t,{start:e.source.start,end:r.source.end})},t.newParentheses=function(e,t){return new o.Parentheses(t,{start:e.source.start,end:e.source.end})},t.newMathExpression=function(e,t,r){const n="string"==typeof t?m(o.Operator,{source:{start:{index:0},end:{index:0}}},t," "):t,{before:i}=e.raws;return e.raws.before="",new o.MathExpression(e,n,r,i,{start:e.source.start,operator:n.source,end:r.source.end})}},54:(e,t,r)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});var n=r(988);t.Parser=n.Parser;var o=r(966);t.Tokenizer=o.Tokenizer;var i=r(109);t.Stringifier=i.Stringifier;var a=r(876);t.getResolvedType=a.getResolvedType;var s=r(780);t.reduceExpression=s.reduce;var u=r(998);t.newMathExpression=u.newMathExpression},988:(e,t,r)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});const n=r(404),o=r(830),i=r(998),a=r(922),s=r(35),u=/^([^-+0-9.]|-[^+0-9.])/u,c={"*":3,"/":3,"+":2,"-":2};function l(e){return e.source||{start:{index:0},end:{index:0}}}function p(e){return e&&"Punctuator"!==e.type&&"Operator"!==e.type?e:null}t.Parser=class{constructor(e,t){this.tokenizer=e,this.root=new o.Root({start:{index:0},end:{index:0}}),this.rescans=[],this.tokens=this.root.tokens,this.errors=this.root.errors}parse(){let e={container:this.root,fnName:"",post(){},eof(){}};for(;e;)e=this.processExpressions(e);const{tokens:t}=this;return t.length>0&&(l(this.root).end.index=t[t.length-1].source.end.index),this.errors.unshift(...this.tokenizer.errors),this.errors.sort(((e,t)=>e.index-t.index)),this.root}reportParseError(e,t=0){if(this.errors.find((r=>r.code===e&&r.index===t)))return;const r=n.ParseError.fromCode(e,t);this.errors.push(r)}processExpressions(e){let t;for(;t=this.scan();){const{token:r}=t;switch(r.type){case"word":if(u.test(r.value)){const n=this.scan();if(n){if(!n.raws&&"punctuator"===n.token.type&&"("===n.token.value)return this.processFunction(r,t.raws,n.token,e);this.back(n)}}e.container.push(i.newWordNode(r,t.raws));break;case"string":e.container.push(i.newString(r,t.raws));break;case"operator":this.checkAndMergeMathExpr(e,c[r.value]),e.container.push(i.newOperator(r,t.raws));break;case"punctuator":return this.checkAndMergeMathExpr(e),this.processPunctuator(r,t.raws,e)}}return this.postStack(e),e.eof(),null}checkAndMergeMathExpr(e,t){const{container:r}=e,{nodes:n}=r;if(n.length>=3){const o=n[n.length-2];if("Operator"===o.type&&c[o.value]&&(null==t||t<=c[o.value])){const t=this.mergeMathExpr(e);t&&r.push(t)}}}processPunctuator(e,t,r){const{container:n,parent:o}=r;if("("===e.value){const o=i.newParentheses(e,t);return n.push(o),this.createNestedStateContainer(o,r.fnName,r)}if(this.postStack(r),")"===e.value){if(o)return r.post(e,t),o;this.reportParseError("unexpected-parenthesis",e.source.start.index)}return n.push(i.newPunctuator(e,t)),r}processFunction(e,t,r,n){const o=i.newFunction(e,t,r);return n.container.push(o),this.createNestedStateContainer(o,o.name,n)}createNestedStateContainer(e,t,r){return{container:e,parent:r,fnName:t,post(t,r){r&&(e.raws.beforeClose=r),l(e).end=t.source.end},eof:()=>{e.unclosed=!0;const t=this.tokens[this.tokens.length-1],n=e.last;n&&(l(e).end=l(n).end),this.reportParseError("eof-in-bracket",t.source.end.index),r.eof()}}}mergeMathExpr(e){const{container:{nodes:t}}=e,r=t.pop(),n=t.pop(),o=t.pop()||null,u=()=>{o&&t.push(o),t.push(n,r)},c=t=>{a.isMathFunction(e.fnName)&&this.reportParseError("unexpected-calc-token",l(t).start.index)},f=p(r);if(s.isComma(n))return f||c(r),u(),null;if(!o)return c(p(n)?r:n),u(),null;const h=p(o);return h?"Operator"!==n.type?(c(n),u(),null):f?i.newMathExpression(h,n,f):(c(r),u(),null):(c(p(t[t.length-1])?n:o),u(),null)}postStack(e){const{container:t}=e,{nodes:r}=t;for(;r.length>1;){const r=this.mergeMathExpr(e);if(!r)return;t.push(r)}}scan(){const e=this.rescans.shift();if(e)return e;let t="",r=this.tokenizer.nextToken();for(;r;){if(this.tokens.push(r),"whitespace"!==r.type&&"comment"!==r.type&&"inline-comment"!==r.type)return{token:r,raws:t};t+=r.value,r=this.tokenizer.nextToken()}return t&&(this.root.raws.after=t),null}back(e){this.rescans.unshift(e)}}},780:(e,t,r)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});const n=r(922),o=r(35);function i(e){if("Number"===e.type||"Length"===e.type||"Angle"===e.type||"Time"===e.type||"Frequency"===e.type||"Resolution"===e.type||"Percentage"===e.type||"Flex"===e.type)return e;if("MathExpression"===e.type)return function(e){const t=i(e.left),r=i(e.right);if(!t||!r)return null;switch(e.operator){case"+":case"-":return function(e,t,r){if(e.type!==r.type)return null;const n="-"===t?(e,t)=>e-t:(e,t)=>e+t;return"Number"===e.type?{type:"Number",value:n(e.value,r.value)}:e.unit===r.unit?{type:e.type,value:n(e.value,r.value),unit:e.unit}:null}(t,e.operator,r);case"/":return function(e,t){return"Number"!==t.type?null:"Number"===e.type?{type:"Number",value:e.value/t.value}:{type:e.type,value:e.value/t.value,unit:e.unit}}(t,r);case"*":return function(e,t){return"Number"===e.type?"Number"===t.type?{type:"Number",value:e.value*t.value}:{type:t.type,value:e.value*t.value,unit:t.unit}:"Number"===t.type?{type:e.type,value:e.value*t.value,unit:e.unit}:null}(t,r)}return null}(e);if("Parentheses"===e.type||"Root"===e.type){if(1===e.nodes.length)return i(e.nodes[0])}else if("Function"===e.type&&"Function"===e.type&&n.isCalc(e.name))return function(e){const t=o.getFunctionArguments(e);return t&&1===t.length?i(t[0]):null}(e);return null}t.reduce=function(e){return i(e)}},876:(e,t,r)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});const n=r(922),o=r(35);function i(e){const t=a(e.left),r=a(e.right),{operator:n}=e;switch(n){case"+":case"-":return"Unknown"===t||"Unknown"===r?"Unknown":t===r?t:"Number"===t||"Number"===r?"invalid":"Percentage"===t?r:"Percentage"===r?t:"invalid";case"*":return"Unknown"===t||"Unknown"===r?"Unknown":"Number"===t?r:"Number"===r?t:"invalid";case"/":return"Unknown"===r?"Unknown":"Number"===r?t:"invalid"}return"Unknown"}function a(e){if("MathExpression"===e.type){const t=i(e);return"invalid"===t?"Unknown":t}return"Parentheses"===e.type?1===e.nodes.length?a(e.nodes[0]):"Unknown":"Function"===e.type?n.isCalc(e.name)?1===(t=e).nodes.length?s(t):"Unknown":n.isMin(e.name)||n.isMax(e.name)?s(e):n.isClamp(e.name)?function(e){return 5===e.nodes.length?s(e):"Unknown"}(e):"Unknown":function(e){const{type:t}=e;return"Number"===t||"Length"===t||"Angle"===t||"Time"===t||"Frequency"===t||"Resolution"===t||"Percentage"===t||"Flex"===t?t:"Unknown"}(e);var t}function s(e){const t=o.getFunctionArguments(e);if(!t)return"Unknown";const r=t.map(a);let n=null;for(const e of r)if(n&&"Percentage"!==n){if("Percentage"===e);else if(n!==e)return"Unknown"}else n=e;return n||"Unknown"}t.getResolvedType=i},109:(e,t)=>{"use strict";function r(e,t){const r=e.raws[t];return r?r.raw:`${e[t]}`}function n(e,t){return e.raws[t]||""}function o(e,t){return`${n(e,"before")}${t}`}function i(e){return o(e,`${r(e,"value")}${r(e,"unit")}`)}Object.defineProperty(t,"__esModule",{value:!0}),t.Stringifier=class{constructor(e){this.options=Object.assign({autofix:!1},e||{})}stringify(e){return this[e.type](e)}Root(e){let t="";for(const r of e.nodes)t+=this.stringify(r);return t+=n(e,"after"),t}Function(e){let t=`${e.name}(`;for(const r of e.nodes)t+=this.stringify(r);return t+=n(e,"beforeClose"),!this.options.autofix&&e.unclosed||(t+=")"),o(e,t)}Parentheses(e){let t="(";for(const r of e.nodes)t+=this.stringify(r);return t+=n(e,"beforeClose"),!this.options.autofix&&e.unclosed||(t+=")"),o(e,t)}MathExpression(e){let t="",r=n(e,"between"),i="",a="";return this.options.autofix&&(r||(r=" "),e.right.raws.before||(i=" "),"MathExpression"===e.left.type&&("+"!==e.left.operator&&"-"!==e.left.operator||"*"!==e.operator&&"/"!==e.operator||(t+="(",r=`)${r}`)),"MathExpression"===e.right.type&&(("+"!==e.operator||"-"!==e.right.operator)&&("-"!==e.operator&&"*"!==e.operator||"+"!==e.right.operator&&"-"!==e.right.operator)&&"/"!==e.operator||(i+="(",a=`)${a}`))),o(e,`${t}${this.stringify(e.left)}${r}${e.operator}${i}${this.stringify(e.right)}${a}`)}Number(e){return o(e,r(e,"value"))}Punctuator(e){return o(e,e.value)}Word(e){return o(e,e.value)}String(e){return o(e,e.value)}Operator(e){return o(e,e.value)}Length(e){return i(e)}Angle(e){return i(e)}Time(e){return i(e)}Frequency(e){return i(e)}Resolution(e){return i(e)}Percentage(e){return i(e)}Flex(e){return i(e)}word(e){return e.value}punctuator(e){return e.value}operator(e){return e.value}whitespace(e){return e.value}comment(e){return e.value}string(e){return e.value}"inline-comment"(e){return e.value}}},966:(e,t,r)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});const n=r(404),o=r(293);function i(e){return e===o.LPAREN||e===o.RPAREN||e===o.COMMA}function a(e){return o.isDigit(e)||e===o.DOT}function s(e){return e===o.DQUOTE||e===o.SQUOTE}function u(e){return e===o.LPAREN?o.RPAREN:e===o.LBRACE?o.RBRACE:o.RBRACKET}t.Tokenizer=class{constructor(e,t){this.lastCode=o.NULL,this.rescan=!1,this.token=null,this.lastTokenType=null,this.errors=[],this.text=e,this.offset=-1,this.state="SCAN",this.nextTokenOffset=0,this.options=Object.assign({allowInlineCommnets:!0},t||{})}nextToken(){for(;null==this.token;){const e=this.scan();if(this.state=this[this.state](e)||"SCAN",e===o.EOF&&!this.rescan)break}const{token:e}=this;return this.token=null,e}scan(){return this.rescan?(this.rescan=!1,this.lastCode):this.next()}next(){return this.offset<this.text.length&&this.offset++,this.offset>=this.text.length?this.lastCode=o.EOF:this.lastCode=this.text.charCodeAt(this.offset)}back(){this.rescan=!0}reportParseError(e){const t=n.ParseError.fromCode(e,this.offset);this.errors.push(t)}getCode(e=0){return this.text.charCodeAt(this.nextTokenOffset+e)}commitToken(e,t=0){const r=this.nextTokenOffset,n=this.offset+t+1,o=this.text.slice(r,n);this.token={type:e,value:o,source:{start:{index:r},end:{index:n}}},this.nextTokenOffset=n,this.lastTokenType=e}SCAN(e){return o.isWhitespace(e)?"WHITESPACE":e===o.DQUOTE?"DQUOTE":e===o.SQUOTE?"SQUOTE":e===o.SLASH?"SLASH":e===o.MINUS?"MINUS":e===o.PLUS?"PLUS":e===o.STAR?(this.commitToken("operator"),"SCAN"):i(e)?(this.commitToken("punctuator"),"SCAN"):e===o.LBRACKET?"LBRACKET":e===o.LBRACE?"LBRACE":e===o.EOF?"SCAN":"WORD"}WORD(e){for(;!o.isWhitespace(e)&&!i(e)&&e!==o.PLUS&&e!==o.STAR&&e!==o.SLASH&&!s(e)&&e!==o.EOF;){if(e===o.MINUS){const e=this.getCode();if(a(e)||(e===o.MINUS||e===o.PLUS)&&a(this.getCode(1)))return this.commitToken("word",-1),"MINUS"}else e!==o.LBRACE&&e!==o.LBRACKET&&e!==o.LPAREN||this.skipBrakets(this.next(),u(e));e=this.next()}this.commitToken("word",-1),this.back()}LBRACKET(e){return this.skipBrakets(e,o.RBRACKET),"WORD"}LBRACE(e){return this.skipBrakets(e,o.RBRACE),"WORD"}WHITESPACE(e){for(;o.isWhitespace(e);)e=this.next();this.commitToken("whitespace",-1),this.back()}SLASH(e){return e===o.STAR?"COMMENT":e===o.SLASH&&this.options.allowInlineCommnets?"INLINE_COMMENT":(this.commitToken("operator",-1),void this.back())}COMMENT(e){for(;e!==o.EOF;){if(e===o.STAR&&(e=this.next())===o.SLASH)return void this.commitToken("comment");e=this.next()}this.commitToken("comment",-1),this.reportParseError("eof-in-comment")}INLINE_COMMENT(e){for(;e!==o.EOF;){if(e===o.LF||e===o.FF)return void this.commitToken("inline-comment");if(e===o.CR)return(e=this.next())===o.LF?void this.commitToken("inline-comment"):(this.commitToken("inline-comment",-1),this.back());e=this.next()}this.commitToken("inline-comment",-1)}MINUS(e){return"word"===this.lastTokenType||e===o.EOF||e!==o.MINUS&&!a(e)&&!o.isLetter(e)?(this.commitToken("operator",-1),void this.back()):"WORD"}PLUS(e){if("word"!==this.lastTokenType&&a(e))return"WORD";this.commitToken("operator",-1),this.back()}DQUOTE(e){this.skipString(e,o.DQUOTE)}SQUOTE(e){this.skipString(e,o.SQUOTE)}skipBrakets(e,t){const r=[];for(;e!==o.EOF;){if(t===e){const e=r.pop()||null;if(!e)return;t=e}else e!==o.LBRACE&&e!==o.LBRACKET&&e!==o.LPAREN||(t&&r.push(t),t=u(e));e=this.next()}this.reportParseError("eof-in-bracket")}skipString(e,t){for(;e!==o.EOF;){if(e===o.BACKSLASH)e=this.next();else if(e===t)return void this.commitToken("string");e=this.next()}this.commitToken("string",-1),this.reportParseError("eof-in-string")}}},922:(e,t)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});const r=/^(-(webkit|mox)-)?calc/iu,n=/^(-(webkit|mox)-)?min/iu,o=/^(-(webkit|mox)-)?max/iu,i=/^(-(webkit|mox)-)?clamp/iu;function a(e){return r.test(e)}function s(e){return n.test(e)}function u(e){return o.test(e)}function c(e){return i.test(e)}t.isCalc=a,t.isMin=s,t.isMax=u,t.isClamp=c,t.isMathFunction=function(e){return a(e)||c(e)||s(e)||u(e)}},830:(e,t,r)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});const n=r(109);let o=null;class i{constructor(){this.parent=null}toString(e){return"function"==typeof e?e(this):(e||o||(o=new n.Stringifier)).stringify(this)}walk(e,t){const r=this;let n;const o=[...r.nodes||[],r.left,r.right].filter((e=>Boolean(e))),i="string"==typeof e?t=>t.type===e:t=>e.test(t.type);for(const r of o){if(i(r)&&(n=t(r),!1===n))break;if(r.walk&&(n=r.walk(e,t),!1===n))break}return n}}class a extends i{push(...e){for(const t of e)"Root"===t.type?this.push(...t.nodes):(t.parent=this,this.nodes.push(t));return this}unshift(...e){for(const t of e.reverse())"Root"===t.type?this.unshift(...t.nodes):(t.parent=this,this.nodes.unshift(t));return this}append(...e){return this.push(...e)}prepend(...e){return this.unshift(...e)}insertBefore(e,t){if("Root"===t.type){const{nodes:r}=t;if(1===r.length)return this.insertBefore(e,r[0]);throw new Error("The given Root node is illegal.")}const r=this.nodes.indexOf(e);if(r<0)throw new Error("The given node could not be found.");return t.parent=this,this.nodes.splice(r,0,t),this}insertAfter(e,t){if("Root"===t.type){const{nodes:r}=t;if(1===r.length)return this.insertAfter(e,r[0]);throw new Error("The given Root node is illegal.")}const r=this.nodes.indexOf(e);if(r<0)throw new Error("The given node could not be found.");return t.parent=this,this.nodes.splice(r+1,0,t),this}removeAll(){for(const e of this.nodes)e.parent=null;return this.nodes=[],this}removeChild(e){const t=this.nodes.indexOf(e);return this.nodes[t].parent=null,this.nodes.splice(t,1),this}get first(){return this.nodes[0]||null}get last(){return this.nodes[this.nodes.length-1]||null}}t.NumberValue=class extends i{constructor(e,t,r){super();const n=parseFloat(e);this.type="Number",this.value=n,this.raws={before:t,value:{raw:e,value:n}},this.source=r}};class s extends i{constructor(e,t,r,n,o){super();const i=parseFloat(t);this.type=e,this.value=i,this.unit=r,this.raws={before:n,value:{raw:t,value:i}},this.source=o}}t.LengthValue=class extends s{constructor(e,t,r,n){super("Length",e,t,r,n)}},t.AngleValue=class extends s{constructor(e,t,r,n){super("Angle",e,t,r,n)}},t.TimeValue=class extends s{constructor(e,t,r,n){super("Time",e,t,r,n)}},t.FrequencyValue=class extends s{constructor(e,t,r,n){super("Frequency",e,t,r,n)}},t.ResolutionValue=class extends s{constructor(e,t,r,n){super("Resolution",e,t,r,n)}},t.PercentageValue=class extends s{constructor(e,t,r,n){super("Percentage",e,t,r,n)}},t.FlexValue=class extends s{constructor(e,t,r,n){super("Flex",e,t,r,n)}};class u extends i{constructor(e,t,r,n){super(),this.type=e,this.value=t,this.raws={before:r},this.source=n}}function c(e,t,r){const n=Symbol(`${t}`);Object.defineProperties(e,{[n]:{writable:!0,enumerable:!1},[t]:{get(){return this[n]},set(e){const t=this[n];this[n]=r(e,t)},enumerable:!0}})}t.Word=class extends u{constructor(e,t,r){super("Word",e,t,r)}},t.StringNode=class extends u{constructor(e,t,r){super("String",e,t,r)}},t.MathExpression=class extends i{constructor(e,t,r,n,o){super();const i=t.value,a=t.raws.before;this.type="MathExpression";const s=(e,t)=>{let r;if("Root"===e.type){const{nodes:t}=e;if(1!==t.length)throw new Error("The given Root node is illegal.");r=t[0]}else r=e;return r.parent=this,t&&(t.parent=null),r};c(this,"left",s),this.left=e,this.operator=i,c(this,"right",s),this.right=r,this.raws={before:n,between:a},this.source=o}},t.FunctionNode=class extends a{constructor(e,t,r){super(),this.type="Function",this.name=e,this.nodes=[],this.raws={before:t},this.source=r}},t.Parentheses=class extends a{constructor(e,t){super(),this.type="Parentheses",this.nodes=[],this.raws={before:e},this.source=t}},t.Punctuator=class extends u{constructor(e,t,r){super("Punctuator",e,t,r)}},t.Root=class extends a{constructor(e){super(),this.type="Root",this.nodes=[],this.tokens=[],this.errors=[],this.raws={after:""},this.source=e}},t.Operator=class extends u{constructor(e,t,r){super("Operator",e,t,r)}}},293:(e,t)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.EOF=-1,t.NULL=0,t.TAB=9,t.CR=13,t.LF=10,t.FF=12,t.SPACE=32,t.DQUOTE=34,t.SQUOTE=39,t.LPAREN=40,t.RPAREN=41,t.STAR=42,t.PLUS=43,t.COMMA=44,t.MINUS=45,t.DOT=46,t.SLASH=47,t.LBRACKET=91,t.BACKSLASH=92,t.RBRACKET=93,t.LBRACE=123,t.RBRACE=125,t.isWhitespace=function(e){return e===t.TAB||e===t.LF||e===t.FF||e===t.CR||e===t.SPACE},t.isDigit=function(e){return e>=48&&e<=57},t.isLetter=function(e){return e>=97&&e<=122||e>=65&&e<=90}},35:(e,t)=>{"use strict";function r(e){return"Punctuator"===e.type&&","===e.value}Object.defineProperty(t,"__esModule",{value:!0}),t.isComma=r,t.getFunctionArguments=function(e){const{nodes:t}=e,n=t[0];if(!n||r(n))return null;const o=[n],i=t.length;for(let e=1;e<i;e++){if(!r(t[e++]))return null;const n=t[e];if(!n||r(n))return null;o.push(n)}return o}},784:(e,t,r)=>{"use strict";const n=r(404),o=r(54);o.Parser,o.Tokenizer,o.Stringifier,o.getResolvedType,o.reduceExpression,o.newMathExpression,t.ZP={parse:function(e,t){const r=new o.Tokenizer(e,t);return new o.Parser(r,t).parse()},stringify:function(e,t){return new o.Stringifier(t).stringify(e)},getResolvedType:o.getResolvedType,reduceExpression:o.reduceExpression,mathExpr:o.newMathExpression,Parser:o.Parser,Tokenizer:o.Tokenizer,Stringifier:o.Stringifier,AST:n}},761:(e,t)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0});class r extends SyntaxError{static fromCode(e,t){return new r(n[e],e,t)}constructor(e,t,r){super(e),this.code=t,this.index=r}}t.ParseError=r;const n={"eof-in-string":"Unclosed string","eof-in-comment":"Unclosed comment","eof-in-bracket":"Unclosed bracket","unexpected-parenthesis":"Unexpected token","unexpected-calc-token":"Unexpected token"}},404:(e,t,r)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0}),function(e){for(var r in e)t.hasOwnProperty(r)||(t[r]=e[r])}(r(761))},110:e=>{var t="-".charCodeAt(0),r="+".charCodeAt(0),n=".".charCodeAt(0),o="e".charCodeAt(0),i="E".charCodeAt(0);e.exports=function(e){for(var a,s=0,u=e.length,c=!1,l=-1,p=!1;s<u;){if((a=e.charCodeAt(s))>=48&&a<=57)p=!0;else if(a===o||a===i){if(l>-1)break;l=s}else if(a===n){if(c)break;c=!0}else{if(a!==r&&a!==t)break;if(0!==s)break}s+=1}return l+1===s&&s--,!!p&&{number:e.slice(0,s),unit:e.slice(s)}}},86:(e,t,r)=>{"use strict";const n=r(299);function o(e,t,r,n){if(!s(e))return e;let u=n||{};const c=Array.isArray(t);if(!c&&"string"!=typeof t)return e;let l=u.merge;l&&"function"!=typeof l&&(l=Object.assign);const p=(c?t:function(e,t){const r=function(e,t){let r=e;if(void 0===t)return r+"";const n=Object.keys(t);for(let e=0;e<n.length;e++){const o=n[e];r+=";"+o+"="+String(t[o])}return r}(e,t);if(o.memo[r])return o.memo[r];const n=t&&t.separator?t.separator:".";let i=[],a=[];i=t&&"function"==typeof t.split?t.split(e):e.split(n);for(let e=0;e<i.length;e++){let t=i[e];for(;t&&"\\"===t.slice(-1)&&null!=i[e+1];)t=t.slice(0,-1)+n+i[++e];a.push(t)}return o.memo[r]=a,a}(t,u)).filter(a),f=p.length,h=e;if(!n&&1===p.length)return i(e,p[0],r,l),e;for(let t=0;t<f;t++){let n=p[t];if(s(e[n])||(e[n]={}),t===f-1){i(e,n,r,l);break}e=e[n]}return h}function i(e,t,r,o){o&&n(e[t])&&n(r)?e[t]=o({},e[t],r):e[t]=r}function a(e){return"__proto__"!==e&&"constructor"!==e&&"prototype"!==e}function s(e){return null!==e&&("object"==typeof e||"function"==typeof e)}o.memo={},e.exports=o}},t={};function r(n){var o=t[n];if(void 0!==o)return o.exports;var i=t[n]={exports:{}};return e[n](i,i.exports,r),i.exports}r.n=e=>{var t=e&&e.__esModule?()=>e.default:()=>e;return r.d(t,{a:t}),t},r.d=(e,t)=>{for(var n in t)r.o(t,n)&&!r.o(e,n)&&Object.defineProperty(e,n,{enumerable:!0,get:t[n]})},r.o=(e,t)=>Object.prototype.hasOwnProperty.call(e,t),r.r=e=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})};var n={};(()=>{"use strict";r.r(n),r.d(n,{default:()=>Ki});var e,t,o,i=function(e,t){var r={};for(var n in"string"==typeof t&&(t=[].slice.call(arguments,1)),e)e.hasOwnProperty&&!e.hasOwnProperty(n)||-1===t.indexOf(n)&&(r[n]=e[n]);return r},a=r(86),s=r.n(a);function u(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);t&&(n=n.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),r.push.apply(r,n)}return r}function c(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?u(Object(r),!0).forEach((function(t){l(e,t,r[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(r)):u(Object(r)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(r,t))}))}return e}function l(e,t,r){return t in e?Object.defineProperty(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r,e}function p(t){var r=t.type?t.type:function(t){switch(t){case"color":case"colors":return e.COLOR;case"space":case"spacing":return e.SPACING;case"size":case"sizing":return e.SIZING;case"boxShadow":return e.BOX_SHADOW;case"borderRadius":return e.BORDER_RADIUS;case"borderWidth":return e.BORDER_WIDTH;case"opacity":return e.OPACITY;case"fontFamilies":return e.FONT_FAMILIES;case"fontWeights":return e.FONT_WEIGHTS;case"fontSizes":return e.FONT_SIZES;case"lineHeights":return e.LINE_HEIGHTS;case"typography":return e.TYPOGRAPHY;case"letterSpacing":return e.LETTER_SPACING;case"paragraphSpacing":return e.PARAGRAPH_SPACING;case"composition":return e.COMPOSITION;case"border":return e.BORDER;case"asset":return e.ASSET;default:return e.OTHER}}(t.name.split(".").slice(0,1).toString());return c(c({},t),{},{type:r})}function f(e,t,r){return Math.min(Math.max(e,r),t)}(o=e||(e={})).OTHER="other",o.COLOR="color",o.BORDER_RADIUS="borderRadius",o.SIZING="sizing",o.SPACING="spacing",o.TEXT="text",o.TYPOGRAPHY="typography",o.OPACITY="opacity",o.BORDER_WIDTH="borderWidth",o.BOX_SHADOW="boxShadow",o.FONT_FAMILIES="fontFamilies",o.FONT_WEIGHTS="fontWeights",o.LINE_HEIGHTS="lineHeights",o.FONT_SIZES="fontSizes",o.LETTER_SPACING="letterSpacing",o.PARAGRAPH_SPACING="paragraphSpacing",o.PARAGRAPH_INDENT="paragraphIndent",o.TEXT_DECORATION="textDecoration",o.TEXT_CASE="textCase",o.COMPOSITION="composition",o.DIMENSION="dimension",o.BORDER="border",o.ASSET="asset",function(e){e.LIGHTEN="lighten",e.DARKEN="darken",e.MIX="mix",e.ALPHA="alpha"}(t||(t={}));class h extends Error{constructor(e){super(`Failed to parse color: "${e}"`)}}var d=h;function v(e){if("string"!=typeof e)throw new d(e);if("transparent"===e.trim().toLowerCase())return[0,0,0,0];let t=e.trim();t=x.test(e)?function(e){const t=e.toLowerCase().trim(),r=m[function(e){let t=5381,r=e.length;for(;r;)t=33*t^e.charCodeAt(--r);return(t>>>0)%2341}(t)];if(!r)throw new d(e);return`#${r}`}(e):e;const r=b.exec(t);if(r){const e=Array.from(r).slice(1);return[...e.slice(0,3).map((e=>parseInt(g(e,2),16))),parseInt(g(e[3]||"f",2),16)/255]}const n=w.exec(t);if(n){const e=Array.from(n).slice(1);return[...e.slice(0,3).map((e=>parseInt(e,16))),parseInt(e[3]||"ff",16)/255]}const o=M.exec(t);if(o){const e=Array.from(o).slice(1);return[...e.slice(0,3).map((e=>parseInt(e,10))),parseFloat(e[3]||"1")]}const i=O.exec(t);if(i){const[t,r,n,o]=Array.from(i).slice(1).map(parseFloat);if(f(0,100,r)!==r)throw new d(e);if(f(0,100,n)!==n)throw new d(e);return[...k(t,r,n),Number.isNaN(o)?1:o]}throw new d(e)}const y=e=>parseInt(e.replace(/_/g,""),36),m="1q29ehhb 1n09sgk7 1kl1ekf_ _yl4zsno 16z9eiv3 1p29lhp8 _bd9zg04 17u0____ _iw9zhe5 _to73___ _r45e31e _7l6g016 _jh8ouiv _zn3qba8 1jy4zshs 11u87k0u 1ro9yvyo 1aj3xael 1gz9zjz0 _3w8l4xo 1bf1ekf_ _ke3v___ _4rrkb__ 13j776yz _646mbhl _nrjr4__ _le6mbhl 1n37ehkb _m75f91n _qj3bzfz 1939yygw 11i5z6x8 _1k5f8xs 1509441m 15t5lwgf _ae2th1n _tg1ugcv 1lp1ugcv 16e14up_ _h55rw7n _ny9yavn _7a11xb_ 1ih442g9 _pv442g9 1mv16xof 14e6y7tu 1oo9zkds 17d1cisi _4v9y70f _y98m8kc 1019pq0v 12o9zda8 _348j4f4 1et50i2o _8epa8__ _ts6senj 1o350i2o 1mi9eiuo 1259yrp0 1ln80gnw _632xcoy 1cn9zldc _f29edu4 1n490c8q _9f9ziet 1b94vk74 _m49zkct 1kz6s73a 1eu9dtog _q58s1rz 1dy9sjiq __u89jo3 _aj5nkwg _ld89jo3 13h9z6wx _qa9z2ii _l119xgq _bs5arju 1hj4nwk9 1qt4nwk9 1ge6wau6 14j9zlcw 11p1edc_ _ms1zcxe _439shk6 _jt9y70f _754zsow 1la40eju _oq5p___ _x279qkz 1fa5r3rv _yd2d9ip _424tcku _8y1di2_ _zi2uabw _yy7rn9h 12yz980_ __39ljp6 1b59zg0x _n39zfzp 1fy9zest _b33k___ _hp9wq92 1il50hz4 _io472ub _lj9z3eo 19z9ykg0 _8t8iu3a 12b9bl4a 1ak5yw0o _896v4ku _tb8k8lv _s59zi6t _c09ze0p 1lg80oqn 1id9z8wb _238nba5 1kq6wgdi _154zssg _tn3zk49 _da9y6tc 1sg7cv4f _r12jvtt 1gq5fmkz 1cs9rvci _lp9jn1c _xw1tdnb 13f9zje6 16f6973h _vo7ir40 _bt5arjf _rc45e4t _hr4e100 10v4e100 _hc9zke2 _w91egv_ _sj2r1kk 13c87yx8 _vqpds__ _ni8ggk8 _tj9yqfb 1ia2j4r4 _7x9b10u 1fc9ld4j 1eq9zldr _5j9lhpx _ez9zl6o _md61fzm".split(" ").reduce(((e,t)=>{const r=y(t.substring(0,3)),n=y(t.substring(3)).toString(16);let o="";for(let e=0;e<6-n.length;e++)o+="0";return e[r]=`${o}${n}`,e}),{}),g=(e,t)=>Array.from(Array(t)).map((()=>e)).join(""),b=new RegExp(`^#${g("([a-f0-9])",3)}([a-f0-9])?$`,"i"),w=new RegExp(`^#${g("([a-f0-9]{2})",3)}([a-f0-9]{2})?$`,"i"),M=new RegExp(`^rgba?\\(\\s*(\\d+)\\s*${g(",\\s*(\\d+)\\s*",2)}(?:,\\s*([\\d.]+))?\\s*\\)$`,"i"),O=/^hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%(?:\s*,\s*([\d.]+))?\s*\)$/i,x=/^[a-z]+$/i,S=e=>Math.round(255*e),k=(e,t,r)=>{let n=r/100;if(0===t)return[n,n,n].map(S);const o=(e%360+360)%360/60,i=(1-Math.abs(2*n-1))*(t/100),a=i*(1-Math.abs(o%2-1));let s=0,u=0,c=0;o>=0&&o<1?(s=i,u=a):o>=1&&o<2?(s=a,u=i):o>=2&&o<3?(u=i,c=a):o>=3&&o<4?(u=a,c=i):o>=4&&o<5?(s=a,c=i):o>=5&&o<6&&(s=i,c=a);const l=n-i/2;return[s+l,u+l,c+l].map(S)};function A(e){const[t,r,n,o]=v(e);let i=e=>{const t=f(0,255,e).toString(16);return 1===t.length?`0${t}`:t};return`#${i(t)}${i(r)}${i(n)}${o<1?i(Math.round(255*o)):""}`}function E(e,t){return function(e){if(Array.isArray(e))return e}(e)||function(e,t){if("undefined"!=typeof Symbol&&Symbol.iterator in Object(e)){var r=[],n=!0,o=!1,i=void 0;try{for(var a,s=e[Symbol.iterator]();!(n=(a=s.next()).done)&&(r.push(a.value),!t||r.length!==t);n=!0);}catch(e){o=!0,i=e}finally{try{n||null==s.return||s.return()}finally{if(o)throw i}}return r}}(e,t)||function(e,t){if(e){if("string"==typeof e)return _(e,t);var r=Object.prototype.toString.call(e).slice(8,-1);return"Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r?Array.from(e):"Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)?_(e,t):void 0}}(e,t)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function _(e,t){(null==t||t>e.length)&&(t=e.length);for(var r=0,n=new Array(t);r<t;r++)n[r]=e[r];return n}function j(e){try{if("string"!=typeof e)return e;var t=/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/g,r=e;try{var n=Array.from(r.matchAll(/(rgba?\(.*?\))/g),(function(e){return e[0]})),o=Array.from(r.matchAll(/(hsla?\(.*?\))/g),(function(e){return e[0]}));o.length>0&&o.forEach((function(e){r=r.replace(e,A(e))})),n.length>0&&n.forEach((function(e){var n,o,i,a=e,s=e.replace(/rgba?\(/g,"").replace(")",""),u=s.match(t),c="1";if(u){var l,p,f=E(v(u[0]),3);n=f[0],o=f[1],i=f[2],c=null!==(l=null===(p=s.split(",").pop())||void 0===p?void 0:p.trim())&&void 0!==l?l:"0"}else{var h=s.split(",").map((function(e){return e.trim()})),d=E(h,4);n=d[0],o=d[1],i=d[2];var y=d[3];c=void 0===y?"1":y}var m,g,b=(g=(m=c).match(/(\d+%)/))?Number(g[0].slice(0,-1))/100:Number(m);r=r.split(a).join(A("rgba(".concat(n,", ").concat(o,", ").concat(i,", ").concat(b,")")))}))}catch(t){console.log("error",t,e)}return r}catch(e){console.error(e)}return null}function T(e,t,r){return T=N()?Reflect.construct:function(e,t,r){var n=[null];n.push.apply(n,t);var o=new(Function.bind.apply(e,n));return r&&R(o,r.prototype),o},T.apply(null,arguments)}function P(e,t){if(null==e)return{};var r,n,o=function(e,t){if(null==e)return{};var r,n,o={},i=Object.keys(e);for(n=0;n<i.length;n++)r=i[n],t.indexOf(r)>=0||(o[r]=e[r]);return o}(e,t);if(Object.getOwnPropertySymbols){var i=Object.getOwnPropertySymbols(e);for(n=0;n<i.length;n++)r=i[n],t.indexOf(r)>=0||Object.prototype.propertyIsEnumerable.call(e,r)&&(o[r]=e[r])}return o}function R(e,t){return R=Object.setPrototypeOf||function(e,t){return e.__proto__=t,e},R(e,t)}function C(e,t){return!t||"object"!==D(t)&&"function"!=typeof t?function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e):t}function N(){if("undefined"==typeof Reflect||!Reflect.construct)return!1;if(Reflect.construct.sham)return!1;if("function"==typeof Proxy)return!0;try{return Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],(function(){}))),!0}catch(e){return!1}}function B(e){return B=Object.setPrototypeOf?Object.getPrototypeOf:function(e){return e.__proto__||Object.getPrototypeOf(e)},B(e)}function I(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);t&&(n=n.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),r.push.apply(r,n)}return r}function L(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?I(Object(r),!0).forEach((function(t){H(e,t,r[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(r)):I(Object(r)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(r,t))}))}return e}function z(e){return function(e){if(Array.isArray(e))return K(e)}(e)||function(e){if("undefined"!=typeof Symbol&&Symbol.iterator in Object(e))return Array.from(e)}(e)||Z(e)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function D(e){return D="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},D(e)}function F(e,t){return function(e){if(Array.isArray(e))return e}(e)||function(e,t){if("undefined"!=typeof Symbol&&Symbol.iterator in Object(e)){var r=[],n=!0,o=!1,i=void 0;try{for(var a,s=e[Symbol.iterator]();!(n=(a=s.next()).done)&&(r.push(a.value),!t||r.length!==t);n=!0);}catch(e){o=!0,i=e}finally{try{n||null==s.return||s.return()}finally{if(o)throw i}}return r}}(e,t)||Z(e,t)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function H(e,t,r){return t in e?Object.defineProperty(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r,e}function W(e,t){return function(e,t){return t.get?t.get.call(e):t.value}(e,G(e,t,"get"))}function U(e,t,r){if(!t.has(e))throw new TypeError("attempted to get private field on non-instance");return r}function $(e,t,r){return function(e,t,r){if(t.set)t.set.call(e,r);else{if(!t.writable)throw new TypeError("attempted to set read only private field");t.value=r}}(e,G(e,t,"set"),r),r}function G(e,t,r){if(!t.has(e))throw new TypeError("attempted to "+r+" private field on non-instance");return t.get(e)}function q(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function V(e,t){for(var r=0;r<t.length;r++){var n=t[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(e,n.key,n)}}function Y(e,t,r){return t&&V(e.prototype,t),r&&V(e,r),e}function X(e,t){var r;if("undefined"==typeof Symbol||null==e[Symbol.iterator]){if(Array.isArray(e)||(r=Z(e))||t&&e&&"number"==typeof e.length){r&&(e=r);var n=0,o=function(){};return{s:o,n:function(){return n>=e.length?{done:!0}:{done:!1,value:e[n++]}},e:function(e){throw e},f:o}}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}var i,a=!0,s=!1;return{s:function(){r=e[Symbol.iterator]()},n:function(){var e=r.next();return a=e.done,e},e:function(e){s=!0,i=e},f:function(){try{a||null==r.return||r.return()}finally{if(s)throw i}}}}function Z(e,t){if(e){if("string"==typeof e)return K(e,t);var r=Object.prototype.toString.call(e).slice(8,-1);return"Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r?Array.from(e):"Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)?K(e,t):void 0}}function K(e,t){(null==t||t>e.length)&&(t=e.length);for(var r=0,n=new Array(t);r<t;r++)n[r]=e[r];return n}function Q(e,t){var r=e.length;Array.isArray(e[0])||(e=[e]),Array.isArray(t[0])||(t=t.map((function(e){return[e]})));var n=t[0].length,o=t[0].map((function(e,r){return t.map((function(e){return e[r]}))})),i=e.map((function(e){return o.map((function(t){var r=0;if(!Array.isArray(e)){var n,o=X(t);try{for(o.s();!(n=o.n()).done;){var i=n.value;r+=e*i}}catch(e){o.e(e)}finally{o.f()}return r}for(var a=0;a<e.length;a++)r+=e[a]*(t[a]||0);return r}))}));return 1===r&&(i=i[0]),1===n?i.map((function(e){return e[0]})):i}function J(e){return"string"===ee(e)}function ee(e){return(Object.prototype.toString.call(e).match(/^\[object\s+(.*?)\]$/)[1]||"").toLowerCase()}function te(e,t){e=+e,t=+t;var r=(Math.floor(e)+"").length;if(t>r)return+e.toFixed(t-r);var n=Math.pow(10,r-t);return Math.round(e/n)*n}function re(e){if(e){e=e.trim();var t=/^-?[\d.]+$/,r=e.match(/^([a-z]+)\((.+?)\)$/i);if(r){var n=[];return r[2].replace(/\/?\s*([-\w.]+(?:%|deg)?)/g,(function(e,r){/%$/.test(r)?(r=new Number(r.slice(0,-1)/100)).type="<percentage>":/deg$/.test(r)?((r=new Number(+r.slice(0,-3))).type="<angle>",r.unit="deg"):t.test(r)&&((r=new Number(r)).type="<number>"),e.startsWith("/")&&((r=r instanceof Number?r:new Number(r)).alpha=!0),n.push(r)})),{name:r[1].toLowerCase(),rawName:r[1],rawArgs:r[2],args:n}}}}function ne(e){return e[e.length-1]}function oe(e,t,r){return isNaN(e)?t:isNaN(t)?e:e+(t-e)*r}function ie(e,t,r){return(r-e)/(t-e)}function ae(e,t,r){return oe(t[0],t[1],ie(e[0],e[1],r))}function se(e){return e.map((function(e){return e.split("|").map((function(e){var t=(e=e.trim()).match(/^(<[a-z]+>)\[(-?[.\d]+),\s*(-?[.\d]+)\]?$/);if(t){var r=new String(t[1]);return r.range=[+t[2],+t[3]],r}return e}))}))}var ue=Object.freeze({__proto__:null,isString:J,type:ee,toPrecision:te,parseFunction:re,last:ne,interpolate:oe,interpolateInv:ie,mapRange:ae,parseCoordGrammar:se,multiplyMatrices:Q}),ce=new(function(){function e(){q(this,e)}return Y(e,[{key:"add",value:function(e,t,r){if("string"==typeof arguments[0])(Array.isArray(e)?e:[e]).forEach((function(e){this[e]=this[e]||[],t&&this[e][r?"unshift":"push"](t)}),this);else for(var e in arguments[0])this.add(e,arguments[0][e],arguments[1])}},{key:"run",value:function(e,t){this[e]=this[e]||[],this[e].forEach((function(e){e.call(t&&t.context?t.context:t,t)}))}}]),e}()),le={gamut_mapping:"lch.c",precision:5,deltaE:"76"},pe={D50:[.3457/.3585,1,.2958/.3585],D65:[.3127/.329,1,.3583/.329]};function fe(e){return Array.isArray(e)?e:pe[e]}function he(e,t,r){var n=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{};if(e=fe(e),t=fe(t),!e||!t)throw new TypeError("Missing white point to convert ".concat(e?"":"from").concat(e||t?"":"/").concat(t?"":"to"));if(e===t)return r;var o={W1:e,W2:t,XYZ:r,options:n};if(ce.run("chromatic-adaptation-start",o),o.M||(o.W1===pe.D65&&o.W2===pe.D50?o.M=[[1.0479298208405488,.022946793341019088,-.05019222954313557],[.029627815688159344,.990434484573249,-.01707382502938514],[-.009243058152591178,.015055144896577895,.7518742899580008]]:o.W1===pe.D50&&o.W2===pe.D65&&(o.M=[[.9554734527042182,-.023098536874261423,.0632593086610217],[-.028369706963208136,1.0099954580058226,.021041398966943008],[.012314001688319899,-.020507696433477912,1.3303659366080753]])),ce.run("chromatic-adaptation-end",o),o.M)return Q(o.M,o.XYZ);throw new TypeError("Only Bradford CAT with white points D50 and D65 supported for now.")}var de=75e-6,ve=new WeakSet,ye=new WeakMap,me=new WeakSet,ge=function(){function e(t){var r,n,o,i,a,s,u;q(this,e),me.add(this),ve.add(this),ye.set(this,{writable:!0,value:void 0}),this.id=t.id,this.name=t.name,this.base=t.base?e.get(t.base):null,this.aliases=t.aliases,this.base&&(this.fromBase=t.fromBase,this.toBase=t.toBase);var c=null!==(r=t.coords)&&void 0!==r?r:this.base.coords;this.coords=c;var l=null!==(n=null!==(o=t.white)&&void 0!==o?o:this.base.white)&&void 0!==n?n:"D65";for(var p in this.white=fe(l),this.formats=null!==(i=t.formats)&&void 0!==i?i:{},this.formats){var f=this.formats[p];f.type||(f.type="function"),f.name||(f.name=p)}!t.cssId||null!==(a=this.formats.functions)&&void 0!==a&&a.color?null===(s=this.formats)||void 0===s||!s.color||null!==(u=this.formats)&&void 0!==u&&u.color.id||(this.formats.color.id=this.id):(this.formats.color={id:t.cssId},Object.defineProperty(this,"cssId",{value:t.cssId})),this.referred=t.referred,$(this,ye,U(this,me,we).call(this).reverse()),ce.run("colorspace-init-end",this)}return Y(e,[{key:"inGamut",value:function(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},r=t.epsilon,n=void 0===r?de:r;if(this.isPolar)return e=this.toBase(e),this.base.inGamut(e,{epsilon:n});var o=Object.values(this.coords);return e.every((function(e,t){var r=o[t];if("angle"!==r.type&&r.range){if(Number.isNaN(e))return!0;var i=F(r.range,2),a=i[0],s=i[1];return(void 0===a||e>=a-n)&&(void 0===s||e<=s+n)}return!0}))}},{key:"cssId",get:function(){var e,t;return(null===(e=this.formats.functions)||void 0===e||null===(t=e.color)||void 0===t?void 0:t.id)||this.id}},{key:"isPolar",get:function(){for(var e in this.coords)if("angle"===this.coords[e].type)return!0;return!1}},{key:"getFormat",value:function(e){return"object"===D(e)?e=U(this,ve,be).call(this,e):(t="default"===e?Object.values(this.formats)[0]:this.formats[e])?t=U(this,ve,be).call(this,t):null;var t}},{key:"to",value:function(t,r){if(1===arguments.length){var n=[t.space,t.coords];t=n[0],r=n[1]}if(this===(t=e.get(t)))return r;r=r.map((function(e){return Number.isNaN(e)?0:e}));for(var o,i,a=W(this,ye),s=W(t,ye),u=0;u<a.length&&a[u]===s[u];u++)o=a[u],i=u;if(!o)throw new Error("Cannot convert between color spaces ".concat(this," and ").concat(t,": no connection space was found"));for(var c=a.length-1;c>i;c--)r=a[c].toBase(r);for(var l=i+1;l<s.length;l++)r=s[l].fromBase(r);return r}},{key:"from",value:function(t,r){if(1===arguments.length){var n=[t.space,t.coords];t=n[0],r=n[1]}return(t=e.get(t)).to(this,r)}},{key:"toString",value:function(){return"".concat(this.name," (").concat(this.id,")")}},{key:"getMinCoords",value:function(){var e=[];for(var t in this.coords){var r,n=this.coords[t],o=n.range||n.refRange;e.push(null!==(r=null==o?void 0:o.min)&&void 0!==r?r:0)}return e}}],[{key:"all",get:function(){return z(new Set(Object.values(e.registry)))}},{key:"register",value:function(e,t){if(1===arguments.length&&(e=(t=arguments[0]).id),t=this.get(t),this.registry[e]&&this.registry[e]!==t)throw new Error("Duplicate color space registration: '".concat(e,"'"));if(this.registry[e]=t,1===arguments.length&&t.aliases){var r,n=X(t.aliases);try{for(n.s();!(r=n.n()).done;){var o=r.value;this.register(o,t)}}catch(e){n.e(e)}finally{n.f()}}return t}},{key:"get",value:function(t){if(!t||t instanceof e)return t;var r=ee(t);if("string"===r){var n=e.registry[t.toLowerCase()];if(!n)throw new TypeError('No color space found with id = "'.concat(t,'"'));return n}for(var o=arguments.length,i=new Array(o>1?o-1:0),a=1;a<o;a++)i[a-1]=arguments[a];if(i.length)return e.get.apply(e,i);throw new TypeError("".concat(t," is not a valid color space"))}},{key:"resolveCoord",value:function(t,r){var n,o,i=ee(t);if("string"===i)if(t.includes(".")){var a=F(t.split("."),2);n=a[0],o=a[1]}else n=void 0,o=t;else if(Array.isArray(t)){var s=F(t,2);n=s[0],o=s[1]}else n=t.space,o=t.coordId;if((n=e.get(n))||(n=r),!n)throw new TypeError("Cannot resolve coordinate reference ".concat(t,": No color space specified and relative references are not allowed here"));if("number"===(i=ee(o))||"string"===i&&o>=0){var u=Object.entries(n.coords)[o];if(u)return L({space:n,id:u[0],index:o},u[1])}n=e.get(n);var c=o.toLowerCase(),l=0;for(var p in n.coords){var f,h=n.coords[p];if(p.toLowerCase()===c||(null===(f=h.name)||void 0===f?void 0:f.toLowerCase())===c)return L({space:n,id:p,index:l},h);l++}throw new TypeError('No "'.concat(o,'" coordinate found in ').concat(n.name,". Its coordinates are: ").concat(Object.keys(n.coords).join(", ")))}}]),e}();function be(e){if(e.coords&&!e.coordGrammar){e.type||(e.type="function"),e.name||(e.name="color"),e.coordGrammar=se(e.coords);var t=Object.entries(this.coords).map((function(t,r){var n=F(t,2),o=(n[0],n[1]),i=e.coordGrammar[r][0],a=o.range||o.refRange,s=i.range,u="";return"<percentage>"==i?(s=[0,100],u="%"):"<angle>"==i&&(u="deg"),{fromRange:a,toRange:s,suffix:u}}));e.serializeCoords=function(e,r){return e.map((function(e,n){var o=t[n],i=o.fromRange,a=o.toRange,s=o.suffix;return i&&a&&(e=ae(i,a,e)),e=te(e,r),s&&(e+=s),e}))}}return e}function we(){for(var e=[this],t=this;t=t.base;)e.push(t);return e}H(ge,"registry",{}),H(ge,"DEFAULT_FORMAT",{type:"functions",name:"color"});var Me=new ge({id:"xyz-d65",name:"XYZ D65",coords:{x:{name:"X"},y:{name:"Y"},z:{name:"Z"}},white:"D65",formats:{color:{ids:["xyz-d65","xyz"]}},aliases:["xyz"]}),Oe=function(e){!function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),t&&R(e,t)}(o,e);var t,r,n=(t=o,r=N(),function(){var e,n=B(t);if(r){var o=B(this).constructor;e=Reflect.construct(n,arguments,o)}else e=n.apply(this,arguments);return C(this,e)});function o(e){var t,r,i,a;return q(this,o),e.coords||(e.coords={r:{range:[0,1],name:"Red"},g:{range:[0,1],name:"Green"},b:{range:[0,1],name:"Blue"}}),e.base||(e.base=Me),e.toXYZ_M&&e.fromXYZ_M&&(null!==(i=e.toBase)&&void 0!==i||(e.toBase=function(t){var n=Q(e.toXYZ_M,t);return r.white!==r.base.white&&(n=he(r.white,r.base.white,n)),n}),null!==(a=e.fromBase)&&void 0!==a||(e.fromBase=function(t){return t=he(r.base.white,r.white,t),Q(e.fromXYZ_M,t)})),null!==(t=e.referred)&&void 0!==t||(e.referred="display"),r=n.call(this,e)}return o}(ge);function xe(e){var t,r={str:null===(t=String(e))||void 0===t?void 0:t.trim()};if(ce.run("parse-start",r),r.color)return r.color;if(r.parsed=re(r.str),r.parsed){var n=function(){var e=r.parsed.name;if("color"===e){var t,n=r.parsed.args.shift(),o=r.parsed.rawArgs.indexOf("/")>0?r.parsed.args.pop():1,i=X(ge.all);try{for(i.s();!(t=i.n()).done;){var a,s=t.value,u=s.getFormat("color");if(u&&(n===u.id||null!==(a=u.ids)&&void 0!==a&&a.includes(n))){var c=function(){var e=Object.keys(s.coords).length,t=Array(e).fill(0);return t.forEach((function(e,n){return t[n]=r.parsed.args[n]||0})),{v:{v:{spaceId:s.id,coords:t,alpha:o}}}}();if("object"===D(c))return c.v}}}catch(e){i.e(e)}finally{i.f()}var l="";if(n in ge.registry){var p,f,h,d=null===(p=ge.registry[n].formats)||void 0===p||null===(f=p.functions)||void 0===f||null===(h=f.color)||void 0===h?void 0:h.id;d&&(l="Did you mean color(".concat(d,")?"))}throw new TypeError("Cannot parse color(".concat(n,"). ")+(l||"Missing a plugin?"))}var v,y=X(ge.all);try{var m=function(){var t=v.value,n=t.getFormat(e);if(n&&"function"===n.type){var o=1;(n.lastAlpha||ne(r.parsed.args).alpha)&&(o=r.parsed.args.pop());var i=r.parsed.args;return n.coordGrammar&&Object.entries(t.coords).forEach((function(t,r){var o,a=F(t,2),s=a[0],u=a[1],c=n.coordGrammar[r],l=null===(o=i[r])||void 0===o?void 0:o.type;if(c=c.find((function(e){return e==l})),!c){var p=u.name||s;throw new TypeError("".concat(l," not allowed for ").concat(p," in ").concat(e,"()"))}var f=c.range;"<percentage>"===l&&(f||(f=[0,1]));var h=u.range||u.refRange;f&&h&&(i[r]=ae(f,h,i[r]))})),{v:{v:{spaceId:t.id,coords:i,alpha:o}}}}};for(y.s();!(v=y.n()).done;){var g=m();if("object"===D(g))return g.v}}catch(e){y.e(e)}finally{y.f()}}();if("object"===D(n))return n.v}else{var o,i=X(ge.all);try{for(i.s();!(o=i.n()).done;){var a=o.value;for(var s in a.formats){var u=a.formats[s];if("custom"===u.type&&(!u.test||u.test(r.str))){var c,l=u.parse(r.str);if(l)return null!==(c=l.alpha)&&void 0!==c||(l.alpha=1),l}}}}catch(e){i.e(e)}finally{i.f()}}throw new TypeError("Could not parse ".concat(e," as a color. Missing a plugin?"))}function Se(e){if(!e)throw new TypeError("Empty color reference");J(e)&&(e=xe(e));var t=e.space||e.spaceId;return t instanceof ge||(e.space=ge.get(t)),void 0===e.alpha&&(e.alpha=1),e}function ke(e,t){return(t=ge.get(t)).from(e)}function Ae(e,t){var r=ge.resolveCoord(t,e.space),n=r.space,o=r.index;return ke(e,n)[o]}function Ee(e,t,r){return t=ge.get(t),e.coords=t.to(e.space,r),e}function _e(e,t,r){if(e=Se(e),2===arguments.length&&"object"===ee(arguments[1])){var n=arguments[1];for(var o in n)_e(e,o,n[o])}else{"function"==typeof r&&(r=r(Ae(e,t)));var i=ge.resolveCoord(t,e.space),a=i.space,s=i.index,u=ke(e,a);u[s]=r,Ee(e,a,u)}return e}var je=new ge({id:"xyz-d50",name:"XYZ D50",white:"D50",base:Me,fromBase:function(e){return he(Me.white,"D50",e)},toBase:function(e){return he("D50",Me.white,e)},formats:{color:{}}}),Te=24/116,Pe=24389/27,Re=pe.D50,Ce=new ge({id:"lab",name:"Lab",coords:{l:{refRange:[0,100],name:"L"},a:{refRange:[-125,125]},b:{refRange:[-125,125]}},white:Re,base:je,fromBase:function(e){var t=e.map((function(e,t){return e/Re[t]})).map((function(e){return e>.008856451679035631?Math.cbrt(e):(Pe*e+16)/116}));return[116*t[1]-16,500*(t[0]-t[1]),200*(t[1]-t[2])]},toBase:function(e){var t=[];return t[1]=(e[0]+16)/116,t[0]=e[1]/500+t[1],t[2]=t[1]-e[2]/200,[t[0]>Te?Math.pow(t[0],3):(116*t[0]-16)/Pe,e[0]>8?Math.pow((e[0]+16)/116,3):e[0]/Pe,t[2]>Te?Math.pow(t[2],3):(116*t[2]-16)/Pe].map((function(e,t){return e*Re[t]}))},formats:{lab:{coords:["<number> | <percentage>","<number>","<number>"]}}});function Ne(e){return(e%360+360)%360}function Be(e,t){if("raw"===e)return t;var r=F(t.map(Ne),2),n=r[0],o=r[1],i=o-n;return"increasing"===e?i<0&&(o+=360):"decreasing"===e?i>0&&(n+=360):"longer"===e?-180<i&&i<180&&(i>0?o+=360:n+=360):"shorter"===e&&(i>180?n+=360:i<-180&&(o+=360)),[n,o]}var Ie=new ge({id:"lch",name:"LCH",coords:{l:{refRange:[0,100],name:"Lightness"},c:{refRange:[0,150],name:"Chroma"},h:{refRange:[0,360],type:"angle",name:"Hue"}},base:Ce,fromBase:function(e){var t,r=F(e,3),n=r[0],o=r[1],i=r[2];return t=Math.abs(o)<.02&&Math.abs(i)<.02?NaN:180*Math.atan2(i,o)/Math.PI,[n,Math.sqrt(Math.pow(o,2)+Math.pow(i,2)),Ne(t)]},toBase:function(e){var t=F(e,3),r=t[0],n=t[1],o=t[2];return n<0&&(n=0),isNaN(o)&&(o=0),[r,n*Math.cos(o*Math.PI/180),n*Math.sin(o*Math.PI/180)]},formats:{lch:{coords:["<number> | <percentage>","<number>","<number> | <angle>"]}}}),Le=Math.pow(25,7),ze=Math.PI,De=180/ze,Fe=ze/180;function He(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},n=r.kL,o=void 0===n?1:n,i=r.kC,a=void 0===i?1:i,s=r.kH,u=void 0===s?1:s,c=Ce.from(e),l=F(c,3),p=l[0],f=l[1],h=l[2],d=Ie.from(Ce,[p,f,h])[1],v=Ce.from(t),y=F(v,3),m=y[0],g=y[1],b=y[2],w=Ie.from(Ce,[m,g,b])[1];d<0&&(d=0),w<0&&(w=0);var M=(d+w)/2,O=Math.pow(M,7),x=.5*(1-Math.sqrt(O/(O+Le))),S=(1+x)*f,k=(1+x)*g,A=Math.sqrt(Math.pow(S,2)+Math.pow(h,2)),E=Math.sqrt(Math.pow(k,2)+Math.pow(b,2)),_=0===S&&0===h?0:Math.atan2(h,S),j=0===k&&0===b?0:Math.atan2(b,k);_<0&&(_+=2*ze),j<0&&(j+=2*ze);var T,P=m-p,R=E-A,C=(j*=De)-(_*=De),N=_+j,B=Math.abs(C);A*E==0?T=0:B<=180?T=C:C>180?T=C-360:C<-180?T=C+360:console.log("the unthinkable has happened");var I,L=2*Math.sqrt(E*A)*Math.sin(T*Fe/2),z=(p+m)/2,D=(A+E)/2,H=Math.pow(D,7);I=A*E==0?N:B<=180?N/2:N<360?(N+360)/2:(N-360)/2;var W=Math.pow(z-50,2),U=1+.015*W/Math.sqrt(20+W),$=1+.045*D,G=1;G-=.17*Math.cos((I-30)*Fe),G+=.24*Math.cos(2*I*Fe),G+=.32*Math.cos((3*I+6)*Fe);var q=1+.015*D*(G-=.2*Math.cos((4*I-63)*Fe)),V=30*Math.exp(-1*Math.pow((I-275)/25,2)),Y=2*Math.sqrt(H/(H+Le)),X=-1*Math.sin(2*V*Fe)*Y,Z=Math.pow(P/(o*U),2);return Z+=Math.pow(R/(a*$),2),Z+=Math.pow(L/(u*q),2),Z+=X*(R/(a*$))*(L/(u*q)),Math.sqrt(Z)}var We=75e-6;function Ue(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:e.space,r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},n=r.epsilon,o=void 0===n?We:n;e=Se(e),t=ge.get(t);var i=e.coords;return t!==e.space&&(i=t.from(e)),t.inGamut(i,{epsilon:o})}function $e(e){return{space:e.space,coords:e.coords.slice(),alpha:e.alpha}}function Ge(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},r=t.method,n=void 0===r?le.gamut_mapping:r,o=t.space,i=void 0===o?e.space:o;if(J(arguments[1])&&(i=arguments[1]),Ue(e,i=ge.get(i),{epsilon:0}))return e;var a=qe(e,i);if("clip"!==n&&!Ue(e,i)){var s=Ge($e(a),{method:"clip",space:i});if(He(e,s)>2){for(var u=ge.resolveCoord(n),c=u.space,l=u.id,p=qe(a,c),f=u.range||u.refRange,h=f[0],d=.01,v=h,y=Ae(p,l);y-v>d;){var m=$e(p),g=He(p,m=Ge(m,{space:i,method:"clip"}));g-2<d?v=Ae(p,l):y=Ae(p,l),_e(p,l,(v+y)/2)}a=qe(p,i)}else a=s}if("clip"===n||!Ue(a,i,{epsilon:0})){var b=Object.values(i.coords).map((function(e){return e.range||[]}));a.coords=a.coords.map((function(e,t){var r=F(b[t],2),n=r[0],o=r[1];return void 0!==n&&(e=Math.max(n,e)),void 0!==o&&(e=Math.min(e,o)),e}))}return i!==e.space&&(a=qe(a,e.space)),e.coords=a.coords,e}function qe(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},n=r.inGamut;e=Se(e);var o=(t=ge.get(t)).from(e),i={space:t,coords:o,alpha:e.alpha};return n&&(i=Ge(i)),i}function Ve(e){var t,r,n,o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},i=o.precision,a=void 0===i?le.precision:i,s=o.format,u=void 0===s?"default":s,c=o.inGamut,l=void 0===c||c,p=P(o,["precision","format","inGamut"]),f=u;u=null!==(t=null!==(r=(e=Se(e)).space.getFormat(u))&&void 0!==r?r:e.space.getFormat("default"))&&void 0!==t?t:ge.DEFAULT_FORMAT,l||(l=u.toGamut);var h=e.coords;if(h=h.map((function(e){return e||0})),l&&!Ue(e)&&(h=Ge($e(e),!0===l?void 0:l).coords),"custom"===u.type){if(p.precision=a,!u.serialize)throw new TypeError("format ".concat(f," can only be used to parse colors, not for serialization"));n=u.serialize(h,e.alpha,p)}else{var d=u.name||"color";u.serializeCoords?h=u.serializeCoords(h,a):null!==a&&(h=h.map((function(e){return te(e,a)})));var v=z(h);if("color"===d){var y,m=u.id||(null===(y=u.ids)||void 0===y?void 0:y[0])||e.space.id;v.unshift(m)}var g=e.alpha;null!==a&&(g=te(g,a));var b=e.alpha<1&&!u.noAlpha?"".concat(u.commas?",":" /"," ").concat(g):"";n="".concat(d,"(").concat(v.join(u.commas?", ":" ")).concat(b,")")}return n}Ge.returns="color",qe.returns="color";var Ye=new Oe({id:"rec2020-linear",name:"Linear REC.2020",white:"D65",toXYZ_M:[[.6369580483012914,.14461690358620832,.1688809751641721],[.2627002120112671,.6779980715188708,.05930171646986196],[0,.028072693049087428,1.060985057710791]],fromXYZ_M:[[1.716651187971268,-.355670783776392,-.25336628137366],[-.666684351832489,1.616481236634939,.0157685458139111],[.017639857445311,-.042770613257809,.942103121235474]],formats:{color:{}}}),Xe=1.09929682680944,Ze=.018053968510807,Ke=new Oe({id:"rec2020",name:"REC.2020",base:Ye,toBase:function(e){return e.map((function(e){return e<4.5*Ze?e/4.5:Math.pow((e+Xe-1)/Xe,1/.45)}))},fromBase:function(e){return e.map((function(e){return e>=Ze?Xe*Math.pow(e,.45)-(Xe-1):4.5*e}))},formats:{color:{}}}),Qe=new Oe({id:"p3-linear",name:"Linear P3",white:"D65",toXYZ_M:[[.4865709486482162,.26566769316909306,.1982172852343625],[.2289745640697488,.6917385218365064,.079286914093745],[0,.04511338185890264,1.043944368900976]],fromXYZ_M:[[2.493496911941425,-.9313836179191239,-.40271078445071684],[-.8294889695615747,1.7626640603183463,.023624685841943577],[.03584583024378447,-.07617238926804182,.9568845240076872]]}),Je=new Oe({id:"srgb-linear",name:"Linear sRGB",white:"D65",toXYZ_M:[[.41239079926595934,.357584339383878,.1804807884018343],[.21263900587151027,.715168678767756,.07219231536073371],[.01933081871559182,.11919477979462598,.9505321522496607]],fromXYZ_M:[[3.2409699419045226,-1.537383177570094,-.4986107602930034],[-.9692436362808796,1.8759675015077202,.04155505740717559],[.05563007969699366,-.20397695888897652,1.0569715142428786]],formats:{color:{}}}),et={aliceblue:[240/255,248/255,1],antiquewhite:[250/255,235/255,215/255],aqua:[0,1,1],aquamarine:[127/255,1,212/255],azure:[240/255,1,1],beige:[245/255,245/255,220/255],bisque:[1,228/255,196/255],black:[0,0,0],blanchedalmond:[1,235/255,205/255],blue:[0,0,1],blueviolet:[138/255,43/255,226/255],brown:[165/255,42/255,42/255],burlywood:[222/255,184/255,135/255],cadetblue:[95/255,158/255,160/255],chartreuse:[127/255,1,0],chocolate:[210/255,105/255,30/255],coral:[1,127/255,80/255],cornflowerblue:[100/255,149/255,237/255],cornsilk:[1,248/255,220/255],crimson:[220/255,20/255,60/255],cyan:[0,1,1],darkblue:[0,0,139/255],darkcyan:[0,139/255,139/255],darkgoldenrod:[184/255,134/255,11/255],darkgray:[169/255,169/255,169/255],darkgreen:[0,100/255,0],darkgrey:[169/255,169/255,169/255],darkkhaki:[189/255,183/255,107/255],darkmagenta:[139/255,0,139/255],darkolivegreen:[85/255,107/255,47/255],darkorange:[1,140/255,0],darkorchid:[.6,50/255,.8],darkred:[139/255,0,0],darksalmon:[233/255,150/255,122/255],darkseagreen:[143/255,188/255,143/255],darkslateblue:[72/255,61/255,139/255],darkslategray:[47/255,79/255,79/255],darkslategrey:[47/255,79/255,79/255],darkturquoise:[0,206/255,209/255],darkviolet:[148/255,0,211/255],deeppink:[1,20/255,147/255],deepskyblue:[0,191/255,1],dimgray:[105/255,105/255,105/255],dimgrey:[105/255,105/255,105/255],dodgerblue:[30/255,144/255,1],firebrick:[178/255,34/255,34/255],floralwhite:[1,250/255,240/255],forestgreen:[34/255,139/255,34/255],fuchsia:[1,0,1],gainsboro:[220/255,220/255,220/255],ghostwhite:[248/255,248/255,1],gold:[1,215/255,0],goldenrod:[218/255,165/255,32/255],gray:[128/255,128/255,128/255],green:[0,128/255,0],greenyellow:[173/255,1,47/255],grey:[128/255,128/255,128/255],honeydew:[240/255,1,240/255],hotpink:[1,105/255,180/255],indianred:[205/255,92/255,92/255],indigo:[75/255,0,130/255],ivory:[1,1,240/255],khaki:[240/255,230/255,140/255],lavender:[230/255,230/255,250/255],lavenderblush:[1,240/255,245/255],lawngreen:[124/255,252/255,0],lemonchiffon:[1,250/255,205/255],lightblue:[173/255,216/255,230/255],lightcoral:[240/255,128/255,128/255],lightcyan:[224/255,1,1],lightgoldenrodyellow:[250/255,250/255,210/255],lightgray:[211/255,211/255,211/255],lightgreen:[144/255,238/255,144/255],lightgrey:[211/255,211/255,211/255],lightpink:[1,182/255,193/255],lightsalmon:[1,160/255,122/255],lightseagreen:[32/255,178/255,170/255],lightskyblue:[135/255,206/255,250/255],lightslategray:[119/255,136/255,.6],lightslategrey:[119/255,136/255,.6],lightsteelblue:[176/255,196/255,222/255],lightyellow:[1,1,224/255],lime:[0,1,0],limegreen:[50/255,205/255,50/255],linen:[250/255,240/255,230/255],magenta:[1,0,1],maroon:[128/255,0,0],mediumaquamarine:[.4,205/255,170/255],mediumblue:[0,0,205/255],mediumorchid:[186/255,85/255,211/255],mediumpurple:[147/255,112/255,219/255],mediumseagreen:[60/255,179/255,113/255],mediumslateblue:[123/255,104/255,238/255],mediumspringgreen:[0,250/255,154/255],mediumturquoise:[72/255,209/255,.8],mediumvioletred:[199/255,21/255,133/255],midnightblue:[25/255,25/255,112/255],mintcream:[245/255,1,250/255],mistyrose:[1,228/255,225/255],moccasin:[1,228/255,181/255],navajowhite:[1,222/255,173/255],navy:[0,0,128/255],oldlace:[253/255,245/255,230/255],olive:[128/255,128/255,0],olivedrab:[107/255,142/255,35/255],orange:[1,165/255,0],orangered:[1,69/255,0],orchid:[218/255,112/255,214/255],palegoldenrod:[238/255,232/255,170/255],palegreen:[152/255,251/255,152/255],paleturquoise:[175/255,238/255,238/255],palevioletred:[219/255,112/255,147/255],papayawhip:[1,239/255,213/255],peachpuff:[1,218/255,185/255],peru:[205/255,133/255,63/255],pink:[1,192/255,203/255],plum:[221/255,160/255,221/255],powderblue:[176/255,224/255,230/255],purple:[128/255,0,128/255],rebeccapurple:[.4,.2,.6],red:[1,0,0],rosybrown:[188/255,143/255,143/255],royalblue:[65/255,105/255,225/255],saddlebrown:[139/255,69/255,19/255],salmon:[250/255,128/255,114/255],sandybrown:[244/255,164/255,96/255],seagreen:[46/255,139/255,87/255],seashell:[1,245/255,238/255],sienna:[160/255,82/255,45/255],silver:[192/255,192/255,192/255],skyblue:[135/255,206/255,235/255],slateblue:[106/255,90/255,205/255],slategray:[112/255,128/255,144/255],slategrey:[112/255,128/255,144/255],snow:[1,250/255,250/255],springgreen:[0,1,127/255],steelblue:[70/255,130/255,180/255],tan:[210/255,180/255,140/255],teal:[0,128/255,128/255],thistle:[216/255,191/255,216/255],tomato:[1,99/255,71/255],turquoise:[64/255,224/255,208/255],violet:[238/255,130/255,238/255],wheat:[245/255,222/255,179/255],white:[1,1,1],whitesmoke:[245/255,245/255,245/255],yellow:[1,1,0],yellowgreen:[154/255,205/255,50/255]},tt=Array(3).fill("<percentage> | <number>[0, 255]"),rt=Array(3).fill("<number>[0, 255]"),nt=new Oe({id:"srgb",name:"sRGB",base:Je,fromBase:function(e){return e.map((function(e){var t=e<0?-1:1,r=e*t;return r>.0031308?t*(1.055*Math.pow(r,1/2.4)-.055):12.92*e}))},toBase:function(e){return e.map((function(e){var t=e<0?-1:1,r=e*t;return r<.04045?e/12.92:t*Math.pow((r+.055)/1.055,2.4)}))},formats:{rgb:{coords:tt},rgb_number:{name:"rgb",commas:!0,coords:rt,noAlpha:!0},color:{},rgba:{coords:tt,commas:!0,lastAlpha:!0},rgba_number:{name:"rgba",commas:!0,coords:rt},hex:{type:"custom",toGamut:!0,test:function(e){return/^#([a-f0-9]{3,4}){1,2}$/i.test(e)},parse:function(e){e.length<=5&&(e=e.replace(/[a-f0-9]/gi,"$&$&"));var t=[];return e.replace(/[a-f0-9]{2}/gi,(function(e){t.push(parseInt(e,16)/255)})),{spaceId:"srgb",coords:t.slice(0,3),alpha:t.slice(3)[0]}},serialize:function(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},n=r.collapse,o=void 0===n||n;t<1&&e.push(t),e=e.map((function(e){return Math.round(255*e)}));var i=o&&e.every((function(e){return e%17==0})),a=e.map((function(e){return i?(e/17).toString(16):e.toString(16).padStart(2,"0")})).join("");return"#"+a}},keyword:{type:"custom",test:function(e){return/^[a-z]+$/i.test(e)},parse:function(e){var t={spaceId:"srgb",coords:null,alpha:1};if("transparent"===(e=e.toLowerCase())?(t.coords=et.black,t.alpha=0):t.coords=et[e],t.coords)return t}}}}),ot=new Oe({id:"p3",name:"P3",base:Qe,fromBase:nt.fromBase,toBase:nt.toBase,formats:{color:{id:"display-p3"}}});if(le.display_space=nt,"undefined"!=typeof CSS&&CSS.supports)for(var it=0,at=[Ce,Ke,ot];it<at.length;it++){var st=at[it],ut=st.getMinCoords(),ct=Ve({space:st,coords:ut,alpha:1});if(CSS.supports("color",ct)){le.display_space=st;break}}function lt(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},r=t.space,n=void 0===r?le.display_space:r,o=P(t,["space"]),i=Ve(e,o);if("undefined"==typeof CSS||CSS.supports("color",i)||!le.display_space)(i=new String(i)).color=e;else{var a=qe(e,n);(i=new String(Ve(a,o))).color=a}return i}function pt(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:"lab",n=(r=ge.get(r)).from(e),o=r.from(t);return Math.sqrt(n.reduce((function(e,t,r){var n=o[r];return isNaN(t)||isNaN(n)?e:e+Math.pow(n-t,2)}),0))}function ft(e){return Ae(e,[Me,"y"])}function ht(e,t){_e(e,[Me,"y"],t)}var dt=Object.freeze({__proto__:null,getLuminance:ft,setLuminance:ht,register:function(e){Object.defineProperty(e.prototype,"luminance",{get:function(){return ft(this)},set:function(e){ht(this,e)}})}});function vt(e){return e>=.022?e:e+Math.pow(.022-e,1.414)}function yt(e){var t=e<0?-1:1,r=Math.abs(e);return t*Math.pow(r,2.4)}var mt=24/116,gt=24389/27,bt=pe.D65,wt=new ge({id:"lab-d65",name:"Lab D65",coords:{l:{refRange:[0,100],name:"L"},a:{refRange:[-125,125]},b:{refRange:[-125,125]}},white:bt,base:Me,fromBase:function(e){var t=e.map((function(e,t){return e/bt[t]})).map((function(e){return e>.008856451679035631?Math.cbrt(e):(gt*e+16)/116}));return[116*t[1]-16,500*(t[0]-t[1]),200*(t[1]-t[2])]},toBase:function(e){var t=[];return t[1]=(e[0]+16)/116,t[0]=e[1]/500+t[1],t[2]=t[1]-e[2]/200,[t[0]>mt?Math.pow(t[0],3):(116*t[0]-16)/gt,e[0]>8?Math.pow((e[0]+16)/116,3):e[0]/gt,t[2]>mt?Math.pow(t[2],3):(116*t[2]-16)/gt].map((function(e,t){return e*bt[t]}))},formats:{"lab-d65":{coords:["<number> | <percentage>","<number>","<number>"]}}}),Mt=.5*Math.pow(5,.5)+.5,Ot=Object.freeze({__proto__:null,contrastWCAG21:function(e,t){e=Se(e),t=Se(t);var r=Math.max(ft(e),0),n=Math.max(ft(t),0);if(n>r){var o=[n,r];r=o[0],n=o[1]}return(r+.05)/(n+.05)},contrastAPCA:function(e,t){var r,n,o,i;t=Se(t),e=Se(e);var a=F((t=qe(t,"srgb")).coords,3);n=a[0],o=a[1],i=a[2];var s=.2126729*yt(n)+.7151522*yt(o)+.072175*yt(i),u=F((e=qe(e,"srgb")).coords,3);n=u[0],o=u[1],i=u[2];var c=.2126729*yt(n)+.7151522*yt(o)+.072175*yt(i),l=vt(s),p=vt(c),f=p>l;return r=Math.abs(p-l)<5e-4?0:f?1.14*(Math.pow(p,.56)-Math.pow(l,.57)):1.14*(Math.pow(p,.65)-Math.pow(l,.62)),100*(Math.abs(r)<.1?0:r>0?r-.027:r+.027)},contrastMichelson:function(e,t){e=Se(e),t=Se(t);var r=Math.max(ft(e),0),n=Math.max(ft(t),0);if(n>r){var o=[n,r];r=o[0],n=o[1]}var i=r+n;return 0===i?0:(r-n)/i},contrastWeber:function(e,t){e=Se(e),t=Se(t);var r=Math.max(ft(e),0),n=Math.max(ft(t),0);if(n>r){var o=[n,r];r=o[0],n=o[1]}return 0===n?5e4:(r-n)/n},contrastLstar:function(e,t){e=Se(e),t=Se(t);var r=Ae(e,[Ce,"l"]),n=Ae(t,[Ce,"l"]);return Math.abs(r-n)},contrastDeltaPhi:function(e,t){e=Se(e),t=Se(t);var r=Ae(e,[wt,"l"]),n=Ae(t,[wt,"l"]),o=Math.abs(Math.pow(r,Mt)-Math.pow(n,Mt)),i=Math.pow(o,1/Mt)*Math.SQRT2-40;return i<7.5?0:i}});function xt(e){var t=F(ke(e,Me),3),r=t[0],n=t[1],o=r+15*n+3*t[2];return[4*r/o,9*n/o]}function St(e){var t=F(ke(e,Me),3),r=t[0],n=t[1],o=r+n+t[2];return[r/o,n/o]}var kt=Object.freeze({__proto__:null,uv:xt,xy:St,register:function(e){Object.defineProperty(e.prototype,"uv",{get:function(){return xt(this)}}),Object.defineProperty(e.prototype,"xy",{get:function(){return St(this)}})}}),At=Math.PI/180,Et=new ge({id:"xyz-abs-d65",name:"Absolute XYZ D65",coords:{x:{refRange:[0,9504.7],name:"Xa"},y:{refRange:[0,1e4],name:"Ya"},z:{refRange:[0,10888.3],name:"Za"}},base:Me,fromBase:function(e){return e.map((function(e){return Math.max(203*e,0)}))},toBase:function(e){return e.map((function(e){return Math.max(e/203,0)}))}}),_t=1.15,jt=.66,Tt=2610/Math.pow(2,14),Pt=Math.pow(2,14)/2610,Rt=3424/Math.pow(2,12),Ct=2413/Math.pow(2,7),Nt=2392/Math.pow(2,7),Bt=1.7*2523/Math.pow(2,5),It=Math.pow(2,5)/(1.7*2523),Lt=-.56,zt=16295499532821565e-27,Dt=[[.41478972,.579999,.014648],[-.20151,1.120649,.0531008],[-.0166008,.2648,.6684799]],Ft=[[1.9242264357876067,-1.0047923125953657,.037651404030618],[.35031676209499907,.7264811939316552,-.06538442294808501],[-.09098281098284752,-.3127282905230739,1.5227665613052603]],Ht=[[.5,.5,0],[3.524,-4.066708,.542708],[.199076,1.096799,-1.295875]],Wt=[[1,.1386050432715393,.05804731615611886],[.9999999999999999,-.1386050432715393,-.05804731615611886],[.9999999999999998,-.09601924202631895,-.8118918960560388]],Ut=new ge({id:"jzazbz",name:"Jzazbz",coords:{jz:{refRange:[0,1],name:"Jz"},az:{refRange:[-.5,.5]},bz:{refRange:[-.5,.5]}},base:Et,fromBase:function(e){var t=F(e,3),r=t[0],n=t[1],o=t[2],i=Q(Dt,[_t*r-(_t-1)*o,jt*n-(jt-1)*r,o]).map((function(e){var t=Rt+Ct*Math.pow(e/1e4,Tt),r=1+Nt*Math.pow(e/1e4,Tt);return Math.pow(t/r,Bt)})),a=F(Q(Ht,i),3),s=a[0],u=a[1],c=a[2];return[(1+Lt)*s/(1+Lt*s)-zt,u,c]},toBase:function(e){var t=F(e,3),r=t[0],n=t[1],o=t[2],i=Q(Wt,[(r+zt)/(1+Lt-Lt*(r+zt)),n,o]).map((function(e){var t=Rt-Math.pow(e,It),r=Nt*Math.pow(e,It)-Ct;return 1e4*Math.pow(t/r,Pt)})),a=F(Q(Ft,i),3),s=a[0],u=a[1],c=a[2],l=(s+(_t-1)*c)/_t;return[l,(u+(jt-1)*l)/jt,c]},formats:{color:{}}}),$t=new ge({id:"jzczhz",name:"JzCzHz",coords:{jz:{refRange:[0,1],name:"Jz"},cz:{refRange:[0,1],name:"Chroma"},hz:{refRange:[0,360],type:"angle",name:"Hue"}},base:Ut,fromBase:function(e){var t,r=F(e,3),n=r[0],o=r[1],i=r[2],a=2e-4;return t=Math.abs(o)<a&&Math.abs(i)<a?NaN:180*Math.atan2(i,o)/Math.PI,[n,Math.sqrt(Math.pow(o,2)+Math.pow(i,2)),Ne(t)]},toBase:function(e){return[e[0],e[1]*Math.cos(e[2]*Math.PI/180),e[1]*Math.sin(e[2]*Math.PI/180)]},formats:{color:{}}}),Gt=.8359375,qt=2413/128,Vt=18.6875,Yt=2610/16384,Xt=32/2523,Zt=[[.3592,.6976,-.0358],[-.1922,1.1004,.0755],[.007,.0749,.8434]],Kt=[[.5,.5,0],[6610/4096,-13613/4096,7003/4096],[17933/4096,-17390/4096,-543/4096]],Qt=[[.9999888965628402,.008605050147287059,.11103437159861648],[1.00001110343716,-.008605050147287059,-.11103437159861648],[1.0000320633910054,.56004913547279,-.3206339100541203]],Jt=[[2.0701800566956137,-1.326456876103021,.20661600684785517],[.3649882500326575,.6804673628522352,-.04542175307585323],[-.04959554223893211,-.04942116118675749,1.1879959417328034]],er=new ge({id:"ictcp",name:"ICTCP",coords:{i:{refRange:[0,1],name:"I"},ct:{refRange:[-.5,.5],name:"CT"},cp:{refRange:[-.5,.5],name:"CP"}},base:Et,fromBase:function(e){return t=Q(Zt,e),r=t.map((function(e){var t=Gt+qt*Math.pow(e/1e4,Yt),r=1+Vt*Math.pow(e/1e4,Yt);return Math.pow(t/r,78.84375)})),Q(Kt,r);var t,r},toBase:function(e){var t=function(e){return Q(Qt,e).map((function(e){var t=Math.max(Math.pow(e,Xt)-Gt,0),r=qt-Vt*Math.pow(e,Xt);return 1e4*Math.pow(t/r,6.277394636015326)}))}(e);return Q(Jt,t)},formats:{color:{}}}),tr=[[.8190224432164319,.3619062562801221,-.12887378261216414],[.0329836671980271,.9292868468965546,.03614466816999844],[.048177199566046255,.26423952494422764,.6335478258136937]],rr=[[1.2268798733741557,-.5578149965554813,.28139105017721583],[-.04057576262431372,1.1122868293970594,-.07171106666151701],[-.07637294974672142,-.4214933239627914,1.5869240244272418]],nr=[[.2104542553,.793617785,-.0040720468],[1.9779984951,-2.428592205,.4505937099],[.0259040371,.7827717662,-.808675766]],or=[[.9999999984505198,.39633779217376786,.2158037580607588],[1.0000000088817609,-.10556134232365635,-.06385417477170591],[1.0000000546724108,-.08948418209496575,-1.2914855378640917]],ir=new ge({id:"oklab",name:"OKLab",coords:{l:{refRange:[0,1],name:"L"},a:{refRange:[-.4,.4]},b:{refRange:[-.4,.4]}},white:"D65",base:Me,fromBase:function(e){var t=Q(tr,e).map((function(e){return Math.cbrt(e)}));return Q(nr,t)},toBase:function(e){var t=Q(or,e).map((function(e){return Math.pow(e,3)}));return Q(rr,t)},formats:{oklab:{coords:["<number> | <percentage>","<number>","<number>"]}}}),ar=Object.freeze({__proto__:null,deltaE76:function(e,t){return pt(e,t,"lab")},deltaECMC:function(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},n=r.l,o=void 0===n?2:n,i=r.c,a=void 0===i?1:i,s=Ce.from(e),u=F(s,3),c=u[0],l=u[1],p=u[2],f=Ie.from(Ce,[c,l,p]),h=F(f,3),d=h[1],v=h[2],y=Ce.from(t),m=F(y,3),g=m[0],b=m[1],w=m[2],M=Ie.from(Ce,[g,b,w])[1];d<0&&(d=0),M<0&&(M=0);var O=c-g,x=d-M,S=l-b,k=p-w,A=Math.pow(S,2)+Math.pow(k,2)-Math.pow(x,2),E=.511;c>=16&&(E=.040975*c/(1+.01765*c));var _,j=.0638*d/(1+.0131*d)+.638;Number.isNaN(v)&&(v=0),_=v>=164&&v<=345?.56+Math.abs(.2*Math.cos((v+168)*At)):.36+Math.abs(.4*Math.cos((v+35)*At));var T=Math.pow(d,4),P=Math.sqrt(T/(T+1900)),R=j*(P*_+1-P),C=Math.pow(O/(o*E),2);return C+=Math.pow(x/(a*j),2),C+=A/Math.pow(R,2),Math.sqrt(C)},deltaE2000:He,deltaEJz:function(e,t){var r=F($t.from(e),3),n=r[0],o=r[1],i=r[2],a=F($t.from(t),3),s=a[0],u=a[1],c=a[2],l=n-s,p=o-u;Number.isNaN(i)&&Number.isNaN(c)?(i=0,c=0):Number.isNaN(i)?i=c:Number.isNaN(c)&&(c=i);var f=i-c,h=2*Math.sqrt(o*u)*Math.sin(f/2*(Math.PI/180));return Math.sqrt(Math.pow(l,2)+Math.pow(p,2)+Math.pow(h,2))},deltaEITP:function(e,t){var r=F(er.from(e),3),n=r[0],o=r[1],i=r[2],a=F(er.from(t),3),s=a[0],u=a[1],c=a[2];return 720*Math.sqrt(Math.pow(n-s,2)+.25*Math.pow(o-u,2)+Math.pow(i-c,2))},deltaEOK:function(e,t){var r=F(ir.from(e),3),n=r[0],o=r[1],i=r[2],a=F(ir.from(t),3),s=n-a[0],u=o-a[1],c=i-a[2];return Math.sqrt(Math.pow(s,2)+Math.pow(u,2)+Math.pow(c,2))}});function sr(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};J(r)&&(r={method:r});var n=r,o=n.method,i=void 0===o?le.deltaE:o,a=P(n,["method"]);for(var s in e=Se(e),t=Se(t),ar)if("deltae"+i.toLowerCase()===s.toLowerCase())return ar[s](e,t,a);throw new TypeError("Unknown deltaE method: ".concat(i))}var ur=Object.freeze({__proto__:null,lighten:function(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:.25,r=ge.get("oklch","lch"),n=[r,"l"];return _e(e,n,(function(e){return e*(1+t)}))},darken:function(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:.25,r=ge.get("oklch","lch"),n=[r,"l"];return _e(e,n,(function(e){return e*(1-t)}))}});function cr(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:.5,n=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{},o=[Se(e),Se(t)];if(e=o[0],t=o[1],"object"===ee(r)){var i=[.5,r];r=i[0],n=i[1]}var a=n,s=a.space,u=a.outputSpace,c=a.premultiplied,l=pr(e,t,{space:s,outputSpace:u,premultiplied:c});return l(r)}function lr(e,t){var r,n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};if(fr(e)){n=t;var o=F((r=e).rangeArgs.colors,2);e=o[0],t=o[1]}var i=n,a=i.maxDeltaE,s=i.deltaEMethod,u=i.steps,c=void 0===u?2:u,l=i.maxSteps,p=void 0===l?1e3:l,f=P(i,["maxDeltaE","deltaEMethod","steps","maxSteps"]);if(!r){var h=[Se(e),Se(t)];e=h[0],t=h[1],r=pr(e,t,f)}var d=sr(e,t),v=a>0?Math.max(c,Math.ceil(d/a)+1):c,y=[];if(void 0!==p&&(v=Math.min(v,p)),1===v)y=[{p:.5,color:r(.5)}];else{var m=1/(v-1);y=Array.from({length:v},(function(e,t){var n=t*m;return{p:n,color:r(n)}}))}if(a>0)for(var g=y.reduce((function(e,t,r){if(0===r)return 0;var n=sr(t.color,y[r-1].color,s);return Math.max(e,n)}),0);g>a;){g=0;for(var b=1;b<y.length&&y.length<p;b++){var w=y[b-1],M=y[b],O=(M.p+w.p)/2,x=r(O);g=Math.max(g,sr(x,w.color),sr(x,M.color)),y.splice(b,0,{p:O,color:r(O)}),b++}}return y=y.map((function(e){return e.color})),y}function pr(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};if(fr(e)){var n=e,o=t;return pr.apply(void 0,z(n.rangeArgs.colors).concat([L(L({},n.rangeArgs.options),o)]))}var i=r.space,a=r.outputSpace,s=r.progression,u=r.premultiplied;e=Se(e),t=Se(t),e=$e(e),t=$e(t);var c={colors:[e,t],options:r};if(i=i?ge.get(i):ge.registry[le.interpolationSpace]||e.space,a=a?ge.get(a):i,e=qe(e,i),t=qe(t,i),e=Ge(e),t=Ge(t),i.coords.h&&"angle"===i.coords.h.type){var l=r.hue=r.hue||"shorter",p=[i,"h"],f=[Ae(e,p),Ae(t,p)],h=f[0],d=f[1],v=Be(l,[h,d]),y=F(v,2);h=y[0],d=y[1],_e(e,p,h),_e(t,p,d)}return u&&(e.coords=e.coords.map((function(t){return t*e.alpha})),t.coords=t.coords.map((function(e){return e*t.alpha}))),Object.assign((function(r){r=s?s(r):r;var n=e.coords.map((function(e,n){return oe(e,t.coords[n],r)})),o=oe(e.alpha,t.alpha,r),c={space:i,coords:n,alpha:o};return u&&(c.coords=c.coords.map((function(e){return e/o}))),a!==i&&(c=qe(c,a)),c}),{rangeArgs:c})}function fr(e){return"function"===ee(e)&&!!e.rangeArgs}le.interpolationSpace="lab";var hr=Object.freeze({__proto__:null,mix:cr,steps:lr,range:pr,isRange:fr,register:function(e){e.defineFunction("mix",cr,{returns:"color"}),e.defineFunction("range",pr,{returns:"function<color>"}),e.defineFunction("steps",lr,{returns:"array<color>"})}}),dr=new ge({id:"hsl",name:"HSL",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},s:{range:[0,100],name:"Saturation"},l:{range:[0,100],name:"Lightness"}},base:nt,fromBase:function(e){var t=Math.max.apply(Math,z(e)),r=Math.min.apply(Math,z(e)),n=F(e,3),o=n[0],i=n[1],a=n[2],s=NaN,u=0,c=(r+t)/2,l=t-r;if(0!==l){switch(u=0===c||1===c?0:(t-c)/Math.min(c,1-c),t){case o:s=(i-a)/l+(i<a?6:0);break;case i:s=(a-o)/l+2;break;case a:s=(o-i)/l+4}s*=60}return[s,100*u,100*c]},toBase:function(e){var t=F(e,3),r=t[0],n=t[1],o=t[2];function i(e){var t=(e+r/30)%12,i=n*Math.min(o,1-o);return o-i*Math.max(-1,Math.min(t-3,9-t,1))}return(r%=360)<0&&(r+=360),n/=100,o/=100,[i(0),i(8),i(4)]},formats:{hsl:{toGamut:!0,coords:["<number> | <angle>","<percentage>","<percentage>"]},hsla:{coords:["<number> | <angle>","<percentage>","<percentage>"],commas:!0,lastAlpha:!0}}}),vr=new ge({id:"hsv",name:"HSV",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},s:{range:[0,100],name:"Saturation"},v:{range:[0,100],name:"Value"}},base:dr,fromBase:function(e){var t=F(e,3),r=t[0],n=t[1],o=t[2],i=(o/=100)+(n/=100)*Math.min(o,1-o);return[r,0===i?0:200*(1-o/i),100*i]},toBase:function(e){var t=F(e,3),r=t[0],n=t[1],o=t[2],i=(o/=100)*(1-(n/=100)/2);return[r,0===i||1===i?0:(o-i)/Math.min(i,1-i)*100,100*i]},formats:{color:{toGamut:!0}}}),yr=new ge({id:"hwb",name:"HWB",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},w:{range:[0,100],name:"Whiteness"},b:{range:[0,100],name:"Blackness"}},base:vr,fromBase:function(e){var t=F(e,3),r=t[0],n=t[1],o=t[2];return[r,o*(100-n)/100,100-o]},toBase:function(e){var t=F(e,3),r=t[0],n=t[1],o=t[2],i=(n/=100)+(o/=100);if(i>=1)return[r,0,n/i*100];var a=1-o;return[r,100*(0===a?0:1-n/a),100*a]},formats:{hwb:{toGamut:!0,coords:["<number> | <angle>","<percentage>","<percentage>"]}}}),mr=new Oe({id:"a98rgb-linear",name:"Linear Adobe® 98 RGB compatible",white:"D65",toXYZ_M:[[.5766690429101305,.1855582379065463,.1882286462349947],[.29734497525053605,.6273635662554661,.07529145849399788],[.02703136138641234,.07068885253582723,.9913375368376388]],fromXYZ_M:[[2.0415879038107465,-.5650069742788596,-.34473135077832956],[-.9692436362808795,1.8759675015077202,.04155505740717557],[.013444280632031142,-.11836239223101838,1.0151749943912054]]}),gr=new Oe({id:"a98rgb",name:"Adobe® 98 RGB compatible",base:mr,toBase:function(e){return e.map((function(e){return Math.pow(Math.abs(e),563/256)*Math.sign(e)}))},fromBase:function(e){return e.map((function(e){return Math.pow(Math.abs(e),256/563)*Math.sign(e)}))},formats:{color:{id:"a98-rgb"}}}),br=new Oe({id:"prophoto-linear",name:"Linear ProPhoto",white:"D50",base:je,toXYZ_M:[[.7977604896723027,.13518583717574031,.0313493495815248],[.2880711282292934,.7118432178101014,8565396060525902e-20],[0,0,.8251046025104601]],fromXYZ_M:[[1.3457989731028281,-.25558010007997534,-.05110628506753401],[-.5446224939028347,1.5082327413132781,.02053603239147973],[0,0,1.2119675456389454]]}),wr=new Oe({id:"prophoto",name:"ProPhoto",base:br,toBase:function(e){return e.map((function(e){return e<.03125?e/16:Math.pow(e,1.8)}))},fromBase:function(e){return e.map((function(e){return e>=.001953125?Math.pow(e,1/1.8):16*e}))},formats:{color:{id:"prophoto-rgb"}}}),Mr=new ge({id:"oklch",name:"OKLCh",coords:{l:{refRange:[0,1],name:"Lightness"},c:{refRange:[0,.4],name:"Chroma"},h:{refRange:[0,360],type:"angle",name:"Hue"}},white:"D65",base:ir,fromBase:function(e){var t,r=F(e,3),n=r[0],o=r[1],i=r[2],a=2e-4;return t=Math.abs(o)<a&&Math.abs(i)<a?NaN:180*Math.atan2(i,o)/Math.PI,[n,Math.sqrt(Math.pow(o,2)+Math.pow(i,2)),Ne(t)]},toBase:function(e){var t,r,n=F(e,3),o=n[0],i=n[1],a=n[2];return isNaN(a)?(t=0,r=0):(t=i*Math.cos(a*Math.PI/180),r=i*Math.sin(a*Math.PI/180)),[o,t,r]},formats:{oklch:{coords:["<number> | <percentage>","<number>","<number> | <angle>"]}}}),Or=2610/Math.pow(2,14),xr=Math.pow(2,14)/2610,Sr=2523/Math.pow(2,5),kr=Math.pow(2,5)/2523,Ar=3424/Math.pow(2,12),Er=2413/Math.pow(2,7),_r=2392/Math.pow(2,7),jr=new Oe({id:"rec2100pq",name:"REC.2100-PQ",base:Ye,toBase:function(e){return e.map((function(e){return 1e4*Math.pow(Math.max(Math.pow(e,kr)-Ar,0)/(Er-_r*Math.pow(e,kr)),xr)/203}))},fromBase:function(e){return e.map((function(e){var t=Math.max(203*e/1e4,0),r=Ar+Er*Math.pow(t,Or),n=1+_r*Math.pow(t,Or);return Math.pow(r/n,Sr)}))},formats:{color:{id:"rec2100-pq"}}}),Tr=.17883277,Pr=.28466892,Rr=.55991073,Cr=3.7743,Nr=new Oe({id:"rec2100hlg",cssid:"rec2100-hlg",name:"REC.2100-HLG",referred:"scene",base:Ye,toBase:function(e){return e.map((function(e){return e<=.5?Math.pow(e,2)/3*Cr:Math.exp((e-Rr)/Tr+Pr)/12*Cr}))},fromBase:function(e){return e.map((function(e){return(e/=Cr)<=1/12?Math.sqrt(3*e):Tr*Math.log(12*e-Pr)+Rr}))},formats:{color:{id:"rec2100-hlg"}}}),Br={};function Ir(e){var t=e.id;e.toCone_M,e.fromCone_M,Br[t]=arguments[0]}function Lr(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:"Bradford",n=Br[r],o=Q(n.toCone_M,e),i=F(o,3),a=i[0],s=i[1],u=i[2],c=Q(n.toCone_M,t),l=F(c,3),p=l[0],f=l[1],h=l[2],d=[[p/a,0,0],[0,f/s,0],[0,0,h/u]],v=Q(d,n.toCone_M),y=Q(n.fromCone_M,v);return y}ce.add("chromatic-adaptation-start",(function(e){e.options.method&&(e.M=Lr(e.W1,e.W2,e.options.method))})),ce.add("chromatic-adaptation-end",(function(e){e.M||(e.M=Lr(e.W1,e.W2,e.options.method))})),Ir({id:"von Kries",toCone_M:[[.40024,.7076,-.08081],[-.2263,1.16532,.0457],[0,0,.91822]],fromCone_M:[[1.8599364,-1.1293816,.2198974],[.3611914,.6388125,-64e-7],[0,0,1.0890636]]}),Ir({id:"Bradford",toCone_M:[[.8951,.2664,-.1614],[-.7502,1.7135,.0367],[.0389,-.0685,1.0296]],fromCone_M:[[.9869929,-.1470543,.1599627],[.4323053,.5183603,.0492912],[-.0085287,.0400428,.9684867]]}),Ir({id:"CAT02",toCone_M:[[.7328,.4296,-.1624],[-.7036,1.6975,.0061],[.003,.0136,.9834]],fromCone_M:[[1.0961238,-.278869,.1827452],[.454369,.4735332,.0720978],[-.0096276,-.005698,1.0153256]]}),Ir({id:"CAT16",toCone_M:[[.401288,.650173,-.051461],[-.250268,1.204414,.045854],[-.002079,.048952,.953127]],fromCone_M:[[1.862067855087233,-1.011254630531685,.1491867754444518],[.3875265432361372,.6214474419314753,-.008973985167612518],[-.01584149884933386,-.03412293802851557,1.04996443687785]]}),Object.assign(pe,{A:[1.0985,1,.35585],C:[.98074,1,1.18232],D55:[.95682,1,.92149],D75:[.94972,1,1.22638],E:[1,1,1],F2:[.99186,1,.67393],F7:[.95041,1,1.08747],F11:[1.00962,1,.6435]}),pe.ACES=[.32168/.33767,1,.34065/.33767];var zr,Dr=new Oe({id:"acescg",name:"ACEScg",coords:{r:{range:[0,65504],name:"Red"},g:{range:[0,65504],name:"Green"},b:{range:[0,65504],name:"Blue"}},referred:"scene",white:pe.ACES,toXYZ_M:[[.6624541811085053,.13400420645643313,.1561876870049078],[.27222871678091454,.6740817658111484,.05368951740793705],[-.005574649490394108,.004060733528982826,1.0103391003129971]],fromXYZ_M:[[1.6410233796943257,-.32480329418479,-.23642469523761225],[-.6636628587229829,1.6153315916573379,.016756347685530137],[.011721894328375376,-.008284441996237409,.9883948585390215]],formats:{color:{}}}),Fr=Math.pow(2,-16),Hr=-.35828683,Wr=(Math.log2(65504)+9.72)/17.52,Ur=new Oe({id:"acescc",name:"ACEScc",coords:{r:{range:[Hr,Wr],name:"Red"},g:{range:[Hr,Wr],name:"Green"},b:{range:[Hr,Wr],name:"Blue"}},referred:"scene",base:Dr,toBase:function(e){return e.map((function(e){return e<=-.3013698630136986?2*(Math.pow(2,17.52*e-9.72)-Fr):e<Wr?Math.pow(2,17.52*e-9.72):65504}))},fromBase:function(e){return e.map((function(e){return e<=0?(Math.log2(Fr)+9.72)/17.52:e<Fr?(Math.log2(Fr+.5*e)+9.72)/17.52:(Math.log2(e)+9.72)/17.52}))},formats:{color:{}}}),$r=Object.freeze({__proto__:null,XYZ_D65:Me,XYZ_D50:je,XYZ_ABS_D65:Et,Lab_D65:wt,Lab:Ce,LCH:Ie,sRGB_Linear:Je,sRGB:nt,HSL:dr,HWB:yr,HSV:vr,P3_Linear:Qe,P3:ot,A98RGB_Linear:mr,A98RGB:gr,ProPhoto_Linear:br,ProPhoto:wr,REC_2020_Linear:Ye,REC_2020:Ke,OKLab:ir,OKLCH:Mr,Jzazbz:Ut,JzCzHz:$t,ICTCP:er,REC_2100_PQ:jr,REC_2100_HLG:Nr,ACEScg:Dr,ACEScc:Ur}),Gr=new WeakMap,qr=function(){function e(){var t,r,n,o,i=this;q(this,e),Gr.set(this,{writable:!0,value:void 0});for(var a=arguments.length,s=new Array(a),u=0;u<a;u++)s[u]=arguments[u];1===s.length&&(t=Se(s[0])),t?(r=t.space||t.spaceId,n=t.coords,o=t.alpha):(r=s[0],n=s[1],o=s[2]),$(this,Gr,ge.get(r)),this.coords=n?n.slice():[0,0,0],this.alpha=o<1?o:1;for(var c=0;c<this.coords.length;c++)"NaN"===this.coords[c]&&(this.coords[c]=NaN);var l=function(e){Object.defineProperty(i,e,{get:function(){return i.get(e)},set:function(t){return i.set(e,t)}})};for(var p in W(this,Gr).coords)l(p)}return Y(e,[{key:"space",get:function(){return W(this,Gr)}},{key:"spaceId",get:function(){return W(this,Gr).id}},{key:"clone",value:function(){return new e(this.space,this.coords,this.alpha)}},{key:"toJSON",value:function(){return{spaceId:this.spaceId,coords:this.coords,alpha:this.alpha}}},{key:"display",value:function(){for(var t=arguments.length,r=new Array(t),n=0;n<t;n++)r[n]=arguments[n];var o=lt.apply(void 0,[this].concat(r));return o.color=new e(o.color),o}}],[{key:"get",value:function(t){if(t instanceof e)return t;for(var r=arguments.length,n=new Array(r>1?r-1:0),o=1;o<r;o++)n[o-1]=arguments[o];return T(e,[t].concat(n))}},{key:"defineFunction",value:function(t,r){var n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:r,o=n.instance,i=void 0===o||o,a=n.returns,s=function(){var t=r.apply(void 0,arguments);if("color"===a)t=e.get(t);else if("function<color>"===a){var n=t;t=function(){var t=n.apply(void 0,arguments);return e.get(t)},Object.assign(t,n)}else"array<color>"===a&&(t=t.map((function(t){return e.get(t)})));return t};t in e||(e[t]=s),i&&(e.prototype[t]=function(){for(var e=arguments.length,t=new Array(e),r=0;r<e;r++)t[r]=arguments[r];return s.apply(void 0,[this].concat(t))})}},{key:"defineFunctions",value:function(t){for(var r in t)e.defineFunction(r,t[r],t[r])}},{key:"extend",value:function(t){if(t.register)t.register(e);else for(var r in t)e.defineFunction(r,t[r])}}]),e}();qr.defineFunctions({get:Ae,getAll:ke,set:_e,setAll:Ee,to:qe,equals:function(e,t){return e=Se(e),t=Se(t),e.space===t.space&&e.alpha===t.alpha&&e.coords.every((function(e,r){return e===t.coords[r]}))},inGamut:Ue,toGamut:Ge,distance:pt,toString:Ve}),Object.assign(qr,{util:ue,hooks:ce,WHITES:pe,Space:ge,spaces:ge.registry,parse:xe,defaults:le});for(var Vr=0,Yr=Object.keys($r);Vr<Yr.length;Vr++){var Xr=Yr[Vr];ge.register($r[Xr])}for(var Zr in ge.registry)Kr(Zr,ge.registry[Zr]);function Kr(e,t){Object.keys(t.coords),Object.values(t.coords).map((function(e){return e.name}));var r=e.replace(/-/g,"_");Object.defineProperty(qr.prototype,r,{get:function(){var r=this,n=this.getAll(e);return"undefined"==typeof Proxy?n:new Proxy(n,{has:function(e,r){try{return ge.resolveCoord([t,r]),!0}catch(e){}return Reflect.has(e,r)},get:function(e,r,n){if(r&&"symbol"!==D(r)&&!(r in e)){var o=ge.resolveCoord([t,r]).index;if(o>=0)return e[o]}return Reflect.get(e,r,n)},set:function(n,o,i,a){if(o&&"symbol"!==D(o)&&!(o in n)||o>=0){var s=ge.resolveCoord([t,o]).index;if(s>=0)return n[s]=i,r.setAll(e,n),!0}return Reflect.set(n,o,i,a)}})},set:function(t){this.setAll(e,t)},configurable:!0,enumerable:!0})}function Qr(e,r){var n=e;try{return n=function(e,r){var n=new qr(e),o=n;try{switch(r.type){case t.LIGHTEN:o=function(e,t,r){switch(t){case zr.LCH:var n=e.lch.l,o=100-n,i=Math.max(0,e.lch.c-r*e.lch.c),a=Math.min(100,n+o*r);return e.set("lch.l",a),e.set("lch.c",i),e;case zr.HSL:var s=e.hsl.l,u=100-s,c=Math.min(100,s+u*r);return e.set("hsl.l",c),e;case zr.P3:var l=e.to("p3"),p=Math.min(1,l.p3.r+r*(1-l.p3.r)),f=Math.min(1,l.p3.g+r*(1-l.p3.g)),h=Math.min(1,l.p3.b+r*(1-l.p3.b));return l.set("p3.r",p),l.set("p3.g",f),l.set("p3.b",h),l;case zr.SRGB:var d=Math.min(1,e.srgb.r+r*(1-e.srgb.r)),v=Math.min(1,e.srgb.g+r*(1-e.srgb.g)),y=Math.min(1,e.srgb.b+r*(1-e.srgb.b));return e.set("srgb.r",d),e.set("srgb.g",v),e.set("srgb.b",y),e;default:return e.lighten(r)}}(n,r.space,Number(r.value));break;case t.DARKEN:o=function(e,t,r){switch(t){case zr.LCH:var n=e.lch.l,o=n,i=Math.max(0,e.lch.c-r*e.lch.c),a=Math.max(0,n-o*r);return e.set("lch.l",a),e.set("lch.c",i),e;case zr.HSL:var s=e.hsl.l,u=s,c=Math.max(0,s-u*r);return e.set("hsl.l",c),e;case zr.P3:var l=e.to("p3"),p=Math.max(0,l.p3.r-r*l.p3.r),f=Math.max(0,l.p3.g-r*l.p3.g),h=Math.max(0,l.p3.b-r*l.p3.b);return l.set("p3.r",p),l.set("p3.g",f),l.set("p3.b",h),l;case zr.SRGB:var d=Math.max(0,e.srgb.r-r*e.srgb.r),v=Math.max(0,e.srgb.g-r*e.srgb.g),y=Math.max(0,e.srgb.b-r*e.srgb.b);return e.set("srgb.r",d),e.set("srgb.g",v),e.set("srgb.b",y),e;default:return e.darken(r)}}(n,r.space,Number(r.value));break;case t.MIX:o=function(e,t,r,n){var o=Math.max(0,Math.min(1,Number(r)));return new qr(e.mix(n,o).toString())}(n,r.space,Number(r.value),new qr(r.color));break;case t.ALPHA:o=function(e,t){return e.alpha=Math.max(0,Math.min(1,Number(t))),e}(n,Number(r.value));break;default:o=n}return(o=o.to(r.space)).toString({inGamut:!0,precision:3})}catch(t){return e}}(e,r),new qr(n).to("srgb").toString({format:"hex"})}catch(t){return e}}ce.add("colorspace-init-end",(function(e){var t;Kr(e.id,e),null===(t=e.aliases)||void 0===t||t.forEach((function(t){Kr(t,e)}))})),qr.extend(ar),qr.extend({deltaE:sr}),qr.extend(ur),qr.extend({contrast:function(e,t){var r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};J(r)&&(r={algorithm:r});var n=r,o=n.algorithm,i=P(n,["algorithm"]);if(!o){var a=Object.keys(Ot).map((function(e){return e.replace(/^contrast/,"")})).join(", ");throw new TypeError("contrast() function needs a contrast algorithm. Please specify one of: ".concat(a))}for(var s in e=Se(e),t=Se(t),Ot)if("contrast"+o.toLowerCase()===s.toLowerCase())return Ot[s](e,t,i);throw new TypeError("Unknown contrast algorithm: ".concat(o))}}),qr.extend(kt),qr.extend(dt),qr.extend(hr),qr.extend(Ot),function(e){e.LCH="lch",e.SRGB="srgb",e.P3="p3",e.HSL="hsl"}(zr||(zr={}));var Jr,en,tn,rn,nn,on,an=/(\$[^\s,]+\w)|({([^]*))/g,sn=/(\$[^\s,]+\w)|({([^}]*)})/g,un=function(e){return null==e?void 0:e.toString().match(sn)};function cn(e){return cn="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},cn(e)}function ln(e){return!(!e||"object"!==cn(e)||!("value"in e)||void 0===e.value||null===e.value||"object"===cn(null==e?void 0:e.value)&&e&&"value"in e.value)}function pn(e){return pn="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},pn(e)}function fn(t){return"object"===pn(t)&&t.type===e.TYPOGRAPHY&&("string"==typeof t.value||"object"===pn(t.value)&&!("value"in t.value))}function hn(e){return hn="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},hn(e)}function dn(t){return"object"===hn(t)&&t.type===e.COMPOSITION&&"object"===hn(t.value)&&!("value"in t.value)}function vn(e){return vn="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},vn(e)}function yn(e){return!!(e&&"object"===vn(e)&&"value"in e&&"name"in e)}function mn(e){return mn="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},mn(e)}function gn(t){return"object"===mn(t)&&t.type===e.BOX_SHADOW&&("string"==typeof t.value||Array.isArray(t.value)||"object"===mn(t.value)&&!("value"in t.value))}function bn(e){return bn="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},bn(e)}function wn(t){return"object"===bn(t)&&t.type===e.BORDER&&("string"==typeof t.value||"object"===bn(t.value)&&!("value"in t.value))}(on=Jr||(Jr={})).sizing="sizing",on.height="height",on.width="width",on.spacing="spacing",on.verticalPadding="verticalPadding",on.horizontalPadding="horizontalPadding",on.paddingTop="paddingTop",on.paddingRight="paddingRight",on.paddingBottom="paddingBottom",on.paddingLeft="paddingLeft",on.itemSpacing="itemSpacing",on.fill="fill",on.backgroundBlur="backgroundBlur",on.border="border",on.borderTop="borderTop",on.borderRight="borderRight",on.borderBottom="borderBottom",on.borderLeft="borderLeft",on.borderColor="borderColor",on.borderRadius="borderRadius",on.borderRadiusTopLeft="borderRadiusTopLeft",on.borderRadiusTopRight="borderRadiusTopRight",on.borderRadiusBottomRight="borderRadiusBottomRight",on.borderRadiusBottomLeft="borderRadiusBottomLeft",on.borderWidth="borderWidth",on.borderWidthTop="borderWidthTop",on.borderWidthRight="borderWidthRight",on.borderWidthBottom="borderWidthBottom",on.borderWidthLeft="borderWidthLeft",on.boxShadow="boxShadow",on.opacity="opacity",on.fontFamilies="fontFamilies",on.fontWeights="fontWeights",on.fontSizes="fontSizes",on.lineHeights="lineHeights",on.typography="typography",on.composition="composition",on.letterSpacing="letterSpacing",on.paragraphSpacing="paragraphSpacing",on.textCase="textCase",on.dimension="dimension",on.textDecoration="textDecoration",on.asset="asset",on.tokenValue="tokenValue",on.value="value",on.tokenName="tokenName",on.description="description",(nn=en||(en={})).LOCAL="local",nn.GENERIC_VERSIONED_STORAGE="genericVersionedStorage",nn.JSONBIN="jsonbin",nn.GITHUB="github",nn.GITLAB="gitlab",nn.ADO="ado",nn.URL="url",nn.BITBUCKET="bitbucket",(rn=tn||(tn={})).DROP_SHADOW="dropShadow",rn.INNER_SHADOW="innerShadow";var Mn="INUMBER",On="IOP1",xn="IOP2",Sn="IOP3",kn="IVAR",An="IVARNAME",En="IFUNCALL",_n="IFUNDEF",jn="IEXPR",Tn="IEXPREVAL",Pn="IMEMBER",Rn="IENDSTATEMENT",Cn="IARRAY";function Nn(e,t){this.type=e,this.value=null!=t?t:0}function Bn(e){return new Nn(On,e)}function In(e){return new Nn(xn,e)}function Ln(e){return new Nn(Sn,e)}function zn(e,t,r,n,o){for(var i,a,s,u,c=[],l=[],p=0;p<e.length;p++){var f=e[p],h=f.type;if(h===Mn||h===An)Array.isArray(f.value)?c.push.apply(c,zn(f.value.map((function(e){return new Nn(Mn,e)})).concat(new Nn(Cn,f.value.length)),t,r,n,o)):c.push(f);else if(h===kn&&o.hasOwnProperty(f.value))f=new Nn(Mn,o[f.value]),c.push(f);else if(h===xn&&c.length>1)a=c.pop(),i=c.pop(),u=r[f.value],f=new Nn(Mn,u(i.value,a.value)),c.push(f);else if(h===Sn&&c.length>2)s=c.pop(),a=c.pop(),i=c.pop(),"?"===f.value?c.push(i.value?a.value:s.value):(u=n[f.value],f=new Nn(Mn,u(i.value,a.value,s.value)),c.push(f));else if(h===On&&c.length>0)i=c.pop(),u=t[f.value],f=new Nn(Mn,u(i.value)),c.push(f);else if(h===jn){for(;c.length>0;)l.push(c.shift());l.push(new Nn(jn,zn(f.value,t,r,n,o)))}else if(h===Pn&&c.length>0)i=c.pop(),c.push(new Nn(Mn,i.value[f.value]));else{for(;c.length>0;)l.push(c.shift());l.push(f)}}for(;c.length>0;)l.push(c.shift());return l}function Dn(e,t,r){for(var n=[],o=0;o<e.length;o++){var i=e[o],a=i.type;if(a===kn&&i.value===t)for(var s=0;s<r.tokens.length;s++){var u,c=r.tokens[s];u=c.type===On?Bn(c.value):c.type===xn?In(c.value):c.type===Sn?Ln(c.value):new Nn(c.type,c.value),n.push(u)}else a===jn?n.push(new Nn(jn,Dn(i.value,t,r))):n.push(i)}return n}function Fn(e,t,r){var n,o,i,a,s,u,c=[];if(Wn(e))return Un(e,r);for(var l=e.length,p=0;p<l;p++){var f=e[p],h=f.type;if(h===Mn||h===An)c.push(f.value);else if(h===xn)o=c.pop(),n=c.pop(),"and"===f.value?c.push(!!n&&!!Fn(o,t,r)):"or"===f.value?c.push(!!n||!!Fn(o,t,r)):"="===f.value?(a=t.binaryOps[f.value],c.push(a(n,Fn(o,t,r),r))):(a=t.binaryOps[f.value],c.push(a(Un(n,r),Un(o,r))));else if(h===Sn)i=c.pop(),o=c.pop(),n=c.pop(),"?"===f.value?c.push(Fn(n?o:i,t,r)):(a=t.ternaryOps[f.value],c.push(a(Un(n,r),Un(o,r),Un(i,r))));else if(h===kn)if(f.value in t.functions)c.push(t.functions[f.value]);else if(f.value in t.unaryOps&&t.parser.isOperatorEnabled(f.value))c.push(t.unaryOps[f.value]);else{var d=r[f.value];if(void 0===d)throw new Error("undefined variable: "+f.value);c.push(d)}else if(h===On)n=c.pop(),a=t.unaryOps[f.value],c.push(a(Un(n,r)));else if(h===En){for(u=f.value,s=[];u-- >0;)s.unshift(Un(c.pop(),r));if(!(a=c.pop()).apply||!a.call)throw new Error(a+" is not a function");c.push(a.apply(void 0,s))}else if(h===_n)c.push(function(){for(var e=c.pop(),n=[],o=f.value;o-- >0;)n.unshift(c.pop());var i=c.pop(),a=function(){for(var o=Object.assign({},r),i=0,a=n.length;i<a;i++)o[n[i]]=arguments[i];return Fn(e,t,o)};return Object.defineProperty(a,"name",{value:i,writable:!1}),r[i]=a,a}());else if(h===jn)c.push(Hn(f,t));else if(h===Tn)c.push(f);else if(h===Pn)n=c.pop(),c.push(n[f.value]);else if(h===Rn)c.pop();else{if(h!==Cn)throw new Error("invalid Expression");for(u=f.value,s=[];u-- >0;)s.unshift(c.pop());c.push(s)}}if(c.length>1)throw new Error("invalid Expression (parity)");return 0===c[0]?0:Un(c[0],r)}function Hn(e,t,r){return Wn(e)?e:{type:Tn,value:function(r){return Fn(e.value,t,r)}}}function Wn(e){return e&&e.type===Tn}function Un(e,t){return Wn(e)?e.value(t):e}function $n(e,t){for(var r,n,o,i,a,s,u=[],c=0;c<e.length;c++){var l=e[c],p=l.type;if(p===Mn)"number"==typeof l.value&&l.value<0?u.push("("+l.value+")"):Array.isArray(l.value)?u.push("["+l.value.map(Gn).join(", ")+"]"):u.push(Gn(l.value));else if(p===xn)n=u.pop(),r=u.pop(),i=l.value,t?"^"===i?u.push("Math.pow("+r+", "+n+")"):"and"===i?u.push("(!!"+r+" && !!"+n+")"):"or"===i?u.push("(!!"+r+" || !!"+n+")"):"||"===i?u.push("(function(a,b){ return Array.isArray(a) && Array.isArray(b) ? a.concat(b) : String(a) + String(b); }(("+r+"),("+n+")))"):"=="===i?u.push("("+r+" === "+n+")"):"!="===i?u.push("("+r+" !== "+n+")"):"["===i?u.push(r+"[("+n+") | 0]"):u.push("("+r+" "+i+" "+n+")"):"["===i?u.push(r+"["+n+"]"):u.push("("+r+" "+i+" "+n+")");else if(p===Sn){if(o=u.pop(),n=u.pop(),r=u.pop(),"?"!==(i=l.value))throw new Error("invalid Expression");u.push("("+r+" ? "+n+" : "+o+")")}else if(p===kn||p===An)u.push(l.value);else if(p===On)r=u.pop(),"-"===(i=l.value)||"+"===i?u.push("("+i+r+")"):t?"not"===i?u.push("(!"+r+")"):"!"===i?u.push("fac("+r+")"):u.push(i+"("+r+")"):"!"===i?u.push("("+r+"!)"):u.push("("+i+" "+r+")");else if(p===En){for(s=l.value,a=[];s-- >0;)a.unshift(u.pop());i=u.pop(),u.push(i+"("+a.join(", ")+")")}else if(p===_n){for(n=u.pop(),s=l.value,a=[];s-- >0;)a.unshift(u.pop());r=u.pop(),t?u.push("("+r+" = function("+a.join(", ")+") { return "+n+" })"):u.push("("+r+"("+a.join(", ")+") = "+n+")")}else if(p===Pn)r=u.pop(),u.push(r+"."+l.value);else if(p===Cn){for(s=l.value,a=[];s-- >0;)a.unshift(u.pop());u.push("["+a.join(", ")+"]")}else if(p===jn)u.push("("+$n(l.value,t)+")");else if(p!==Rn)throw new Error("invalid Expression")}return u.length>1&&(u=t?[u.join(",")]:[u.join(";")]),String(u[0])}function Gn(e){return"string"==typeof e?JSON.stringify(e).replace(/\u2028/g,"\\u2028").replace(/\u2029/g,"\\u2029"):e}function qn(e,t){for(var r=0;r<e.length;r++)if(e[r]===t)return!0;return!1}function Vn(e,t,r){for(var n=!!(r=r||{}).withMembers,o=null,i=0;i<e.length;i++){var a=e[i];a.type===kn||a.type===An?n||qn(t,a.value)?null!==o?(qn(t,o)||t.push(o),o=a.value):o=a.value:t.push(a.value):a.type===Pn&&n&&null!==o?o+="."+a.value:a.type===jn?Vn(a.value,t,r):null!==o&&(qn(t,o)||t.push(o),o=null)}null===o||qn(t,o)||t.push(o)}function Yn(e,t){this.tokens=e,this.parser=t,this.unaryOps=t.unaryOps,this.binaryOps=t.binaryOps,this.ternaryOps=t.ternaryOps,this.functions=t.functions}Nn.prototype.toString=function(){switch(this.type){case Mn:case On:case xn:case Sn:case kn:case An:case Rn:return this.value;case En:return"CALL "+this.value;case _n:return"DEF "+this.value;case Cn:return"ARRAY "+this.value;case Pn:return"."+this.value;default:return"Invalid Instruction"}},Yn.prototype.simplify=function(e){return e=e||{},new Yn(zn(this.tokens,this.unaryOps,this.binaryOps,this.ternaryOps,e),this.parser)},Yn.prototype.substitute=function(e,t){return t instanceof Yn||(t=this.parser.parse(String(t))),new Yn(Dn(this.tokens,e,t),this.parser)},Yn.prototype.evaluate=function(e){return e=e||{},Fn(this.tokens,this,e)},Yn.prototype.toString=function(){return $n(this.tokens,!1)},Yn.prototype.symbols=function(e){e=e||{};var t=[];return Vn(this.tokens,t,e),t},Yn.prototype.variables=function(e){e=e||{};var t=[];Vn(this.tokens,t,e);var r=this.functions;return t.filter((function(e){return!(e in r)}))},Yn.prototype.toJSFunction=function(e,t){var r=this,n=new Function(e,"with(this.functions) with (this.ternaryOps) with (this.binaryOps) with (this.unaryOps) { return "+$n(this.simplify(t).tokens,!0)+"; }");return function(){return n.apply(r,arguments)}};var Xn="TEOF",Zn="TOP",Kn="TNUMBER",Qn="TSTRING",Jn="TPAREN",eo="TBRACKET",to="TCOMMA",ro="TNAME",no="TSEMICOLON";function oo(e,t,r){this.type=e,this.value=t,this.index=r}function io(e,t){this.pos=0,this.current=null,this.unaryOps=e.unaryOps,this.binaryOps=e.binaryOps,this.ternaryOps=e.ternaryOps,this.consts=e.consts,this.expression=t,this.savedPosition=0,this.savedCurrent=null,this.options=e.options,this.parser=e}oo.prototype.toString=function(){return this.type+": "+this.value},io.prototype.newToken=function(e,t,r){return new oo(e,t,null!=r?r:this.pos)},io.prototype.save=function(){this.savedPosition=this.pos,this.savedCurrent=this.current},io.prototype.restore=function(){this.pos=this.savedPosition,this.current=this.savedCurrent},io.prototype.next=function(){return this.pos>=this.expression.length?this.newToken(Xn,"EOF"):this.isWhitespace()||this.isComment()?this.next():this.isRadixInteger()||this.isNumber()||this.isOperator()||this.isString()||this.isParen()||this.isBracket()||this.isComma()||this.isSemicolon()||this.isNamedOp()||this.isConst()||this.isName()?this.current:void this.parseError('Unknown character "'+this.expression.charAt(this.pos)+'"')},io.prototype.isString=function(){var e=!1,t=this.pos,r=this.expression.charAt(t);if("'"===r||'"'===r)for(var n=this.expression.indexOf(r,t+1);n>=0&&this.pos<this.expression.length;){if(this.pos=n+1,"\\"!==this.expression.charAt(n-1)){var o=this.expression.substring(t+1,n);this.current=this.newToken(Qn,this.unescape(o),t),e=!0;break}n=this.expression.indexOf(r,n+1)}return e},io.prototype.isParen=function(){var e=this.expression.charAt(this.pos);return("("===e||")"===e)&&(this.current=this.newToken(Jn,e),this.pos++,!0)},io.prototype.isBracket=function(){var e=this.expression.charAt(this.pos);return!("["!==e&&"]"!==e||!this.isOperatorEnabled("[")||(this.current=this.newToken(eo,e),this.pos++,0))},io.prototype.isComma=function(){return","===this.expression.charAt(this.pos)&&(this.current=this.newToken(to,","),this.pos++,!0)},io.prototype.isSemicolon=function(){return";"===this.expression.charAt(this.pos)&&(this.current=this.newToken(no,";"),this.pos++,!0)},io.prototype.isConst=function(){for(var e=this.pos,t=e;t<this.expression.length;t++){var r=this.expression.charAt(t);if(r.toUpperCase()===r.toLowerCase()&&(t===this.pos||"_"!==r&&"."!==r&&(r<"0"||r>"9")))break}if(t>e){var n=this.expression.substring(e,t);if(n in this.consts)return this.current=this.newToken(Kn,this.consts[n]),this.pos+=n.length,!0}return!1},io.prototype.isNamedOp=function(){for(var e=this.pos,t=e;t<this.expression.length;t++){var r=this.expression.charAt(t);if(r.toUpperCase()===r.toLowerCase()&&(t===this.pos||"_"!==r&&(r<"0"||r>"9")))break}if(t>e){var n=this.expression.substring(e,t);if(this.isOperatorEnabled(n)&&(n in this.binaryOps||n in this.unaryOps||n in this.ternaryOps))return this.current=this.newToken(Zn,n),this.pos+=n.length,!0}return!1},io.prototype.isName=function(){for(var e=this.pos,t=e,r=!1;t<this.expression.length;t++){var n=this.expression.charAt(t);if(n.toUpperCase()===n.toLowerCase()){if(t===this.pos&&("$"===n||"_"===n)){"_"===n&&(r=!0);continue}if(t===this.pos||!r||"_"!==n&&(n<"0"||n>"9"))break}else r=!0}if(r){var o=this.expression.substring(e,t);return this.current=this.newToken(ro,o),this.pos+=o.length,!0}return!1},io.prototype.isWhitespace=function(){for(var e=!1,t=this.expression.charAt(this.pos);!(" "!==t&&"\t"!==t&&"\n"!==t&&"\r"!==t||(e=!0,this.pos++,this.pos>=this.expression.length));)t=this.expression.charAt(this.pos);return e};var ao=/^[0-9a-f]{4}$/i;function so(e,t,r){this.parser=e,this.tokens=t,this.current=null,this.nextToken=null,this.next(),this.savedCurrent=null,this.savedNextToken=null,this.allowMemberAccess=!1!==r.allowMemberAccess}io.prototype.unescape=function(e){var t=e.indexOf("\\");if(t<0)return e;for(var r=e.substring(0,t);t>=0;){var n=e.charAt(++t);switch(n){case"'":r+="'";break;case'"':r+='"';break;case"\\":r+="\\";break;case"/":r+="/";break;case"b":r+="\b";break;case"f":r+="\f";break;case"n":r+="\n";break;case"r":r+="\r";break;case"t":r+="\t";break;case"u":var o=e.substring(t+1,t+5);ao.test(o)||this.parseError("Illegal escape sequence: \\u"+o),r+=String.fromCharCode(parseInt(o,16)),t+=4;break;default:throw this.parseError('Illegal escape sequence: "\\'+n+'"')}++t;var i=e.indexOf("\\",t);r+=e.substring(t,i<0?e.length:i),t=i}return r},io.prototype.isComment=function(){return"/"===this.expression.charAt(this.pos)&&"*"===this.expression.charAt(this.pos+1)&&(this.pos=this.expression.indexOf("*/",this.pos)+2,1===this.pos&&(this.pos=this.expression.length),!0)},io.prototype.isRadixInteger=function(){var e,t,r=this.pos;if(r>=this.expression.length-2||"0"!==this.expression.charAt(r))return!1;if(++r,"x"===this.expression.charAt(r))e=16,t=/^[0-9a-f]$/i,++r;else{if("b"!==this.expression.charAt(r))return!1;e=2,t=/^[01]$/i,++r}for(var n=!1,o=r;r<this.expression.length;){var i=this.expression.charAt(r);if(!t.test(i))break;r++,n=!0}return n&&(this.current=this.newToken(Kn,parseInt(this.expression.substring(o,r),e)),this.pos=r),n},io.prototype.isNumber=function(){for(var e,t=!1,r=this.pos,n=r,o=r,i=!1,a=!1;r<this.expression.length&&((e=this.expression.charAt(r))>="0"&&e<="9"||!i&&"."===e);)"."===e?i=!0:a=!0,r++,t=a;if(t&&(o=r),"e"===e||"E"===e){r++;for(var s=!0,u=!1;r<this.expression.length;){if(e=this.expression.charAt(r),!s||"+"!==e&&"-"!==e){if(!(e>="0"&&e<="9"))break;u=!0,s=!1}else s=!1;r++}u||(r=o)}return t?(this.current=this.newToken(Kn,parseFloat(this.expression.substring(n,r))),this.pos=r):this.pos=o,t},io.prototype.isOperator=function(){var e=this.pos,t=this.expression.charAt(this.pos);if("+"===t||"-"===t||"*"===t||"/"===t||"%"===t||"^"===t||"?"===t||":"===t||"."===t)this.current=this.newToken(Zn,t);else if("∙"===t||"•"===t)this.current=this.newToken(Zn,"*");else if(">"===t)"="===this.expression.charAt(this.pos+1)?(this.current=this.newToken(Zn,">="),this.pos++):this.current=this.newToken(Zn,">");else if("<"===t)"="===this.expression.charAt(this.pos+1)?(this.current=this.newToken(Zn,"<="),this.pos++):this.current=this.newToken(Zn,"<");else if("|"===t){if("|"!==this.expression.charAt(this.pos+1))return!1;this.current=this.newToken(Zn,"||"),this.pos++}else if("="===t)"="===this.expression.charAt(this.pos+1)?(this.current=this.newToken(Zn,"=="),this.pos++):this.current=this.newToken(Zn,t);else{if("!"!==t)return!1;"="===this.expression.charAt(this.pos+1)?(this.current=this.newToken(Zn,"!="),this.pos++):this.current=this.newToken(Zn,t)}return this.pos++,!!this.isOperatorEnabled(this.current.value)||(this.pos=e,!1)},io.prototype.isOperatorEnabled=function(e){return this.parser.isOperatorEnabled(e)},io.prototype.getCoordinates=function(){var e,t=0,r=-1;do{t++,e=this.pos-r,r=this.expression.indexOf("\n",r+1)}while(r>=0&&r<this.pos);return{line:t,column:e}},io.prototype.parseError=function(e){var t=this.getCoordinates();throw new Error("parse error ["+t.line+":"+t.column+"]: "+e)},so.prototype.next=function(){return this.current=this.nextToken,this.nextToken=this.tokens.next()},so.prototype.tokenMatches=function(e,t){return void 0===t||(Array.isArray(t)?qn(t,e.value):"function"==typeof t?t(e):e.value===t)},so.prototype.save=function(){this.savedCurrent=this.current,this.savedNextToken=this.nextToken,this.tokens.save()},so.prototype.restore=function(){this.tokens.restore(),this.current=this.savedCurrent,this.nextToken=this.savedNextToken},so.prototype.accept=function(e,t){return!(this.nextToken.type!==e||!this.tokenMatches(this.nextToken,t)||(this.next(),0))},so.prototype.expect=function(e,t){if(!this.accept(e,t)){var r=this.tokens.getCoordinates();throw new Error("parse error ["+r.line+":"+r.column+"]: Expected "+(t||e))}},so.prototype.parseAtom=function(e){var t=this.tokens.unaryOps;if(this.accept(ro)||this.accept(Zn,(function(e){return e.value in t})))e.push(new Nn(kn,this.current.value));else if(this.accept(Kn))e.push(new Nn(Mn,this.current.value));else if(this.accept(Qn))e.push(new Nn(Mn,this.current.value));else if(this.accept(Jn,"("))this.parseExpression(e),this.expect(Jn,")");else{if(!this.accept(eo,"["))throw new Error("unexpected "+this.nextToken);if(this.accept(eo,"]"))e.push(new Nn(Cn,0));else{var r=this.parseArrayList(e);e.push(new Nn(Cn,r))}}},so.prototype.parseExpression=function(e){var t=[];this.parseUntilEndStatement(e,t)||(this.parseVariableAssignmentExpression(t),this.parseUntilEndStatement(e,t)||this.pushExpression(e,t))},so.prototype.pushExpression=function(e,t){for(var r=0,n=t.length;r<n;r++)e.push(t[r])},so.prototype.parseUntilEndStatement=function(e,t){return!!this.accept(no)&&(!this.nextToken||this.nextToken.type===Xn||this.nextToken.type===Jn&&")"===this.nextToken.value||t.push(new Nn(Rn)),this.nextToken.type!==Xn&&this.parseExpression(t),e.push(new Nn(jn,t)),!0)},so.prototype.parseArrayList=function(e){for(var t=0;!this.accept(eo,"]");)for(this.parseExpression(e),++t;this.accept(to);)this.parseExpression(e),++t;return t},so.prototype.parseVariableAssignmentExpression=function(e){for(this.parseConditionalExpression(e);this.accept(Zn,"=");){var t=e.pop(),r=[],n=e.length-1;if(t.type!==En){if(t.type!==kn&&t.type!==Pn)throw new Error("expected variable for assignment");this.parseVariableAssignmentExpression(r),e.push(new Nn(An,t.value)),e.push(new Nn(jn,r)),e.push(In("="))}else{if(!this.tokens.isOperatorEnabled("()="))throw new Error("function definition is not permitted");for(var o=0,i=t.value+1;o<i;o++){var a=n-o;e[a].type===kn&&(e[a]=new Nn(An,e[a].value))}this.parseVariableAssignmentExpression(r),e.push(new Nn(jn,r)),e.push(new Nn(_n,t.value))}}},so.prototype.parseConditionalExpression=function(e){for(this.parseOrExpression(e);this.accept(Zn,"?");){var t=[],r=[];this.parseConditionalExpression(t),this.expect(Zn,":"),this.parseConditionalExpression(r),e.push(new Nn(jn,t)),e.push(new Nn(jn,r)),e.push(Ln("?"))}},so.prototype.parseOrExpression=function(e){for(this.parseAndExpression(e);this.accept(Zn,"or");){var t=[];this.parseAndExpression(t),e.push(new Nn(jn,t)),e.push(In("or"))}},so.prototype.parseAndExpression=function(e){for(this.parseComparison(e);this.accept(Zn,"and");){var t=[];this.parseComparison(t),e.push(new Nn(jn,t)),e.push(In("and"))}};var uo=["==","!=","<","<=",">=",">","in"];so.prototype.parseComparison=function(e){for(this.parseAddSub(e);this.accept(Zn,uo);){var t=this.current;this.parseAddSub(e),e.push(In(t.value))}};var co=["+","-","||"];so.prototype.parseAddSub=function(e){for(this.parseTerm(e);this.accept(Zn,co);){var t=this.current;this.parseTerm(e),e.push(In(t.value))}};var lo=["*","/","%"];function po(e,t){return Number(e)+Number(t)}function fo(e,t){return e-t}function ho(e,t){return e*t}function vo(e,t){return e/t}function yo(e,t){return e%t}function mo(e,t){return Array.isArray(e)&&Array.isArray(t)?e.concat(t):""+e+t}function go(e,t){return e===t}function bo(e,t){return e!==t}function wo(e,t){return e>t}function Mo(e,t){return e<t}function Oo(e,t){return e>=t}function xo(e,t){return e<=t}function So(e,t){return Boolean(e&&t)}function ko(e,t){return Boolean(e||t)}function Ao(e,t){return qn(t,e)}function Eo(e){return(Math.exp(e)-Math.exp(-e))/2}function _o(e){return(Math.exp(e)+Math.exp(-e))/2}function jo(e){return e===1/0?1:e===-1/0?-1:(Math.exp(e)-Math.exp(-e))/(Math.exp(e)+Math.exp(-e))}function To(e){return e===-1/0?e:Math.log(e+Math.sqrt(e*e+1))}function Po(e){return Math.log(e+Math.sqrt(e*e-1))}function Ro(e){return Math.log((1+e)/(1-e))/2}function Co(e){return Math.log(e)*Math.LOG10E}function No(e){return-e}function Bo(e){return!e}function Io(e){return e<0?Math.ceil(e):Math.floor(e)}function Lo(e){return Math.random()*(e||1)}function zo(e){return Fo(e+1)}so.prototype.parseTerm=function(e){for(this.parseFactor(e);this.accept(Zn,lo);){var t=this.current;this.parseFactor(e),e.push(In(t.value))}},so.prototype.parseFactor=function(e){var t=this.tokens.unaryOps;if(this.save(),this.accept(Zn,(function(e){return e.value in t}))){if("-"!==this.current.value&&"+"!==this.current.value){if(this.nextToken.type===Jn&&"("===this.nextToken.value)return this.restore(),void this.parseExponential(e);if(this.nextToken.type===no||this.nextToken.type===to||this.nextToken.type===Xn||this.nextToken.type===Jn&&")"===this.nextToken.value)return this.restore(),void this.parseAtom(e)}var r=this.current;this.parseFactor(e),e.push(Bn(r.value))}else this.parseExponential(e)},so.prototype.parseExponential=function(e){for(this.parsePostfixExpression(e);this.accept(Zn,"^");)this.parseFactor(e),e.push(In("^"))},so.prototype.parsePostfixExpression=function(e){for(this.parseFunctionCall(e);this.accept(Zn,"!");)e.push(Bn("!"))},so.prototype.parseFunctionCall=function(e){var t=this.tokens.unaryOps;if(this.accept(Zn,(function(e){return e.value in t}))){var r=this.current;this.parseAtom(e),e.push(Bn(r.value))}else for(this.parseMemberExpression(e);this.accept(Jn,"(");)if(this.accept(Jn,")"))e.push(new Nn(En,0));else{var n=this.parseArgumentList(e);e.push(new Nn(En,n))}},so.prototype.parseArgumentList=function(e){for(var t=0;!this.accept(Jn,")");)for(this.parseExpression(e),++t;this.accept(to);)this.parseExpression(e),++t;return t},so.prototype.parseMemberExpression=function(e){for(this.parseAtom(e);this.accept(Zn,".")||this.accept(eo,"[");){var t=this.current;if("."===t.value){if(!this.allowMemberAccess)throw new Error('unexpected ".", member access is not permitted');this.expect(ro),e.push(new Nn(Pn,this.current.value))}else{if("["!==t.value)throw new Error("unexpected symbol: "+t.value);if(!this.tokens.isOperatorEnabled("["))throw new Error('unexpected "[]", arrays are disabled');this.parseExpression(e),this.expect(eo,"]"),e.push(In("["))}}};var Do=[.9999999999999971,57.15623566586292,-59.59796035547549,14.136097974741746,-.4919138160976202,3399464998481189e-20,4652362892704858e-20,-9837447530487956e-20,.0001580887032249125,-.00021026444172410488,.00021743961811521265,-.0001643181065367639,8441822398385275e-20,-26190838401581408e-21,36899182659531625e-22];function Fo(e){var t,r;if(function(e){return isFinite(e)&&e===Math.round(e)}(e)){if(e<=0)return isFinite(e)?1/0:NaN;if(e>171)return 1/0;for(var n=e-2,o=e-1;n>1;)o*=n,n--;return 0===o&&(o=1),o}if(e<.5)return Math.PI/(Math.sin(Math.PI*e)*Fo(1-e));if(e>=171.35)return 1/0;if(e>85){var i=e*e,a=i*e,s=a*e,u=s*e;return Math.sqrt(2*Math.PI/e)*Math.pow(e/Math.E,e)*(1+1/(12*e)+1/(288*i)-139/(51840*a)-571/(2488320*s)+163879/(209018880*u)+5246819/(75246796800*u*e))}--e,r=Do[0];for(var c=1;c<Do.length;++c)r+=Do[c]/(e+c);return t=e+4.7421875+.5,Math.sqrt(2*Math.PI)*Math.pow(t,e+.5)*Math.exp(-t)*r}function Ho(e){return Array.isArray(e)?e.length:String(e).length}function Wo(){for(var e=0,t=0,r=0;r<arguments.length;r++){var n,o=Math.abs(arguments[r]);t<o?(e=e*(n=t/o)*n+1,t=o):e+=o>0?(n=o/t)*n:o}return t===1/0?1/0:t*Math.sqrt(e)}function Uo(e,t,r){return e?t:r}function $o(e,t){return void 0===t||0==+t?Math.round(e):(e=+e,t=-+t,isNaN(e)||"number"!=typeof t||t%1!=0?NaN:(e=e.toString().split("e"),+((e=(e=Math.round(+(e[0]+"e"+(e[1]?+e[1]-t:-t)))).toString().split("e"))[0]+"e"+(e[1]?+e[1]+t:t))))}function Go(e,t,r){return r&&(r[e]=t),t}function qo(e,t){return e[0|t]}function Vo(e){return 1===arguments.length&&Array.isArray(e)?Math.max.apply(Math,e):Math.max.apply(Math,arguments)}function Yo(e){return 1===arguments.length&&Array.isArray(e)?Math.min.apply(Math,e):Math.min.apply(Math,arguments)}function Xo(e,t){if("function"!=typeof e)throw new Error("First argument to map is not a function");if(!Array.isArray(t))throw new Error("Second argument to map is not an array");return t.map((function(t,r){return e(t,r)}))}function Zo(e,t,r){if("function"!=typeof e)throw new Error("First argument to fold is not a function");if(!Array.isArray(r))throw new Error("Second argument to fold is not an array");return r.reduce((function(t,r,n){return e(t,r,n)}),t)}function Ko(e,t){if("function"!=typeof e)throw new Error("First argument to filter is not a function");if(!Array.isArray(t))throw new Error("Second argument to filter is not an array");return t.filter((function(t,r){return e(t,r)}))}function Qo(e,t){if(!Array.isArray(t)&&"string"!=typeof t)throw new Error("Second argument to indexOf is not a string or array");return t.indexOf(e)}function Jo(e,t){if(!Array.isArray(t))throw new Error("Second argument to join is not an array");return t.join(e)}function ei(e){return(e>0)-(e<0)||+e}var ti=1/3;function ri(e){return e<0?-Math.pow(-e,ti):Math.pow(e,ti)}function ni(e){return Math.exp(e)-1}function oi(e){return Math.log(1+e)}function ii(e){return Math.log(e)/Math.LN2}function ai(e){this.options=e||{},this.unaryOps={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sinh:Math.sinh||Eo,cosh:Math.cosh||_o,tanh:Math.tanh||jo,asinh:Math.asinh||To,acosh:Math.acosh||Po,atanh:Math.atanh||Ro,sqrt:Math.sqrt,cbrt:Math.cbrt||ri,log:Math.log,log2:Math.log2||ii,ln:Math.log,lg:Math.log10||Co,log10:Math.log10||Co,expm1:Math.expm1||ni,log1p:Math.log1p||oi,abs:Math.abs,ceil:Math.ceil,floor:Math.floor,round:Math.round,trunc:Math.trunc||Io,"-":No,"+":Number,exp:Math.exp,not:Bo,length:Ho,"!":zo,sign:Math.sign||ei},this.binaryOps={"+":po,"-":fo,"*":ho,"/":vo,"%":yo,"^":Math.pow,"||":mo,"==":go,"!=":bo,">":wo,"<":Mo,">=":Oo,"<=":xo,and:So,or:ko,in:Ao,"=":Go,"[":qo},this.ternaryOps={"?":Uo},this.functions={random:Lo,fac:zo,min:Yo,max:Vo,hypot:Math.hypot||Wo,pyt:Math.hypot||Wo,pow:Math.pow,atan2:Math.atan2,if:Uo,gamma:Fo,roundTo:$o,map:Xo,fold:Zo,filter:Ko,indexOf:Qo,join:Jo},this.consts={E:Math.E,PI:Math.PI,true:!0,false:!1}}ai.prototype.parse=function(e){var t=[],r=new so(this,new io(this,e),{allowMemberAccess:this.options.allowMemberAccess});return r.parseExpression(t),r.expect(Xn,"EOF"),new Yn(t,this)},ai.prototype.evaluate=function(e,t){return this.parse(e).evaluate(t)};var si=new ai;ai.parse=function(e){return si.parse(e)},ai.evaluate=function(e,t){return si.parse(e).evaluate(t)};var ui={"+":"add","-":"subtract","*":"multiply","/":"divide","%":"remainder","^":"power","!":"factorial","<":"comparison",">":"comparison","<=":"comparison",">=":"comparison","==":"comparison","!=":"comparison","||":"concatenate",and:"logical",or:"logical",not:"logical","?":"conditional",":":"conditional","=":"assignment","[":"array","()=":"fndef"};ai.prototype.isOperatorEnabled=function(e){var t=function(e){return ui.hasOwnProperty(e)?ui[e]:e}(e),r=this.options.operators||{};return!(t in r)||!!r[t]};var ci,li=r(784),pi=new ai;function fi(e){var t;try{t=li.ZP.parse(e)}catch(t){return e}var r,n=li.ZP.reduceExpression(t),o=e,i="";n&&"Number"!==n.type&&(o=e.replace(new RegExp(n.unit,"ig"),""),i=n.unit);try{r=pi.evaluate(o)}catch(t){return e}try{return i?"".concat(r).concat(i):Number.parseFloat(r.toFixed(3))}catch(t){return e}}function hi(e){return hi="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},hi(e)}function di(t){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:[];try{var n=!1;if("string"==typeof t)n=Boolean(t.match(sn));else if(t.type===e.TYPOGRAPHY||t.type===e.BOX_SHADOW||t.type===e.BORDER)if("string"==typeof t.value)n=Boolean(String(t.value).match(sn));else{var o=Array.isArray(t.value)?t.value:[t.value];n=o.some((function(e){return Object.values(e).some((function(e){return Boolean(null==e?void 0:e.toString().match(sn))}))}))}else{if(t.type===e.COMPOSITION)return!0;n=Boolean(t.value.toString().match(sn))}if(n){var i=Mi(t,r);return null!=i}}catch(e){console.log("Error checking alias of token ".concat("object"===hi(t)?t.name:t),t,r,e)}return!1}function vi(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);t&&(n=n.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),r.push.apply(r,n)}return r}function yi(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?vi(Object(r),!0).forEach((function(t){mi(e,t,r[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(r)):vi(Object(r)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(r,t))}))}return e}function mi(e,t,r){return t in e?Object.defineProperty(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r,e}function gi(e){return gi="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},gi(e)}function bi(t){return"object"!==gi(t)||"object"!==gi(t.value)||(null==t?void 0:t.type)!==e.BOX_SHADOW&&(null==t?void 0:t.type)!==e.TYPOGRAPHY&&(null==t?void 0:t.type)!==e.BORDER?ln(t)?t.value.toString():t.toString():t.value}function wi(e,t,r){if("object"===gi(r))return r;if(e&&("string"==typeof e||"number"==typeof e)){var n=fi(String(r));return e.replace(t,String(n))}return e}function Mi(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:[],n=bi(e);try{var o="string"==typeof n?un(n):null;if(null!=o&&o.length){var i=Array.from(o).map((function(t){if(t.length>1){var n,o;if(o=t.startsWith("{")?t.endsWith("}")?t.slice(1,t.length-1):t.slice(1,t.length):t.substring(1),"object"===gi(e)&&o===e.name||o===e)return ln(e)?e.value.toString():e.toString();var i=o.split("."),a=i.pop(),s=i.join("."),u=Number(i.pop()),c=i.join("."),l=r.find((function(e){return e.name===o||e.name===s||e.name===c}));if((null==l?void 0:l.name)===o)return Mi(l,r);if(a&&(null==l?void 0:l.name)===s&&null!==(n=l.value)&&void 0!==n&&n.hasOwnProperty(a)){var p=l.value;if("object"===gi(p)&&!Array.isArray(p))return Mi(p[a],r)}if(void 0!==u&&a&&(null==l?void 0:l.name)===c&&Array.isArray(null==l?void 0:l.rawValue)&&null!=l&&l.rawValue[u]&&null!=l&&l.rawValue[u].hasOwnProperty(a))return Mi((null==l?void 0:l.rawValue[u])[a]||u,r)}return t}));o.forEach((function(e,t){var r=i[t];n=wi(n,e,r)})),"null"===n&&(n=null)}if(n&&"string"==typeof n){var a=un(n);if(!a){var s,u,c=fi(n);if("number"==typeof c)return c;var l,p,f,h,d,v,y,m,g,b,w,M,O,x,S,k,A,E,_,T,P=j(c);return"string"!=typeof e&&"number"!=typeof e&&null!=e&&null!==(s=e.$extensions)&&void 0!==s&&null!==(u=s["studio.tokens"])&&void 0!==u&&u.modify&&P?(null==e||null===(l=e.$extensions)||void 0===l||null===(p=l["studio.tokens"])||void 0===p||null===(f=p.modify)||void 0===f?void 0:f.type)===t.MIX&&di(null==e||null===(h=e.$extensions)||void 0===h||null===(d=h["studio.tokens"])||void 0===d||null===(v=d.modify)||void 0===v?void 0:v.color)?Qr(P,yi(yi({},null===(M=e.$extensions)||void 0===M||null===(O=M["studio.tokens"])||void 0===O?void 0:O.modify),{},{value:String(Mi(null==e||null===(x=e.$extensions)||void 0===x||null===(S=x["studio.tokens"])||void 0===S||null===(k=S.modify)||void 0===k?void 0:k.value,r)),color:null!==(A=String(Mi(null==e||null===(E=e.$extensions)||void 0===E||null===(_=E["studio.tokens"])||void 0===_||null===(T=_.modify)||void 0===T?void 0:T.color,r)))&&void 0!==A?A:""})):Qr(P,yi(yi({},null===(y=e.$extensions)||void 0===y||null===(m=y["studio.tokens"])||void 0===m?void 0:m.modify),{},{value:String(Mi(null==e||null===(g=e.$extensions)||void 0===g||null===(b=g["studio.tokens"])||void 0===b||null===(w=b.modify)||void 0===w?void 0:w.value,r))})):P}}}catch(t){return console.log("Error getting alias value of ".concat(JSON.stringify(e,null,2)),r),null}return n&&"string"==typeof n?fi(n):n}function Oi(e){return!!e&&Boolean(e.toString().match(an))}function xi(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);t&&(n=n.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),r.push.apply(r,n)}return r}function Si(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?xi(Object(r),!0).forEach((function(t){ki(e,t,r[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(r)):xi(Object(r)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(r,t))}))}return e}function ki(e,t,r){return t in e?Object.defineProperty(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r,e}function Ai(e){return Ai="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},Ai(e)}function Ei(e,t){return function(e){if(Array.isArray(e))return e}(e)||function(e,t){if("undefined"!=typeof Symbol&&Symbol.iterator in Object(e)){var r=[],n=!0,o=!1,i=void 0;try{for(var a,s=e[Symbol.iterator]();!(n=(a=s.next()).done)&&(r.push(a.value),!t||r.length!==t);n=!0);}catch(e){o=!0,i=e}finally{try{n||null==s.return||s.return()}finally{if(o)throw i}}return r}}(e,t)||function(e,t){if(e){if("string"==typeof e)return _i(e,t);var r=Object.prototype.toString.call(e).slice(8,-1);return"Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r?Array.from(e):"Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)?_i(e,t):void 0}}(e,t)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function _i(e,t){(null==t||t>e.length)&&(t=e.length);for(var r=0,n=new Array(t);r<t;r++)n[r]=e[r];return n}function ji(e){return e.filter((function(t){return di(t,e.filter(yn))}))}function Ti(t){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:0,n=ji(t),o=t;return o=t.map((function(t,r,n){var o,a=!1;if(t.type===e.TYPOGRAPHY||t.type===e.BOX_SHADOW||t.type===e.BORDER)"string"==typeof t.value?(o=Mi(t.value,n),a=null===o||Oi("string"==typeof o?o:"")):o=Array.isArray(t.value)?t.value.map((function(e){return Object.entries(e).reduce((function(e,t){var r=Ei(t,2),o=r[0],i=r[1];return e[o]=Mi(i,n),(null===e[o]||Oi("string"==typeof e[o]?e[o]:""))&&(a=!0),e}),{})})):Object.entries(t.value).reduce((function(e,t){var r=Ei(t,2),o=r[0],i=r[1];return e[o]=Mi(i,n),(null===e[o]||Oi("string"==typeof e[o]?e[o]:""))&&(a=!0),e}),{});else if(t.type===e.COMPOSITION){var s={};Object.entries(t.value).forEach((function(e){var t=Ei(e,2),r=t[0],o=t[1];if(Array.isArray(o)){var i=o.map((function(e){return Object.entries(e).reduce((function(e,t){var r=Ei(t,2),o=r[0],i=r[1];return e[o]=Mi(i,n),(null===e[o]||Oi(e[o]))&&(a=!0),e}),{})}));s[r]=i}else if("object"===Ai(o)){var u=Object.entries(o).reduce((function(e,t){var r=Ei(t,2),o=r[0],i=r[1];return e[o]=Mi(i,n),(null===e[o]||Oi(e[o]))&&(a=!0),e}),{});s[r]=u}else{var c=Mi(o,n);null!==c&&(s[r]=c),(null===c||Oi(c))&&(a=!0)}})),o=s}else o=Mi(t,n),a=null===o||Oi("string"==typeof o?o:"");return Si(Si({},i(t,"failedToResolve")),{},{value:o,rawValue:t.rawValue||t.value},a?{failedToResolve:a}:{})})),n.length>0&&(r>n.length||!r)?Ti(o,n.length):o}function Pi(e){var t,r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},n=[],o=Object.entries(r).filter((function(e){var t=Ei(e,2)[1];return t===ci.ENABLED||t===ci.SOURCE})).map((function(e){return Ei(e,1)[0]})),i=null==e||null===(t=e.$metadata)||void 0===t?void 0:t.map((function(e){return e.value})),a=i?Object.entries(e).sort((function(e,t){return i.indexOf(e[0])-i.indexOf(t[0])})):Object.entries(e);return a.reverse().forEach((function(e){(0===o.length||o.includes(e[0]))&&e[1].forEach((function(t){n.some((function(e){return e.name===t.name}))||n.push(Si(Si({},p(t)),{},{internal__Parent:e[0]}))}))})),n}function Ri(e){var t="";switch(e){case Jr.width:case Jr.height:case Jr.sizing:case Jr.itemSpacing:case Jr.verticalPadding:case Jr.horizontalPadding:case Jr.paddingTop:case Jr.paddingLeft:case Jr.paddingBottom:case Jr.paddingRight:t=Jr.dimension;break;case Jr.borderRadiusTopLeft:case Jr.borderRadiusTopRight:case Jr.borderRadiusBottomLeft:case Jr.borderRadiusBottomRight:t=Jr.borderRadius;break;case Jr.borderColor:t=Jr.fill;break;case Jr.borderWidthTop:case Jr.borderWidthLeft:case Jr.borderWidthRight:case Jr.borderWidthBottom:t=Jr.borderWidth;break;case"fontFamily":t=Jr.fontFamilies;break;case"fontSize":t=Jr.fontSizes;break;case"fontWeight":t=Jr.fontWeights;break;case"lineHeights":t=Jr.lineHeights;break;case"style":t="strokeStyle";break;default:t=e}return t}function Ci(e,t){(null==t||t>e.length)&&(t=e.length);for(var r=0,n=new Array(t);r<t;r++)n[r]=e[r];return n}function Ni(e){return Object.entries(e).reduce((function(e,t){var r,n,o=(n=2,function(e){if(Array.isArray(e))return e}(r=t)||function(e,t){if("undefined"!=typeof Symbol&&Symbol.iterator in Object(e)){var r=[],n=!0,o=!1,i=void 0;try{for(var a,s=e[Symbol.iterator]();!(n=(a=s.next()).done)&&(r.push(a.value),!t||r.length!==t);n=!0);}catch(e){o=!0,i=e}finally{try{n||null==s.return||s.return()}finally{if(o)throw i}}return r}}(r,n)||function(e,t){if(e){if("string"==typeof e)return Ci(e,t);var r=Object.prototype.toString.call(e).slice(8,-1);return"Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r?Array.from(e):"Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)?Ci(e,t):void 0}}(r,n)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()),i=o[0],a=o[1];return e[i]="string"==typeof a||"number"==typeof a?{value:a,type:Ri(i)}:Ni(a),e}),{})}function Bi(e,t){(null==t||t>e.length)&&(t=e.length);for(var r=0,n=new Array(t);r<t;r++)n[r]=e[r];return n}function Ii(e,t,r){var n=e;return"string"==typeof t&&e.toString()!==t&&(!1===r.resolveReferences&&(n=t),"math"===r.resolveReferences)&&("number"==typeof e?/^{[^}]*}$|^\$[^$]*$/:/{[^}]*}|\$[\w.-]*/g).test(t)&&(n=t),n}function Li(e,t,r){return Object.entries(e).reduce((function(e,n){var o,i,a=(i=2,function(e){if(Array.isArray(e))return e}(o=n)||function(e,t){if("undefined"!=typeof Symbol&&Symbol.iterator in Object(e)){var r=[],n=!0,o=!1,i=void 0;try{for(var a,s=e[Symbol.iterator]();!(n=(a=s.next()).done)&&(r.push(a.value),!t||r.length!==t);n=!0);}catch(e){o=!0,i=e}finally{try{n||null==s.return||s.return()}finally{if(o)throw i}}return r}}(o,i)||function(e,t){if(e){if("string"==typeof e)return Bi(e,t);var r=Object.prototype.toString.call(e).slice(8,-1);return"Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r?Array.from(e):"Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)?Bi(e,t):void 0}}(o,i)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()),s=a[0],u=a[1],c=t[s];return e[s]=Ii(u,c,r),e}),{})}function zi(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);t&&(n=n.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),r.push.apply(r,n)}return r}function Di(e,t,r){return t in e?Object.defineProperty(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r,e}function Fi(t,r,n){var o;return o=t.reduce((function(t,o){if(n.throwErrorWhenNotResolved&&o.failedToResolve)throw new Error('ERROR: failed to resolve token "'.concat(o.name,'"'));if(o.internal__Parent&&r.includes(o.internal__Parent))return t;var i=t||{},a=p(o);if(delete a.name,!0!==n.resolveReferences?a.value=function(t,r){if(void 0===t.rawValue)return t.value;if(t.type===e.TYPOGRAPHY||t.type===e.BOX_SHADOW||t.type===e.COMPOSITION){if(Array.isArray(t.value)){var n=t.rawValue;return t.value.map((function(e,t){return Li(e,n[t],r)}))}return Li(t.value,t.rawValue,r)}return Ii(t.value,t.rawValue,r)}(a,n):delete a.$extensions,n.preserveRawValue||delete a.rawValue,delete a.internal__Parent,n.expandTypography&&a.type===e.TYPOGRAPHY||n.expandShadow&&a.type===e.BOX_SHADOW||n.expandComposition&&a.type===e.COMPOSITION||n.expandBorder&&a.type===e.BORDER){var u=Ni(a.value);s()(i,o.name,function(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?zi(Object(r),!0).forEach((function(t){Di(e,t,r[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(r)):zi(Object(r)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(r,t))}))}return e}({},u))}else s()(i,o.name,a);return t}),{}),o}function Hi(e){return Hi="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},Hi(e)}function Wi(e,t){return function(e){if(Array.isArray(e))return e}(e)||function(e,t){if("undefined"!=typeof Symbol&&Symbol.iterator in Object(e)){var r=[],n=!0,o=!1,i=void 0;try{for(var a,s=e[Symbol.iterator]();!(n=(a=s.next()).done)&&(r.push(a.value),!t||r.length!==t);n=!0);}catch(e){o=!0,i=e}finally{try{n||null==s.return||s.return()}finally{if(o)throw i}}return r}}(e,t)||function(e,t){if(e){if("string"==typeof e)return Ui(e,t);var r=Object.prototype.toString.call(e).slice(8,-1);return"Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r?Array.from(e):"Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)?Ui(e,t):void 0}}(e,t)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function Ui(e,t){(null==t||t>e.length)&&(t=e.length);for(var r=0,n=new Array(t);r<t;r++)n[r]=e[r];return n}function $i(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);t&&(n=n.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),r.push.apply(r,n)}return r}function Gi(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?$i(Object(r),!0).forEach((function(t){qi(e,t,r[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(r)):$i(Object(r)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(r,t))}))}return e}function qi(e,t,r){return t in e?Object.defineProperty(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r,e}function Vi(e){return Vi="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},Vi(e)}function Yi(e){var t,r,n=e.obj,o=e.token,i=e.root,a=void 0===i?null:i,s=e.returnValuesOnly,u=void 0!==s&&s,c=e.expandTypography,l=void 0!==c&&c,p=e.expandShadow,f=void 0!==p&&p,h=e.expandComposition,d=void 0!==h&&h,v=e.expandBorder,y=void 0!==v&&v,m=e.inheritType,g=e.groupLevel,b=void 0===g?0:g,w=e.currentTypeLevel,M=void 0===w?0:w,O=!(!l||"object"!==Vi(o)||!("value"in o))&&fn(o.value),x=!(!f||"object"!==Vi(o)||!("value"in o))&&gn(o.value),S=!(!d||"object"!==Vi(o)||!("value"in o))&&dn(o.value),k=!(!y||"object"!==Vi(o)||!("value"in o))&&wn(o.value);if(!ln(o)||O||x||S||k)if(fn(o)&&!l||gn(o)&&!f||dn(o)&&!d||wn(o)&&!y)r={type:o.type,value:Object.entries(o).reduce((function(e,t){var r=Wi(t,2),n=r[0],o=r[1];return e[n]=ln(o)&&u?o.value:o,e}),{})},o.description&&(delete r.value.description,r.description=o.description);else if("object"===Vi(o)){var A=o;if(ln(o)||(b+=1),function(e){return!!(e&&"object"===Hi(e)&&(!("value"in e)||"value"in e&&"object"===Hi(e.value)&&"value"in e.value)&&"type"in e&&"string"==typeof e.type)}(o)){o.type;var E=function(e,t){if(null==e)return{};var r,n,o=function(e,t){if(null==e)return{};var r,n,o={},i=Object.keys(e);for(n=0;n<i.length;n++)r=i[n],t.indexOf(r)>=0||(o[r]=e[r]);return o}(e,t);if(Object.getOwnPropertySymbols){var i=Object.getOwnPropertySymbols(e);for(n=0;n<i.length;n++)r=i[n],t.indexOf(r)>=0||Object.prototype.propertyIsEnumerable.call(e,r)&&(o[r]=e[r])}return o}(o,["type"]);m=o.type,M=b,A=E}ln(o)&&"string"!=typeof o.value&&(A=o.value),Object.entries(A).forEach((function(e){var t=Wi(e,2),r=t[0],o=t[1],i=Yi({obj:n,token:o,root:[a,r].filter((function(e){return e})).join("."),returnValuesOnly:u,expandTypography:l,expandShadow:f,expandComposition:d,expandBorder:y,inheritType:m,groupLevel:b,currentTypeLevel:M}),s=Wi(i,2)[1];a&&s?n.push(Gi(Gi({},s),{},{name:[a,r].join(".")})):s&&n.push(Gi(Gi({},s),{},{name:r}))}))}else r={value:o};else r=Gi(Gi({},o),!("type"in o)&&m?{type:m,inheritTypeLevel:M}:{});return"object"===Vi(r)&&"name"in r&&null!==(t=r)&&void 0!==t&&t.name&&(r.name=r.name.split("/").join(".")),[n,r]}function Xi(e){return Xi="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},Xi(e)}function Zi(e){if(Array.isArray(e))return{global:e};var t=Object.entries(e).reduce((function(e,t){var r,n,o,i,a,s,u,c=t[1];if(Array.isArray(c))return e.push([t[0],c]),e;if("object"===Xi(c)){var l=(u=Wi(Yi({obj:[],root:null,token:(r={tokens:c}).tokens,returnValuesOnly:void 0!==(n=r.returnValuesOnly)&&n,expandTypography:void 0!==(o=r.expandTypography)&&o,expandShadow:void 0!==(i=r.expandShadow)&&i,expandComposition:void 0!==(a=r.expandComposition)&&a,expandBorder:void 0!==(s=r.expandBorder)&&s}),1)[0],Object.values(u));return e.push([t[0],l]),e}return e}),[]);return Object.fromEntries(t)}!function(e){e.DISABLED="disabled",e.SOURCE="source",e.ENABLED="enabled"}(ci||(ci={}));const Ki=function(e,t,r,n){return function(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:[],r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:[],n=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{expandTypography:!1,expandShadow:!1,expandComposition:!1,expandBorder:!1,preserveRawValue:!1,resolveReferences:!0};return Fi(Ti(Pi(Zi(e),Object.fromEntries(t.map((function(e){return[e,ci.ENABLED]}))))),r,n)}(e,t,r,n)}})(),module.exports.V=n})();
-
-/***/ }),
-
-/***/ 1234:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const transformTokens = (__nccwpck_require__(4837)/* .tokenTransformer["default"] */ .V["default"]);
-
-module.exports = {
-  transformTokens: transformTokens
-};
-
-
-
-/***/ }),
-
 /***/ 4294:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -29028,6 +29181,14 @@ module.exports = require("https");
 
 /***/ }),
 
+/***/ 8188:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("module");
+
+/***/ }),
+
 /***/ 1808:
 /***/ ((module) => {
 
@@ -29081,6 +29242,14 @@ module.exports = require("tls");
 
 "use strict";
 module.exports = require("tty");
+
+/***/ }),
+
+/***/ 7310:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("url");
 
 /***/ }),
 
@@ -30286,6 +30455,6505 @@ module.exports = require("util");
 
 /***/ }),
 
+/***/ 7986:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+// @ts-nocheck
+var dist = {};
+var ast = {};
+var errors = {};
+Object.defineProperty(errors, "__esModule", { value: true });
+class ParseError extends SyntaxError {
+    static fromCode(code, offset) {
+        return new ParseError(MESSAGES[code], code, offset);
+    }
+    constructor(message, code, offset) {
+        super(message);
+        this.code = code;
+        this.index = offset;
+    }
+}
+errors.ParseError = ParseError;
+const MESSAGES = {
+    "eof-in-string": "Unclosed string",
+    "eof-in-comment": "Unclosed comment",
+    "eof-in-bracket": "Unclosed bracket",
+    "unexpected-parenthesis": "Unexpected token",
+    "unexpected-calc-token": "Unexpected token",
+};
+(function (exports) {
+    function __export(m) {
+        for (var p in m)
+            if (!exports.hasOwnProperty(p))
+                exports[p] = m[p];
+    }
+    Object.defineProperty(exports, "__esModule", { value: true });
+    __export(errors);
+}(ast));
+var cssCalc = {};
+var parser = {};
+var nodeImpl = {};
+var stringifier = {};
+Object.defineProperty(stringifier, "__esModule", { value: true });
+function rawVal(node, name) {
+    const r = node.raws[name];
+    return r ? r.raw : `${node[name]}`;
+}
+function raw(node, name) {
+    const r = node.raws[name];
+    return r || "";
+}
+function wrapRaws(node, inner) {
+    return `${raw(node, "before")}${inner}`;
+}
+function numWithUnit(node) {
+    return wrapRaws(node, `${rawVal(node, "value")}${rawVal(node, "unit")}`);
+}
+let Stringifier$1 = class Stringifier {
+    constructor(options) {
+        this.options = Object.assign({
+            autofix: false,
+        }, options || {});
+    }
+    stringify(node) {
+        return this[node.type](node);
+    }
+    Root(node) {
+        let s = "";
+        for (const c of node.nodes) {
+            s += this.stringify(c);
+        }
+        s += raw(node, "after");
+        return s;
+    }
+    Function(node) {
+        let s = `${node.name}(`;
+        for (const c of node.nodes) {
+            s += this.stringify(c);
+        }
+        s += raw(node, "beforeClose");
+        if (this.options.autofix || !node.unclosed) {
+            s += ")";
+        }
+        return wrapRaws(node, s);
+    }
+    Parentheses(node) {
+        let s = "(";
+        for (const c of node.nodes) {
+            s += this.stringify(c);
+        }
+        s += raw(node, "beforeClose");
+        if (this.options.autofix || !node.unclosed) {
+            s += ")";
+        }
+        return wrapRaws(node, s);
+    }
+    MathExpression(node) {
+        let beforeLeft = "";
+        let between = raw(node, "between");
+        let beforeRight = "";
+        let afterRight = "";
+        if (this.options.autofix) {
+            if (!between) {
+                between = " ";
+            }
+            if (!node.right.raws.before) {
+                beforeRight = " ";
+            }
+            if (node.left.type === "MathExpression") {
+                if ((node.left.operator === "+" ||
+                    node.left.operator === "-") &&
+                    (node.operator === "*" || node.operator === "/")) {
+                    beforeLeft += "(";
+                    between = `)${between}`;
+                }
+            }
+            if (node.right.type === "MathExpression") {
+                if ((node.operator === "+" && node.right.operator === "-") ||
+                    ((node.operator === "-" || node.operator === "*") &&
+                        (node.right.operator === "+" ||
+                            node.right.operator === "-")) ||
+                    node.operator === "/") {
+                    beforeRight += "(";
+                    afterRight = `)${afterRight}`;
+                }
+            }
+        }
+        return wrapRaws(node, `${beforeLeft}${this.stringify(node.left)}${between}${node.operator}${beforeRight}${this.stringify(node.right)}${afterRight}`);
+    }
+    Number(node) {
+        return wrapRaws(node, rawVal(node, "value"));
+    }
+    Punctuator(node) {
+        return wrapRaws(node, node.value);
+    }
+    Word(node) {
+        return wrapRaws(node, node.value);
+    }
+    String(node) {
+        return wrapRaws(node, node.value);
+    }
+    Operator(node) {
+        return wrapRaws(node, node.value);
+    }
+    Length(node) {
+        return numWithUnit(node);
+    }
+    Angle(node) {
+        return numWithUnit(node);
+    }
+    Time(node) {
+        return numWithUnit(node);
+    }
+    Frequency(node) {
+        return numWithUnit(node);
+    }
+    Resolution(node) {
+        return numWithUnit(node);
+    }
+    Percentage(node) {
+        return numWithUnit(node);
+    }
+    Flex(node) {
+        return numWithUnit(node);
+    }
+    word(node) {
+        return node.value;
+    }
+    punctuator(node) {
+        return node.value;
+    }
+    operator(node) {
+        return node.value;
+    }
+    whitespace(node) {
+        return node.value;
+    }
+    comment(node) {
+        return node.value;
+    }
+    string(node) {
+        return node.value;
+    }
+    "inline-comment"(node) {
+        return node.value;
+    }
+};
+stringifier.Stringifier = Stringifier$1;
+Object.defineProperty(nodeImpl, "__esModule", { value: true });
+const stringifier_1$1 = stringifier;
+let defaultStringifier = null;
+class Node {
+    constructor() {
+        this.parent = null;
+    }
+    toString(stringifier) {
+        if (typeof stringifier === "function") {
+            return stringifier(this);
+        }
+        return (stringifier ||
+            defaultStringifier ||
+            (defaultStringifier = new stringifier_1$1.Stringifier())).stringify(this);
+    }
+    walk(type, callback) {
+        const node = this;
+        let result = undefined;
+        const nodes = [...(node.nodes || []), node.left, node.right].filter(n => Boolean(n));
+        const check = typeof type === "string"
+            ? (n) => n.type === type
+            : (n) => type.test(n.type);
+        for (const child of nodes) {
+            if (check(child)) {
+                result = callback(child);
+                if (result === false) {
+                    break;
+                }
+            }
+            if (child.walk) {
+                result = child.walk(type, callback);
+                if (result === false) {
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+}
+class Container extends Node {
+    push(...children) {
+        for (const child of children) {
+            if (child.type === "Root") {
+                this.push(...child.nodes);
+            }
+            else {
+                child.parent = this;
+                this.nodes.push(child);
+            }
+        }
+        return this;
+    }
+    unshift(...children) {
+        for (const child of children.reverse()) {
+            if (child.type === "Root") {
+                this.unshift(...child.nodes);
+            }
+            else {
+                child.parent = this;
+                this.nodes.unshift(child);
+            }
+        }
+        return this;
+    }
+    append(...children) {
+        return this.push(...children);
+    }
+    prepend(...children) {
+        return this.unshift(...children);
+    }
+    insertBefore(exist, add) {
+        if (add.type === "Root") {
+            const { nodes } = add;
+            if (nodes.length === 1) {
+                return this.insertBefore(exist, nodes[0]);
+            }
+            throw new Error("The given Root node is illegal.");
+        }
+        const existIndex = this.nodes.indexOf(exist);
+        if (existIndex < 0) {
+            throw new Error("The given node could not be found.");
+        }
+        add.parent = this;
+        this.nodes.splice(existIndex, 0, add);
+        return this;
+    }
+    insertAfter(exist, add) {
+        if (add.type === "Root") {
+            const { nodes } = add;
+            if (nodes.length === 1) {
+                return this.insertAfter(exist, nodes[0]);
+            }
+            throw new Error("The given Root node is illegal.");
+        }
+        const existIndex = this.nodes.indexOf(exist);
+        if (existIndex < 0) {
+            throw new Error("The given node could not be found.");
+        }
+        add.parent = this;
+        this.nodes.splice(existIndex + 1, 0, add);
+        return this;
+    }
+    removeAll() {
+        for (const node of this.nodes) {
+            node.parent = null;
+        }
+        this.nodes = [];
+        return this;
+    }
+    removeChild(child) {
+        const index = this.nodes.indexOf(child);
+        this.nodes[index].parent = null;
+        this.nodes.splice(index, 1);
+        return this;
+    }
+    get first() {
+        return this.nodes[0] || null;
+    }
+    get last() {
+        return this.nodes[this.nodes.length - 1] || null;
+    }
+}
+class NumberValue extends Node {
+    constructor(value, before, source) {
+        super();
+        const num = parseFloat(value);
+        this.type = "Number";
+        this.value = num;
+        this.raws = {
+            before,
+            value: {
+                raw: value,
+                value: num,
+            },
+        };
+        this.source = source;
+    }
+}
+nodeImpl.NumberValue = NumberValue;
+class NumWithUnitValue extends Node {
+    constructor(type, value, unit, before, source) {
+        super();
+        const num = parseFloat(value);
+        this.type = type;
+        this.value = num;
+        this.unit = unit;
+        this.raws = {
+            before,
+            value: {
+                raw: value,
+                value: num,
+            },
+        };
+        this.source = source;
+    }
+}
+class LengthValue extends NumWithUnitValue {
+    constructor(value, unit, before, source) {
+        super("Length", value, unit, before, source);
+    }
+}
+nodeImpl.LengthValue = LengthValue;
+class AngleValue extends NumWithUnitValue {
+    constructor(value, unit, before, source) {
+        super("Angle", value, unit, before, source);
+    }
+}
+nodeImpl.AngleValue = AngleValue;
+class TimeValue extends NumWithUnitValue {
+    constructor(value, unit, before, source) {
+        super("Time", value, unit, before, source);
+    }
+}
+nodeImpl.TimeValue = TimeValue;
+class FrequencyValue extends NumWithUnitValue {
+    constructor(value, unit, before, source) {
+        super("Frequency", value, unit, before, source);
+    }
+}
+nodeImpl.FrequencyValue = FrequencyValue;
+class ResolutionValue extends NumWithUnitValue {
+    constructor(value, unit, before, source) {
+        super("Resolution", value, unit, before, source);
+    }
+}
+nodeImpl.ResolutionValue = ResolutionValue;
+class PercentageValue extends NumWithUnitValue {
+    constructor(value, unit, before, source) {
+        super("Percentage", value, unit, before, source);
+    }
+}
+nodeImpl.PercentageValue = PercentageValue;
+class FlexValue extends NumWithUnitValue {
+    constructor(value, unit, before, source) {
+        super("Flex", value, unit, before, source);
+    }
+}
+nodeImpl.FlexValue = FlexValue;
+class TokenValue extends Node {
+    constructor(type, value, before, source) {
+        super();
+        this.type = type;
+        this.value = value;
+        this.raws = {
+            before,
+        };
+        this.source = source;
+    }
+}
+class Word extends TokenValue {
+    constructor(value, before, source) {
+        super("Word", value, before, source);
+    }
+}
+nodeImpl.Word = Word;
+class StringNode extends TokenValue {
+    constructor(value, before, source) {
+        super("String", value, before, source);
+    }
+}
+nodeImpl.StringNode = StringNode;
+function defineAssessor(obj, name, setterProc) {
+    const localName = Symbol(`${name}`);
+    Object.defineProperties(obj, {
+        [localName]: { writable: true, enumerable: false },
+        [name]: {
+            get() {
+                return this[localName];
+            },
+            set(n) {
+                const o = this[localName];
+                this[localName] = setterProc(n, o);
+            },
+            enumerable: true,
+        },
+    });
+}
+class MathExpression extends Node {
+    constructor(left, operator, right, before, source) {
+        super();
+        const ope = operator.value;
+        const between = operator.raws.before;
+        this.type = "MathExpression";
+        const setterProc = (n, o) => {
+            let e;
+            if (n.type === "Root") {
+                const { nodes } = n;
+                if (nodes.length === 1) {
+                    e = nodes[0];
+                }
+                else {
+                    throw new Error("The given Root node is illegal.");
+                }
+            }
+            else {
+                e = n;
+            }
+            e.parent = this;
+            if (o) {
+                o.parent = null;
+            }
+            return e;
+        };
+        defineAssessor(this, "left", setterProc);
+        this.left = left;
+        this.operator = ope;
+        defineAssessor(this, "right", setterProc);
+        this.right = right;
+        this.raws = { before, between };
+        this.source = source;
+    }
+}
+nodeImpl.MathExpression = MathExpression;
+class FunctionNode extends Container {
+    constructor(name, before, source) {
+        super();
+        this.type = "Function";
+        this.name = name;
+        this.nodes = [];
+        this.raws = { before };
+        this.source = source;
+    }
+}
+nodeImpl.FunctionNode = FunctionNode;
+class Parentheses extends Container {
+    constructor(before, source) {
+        super();
+        this.type = "Parentheses";
+        this.nodes = [];
+        this.raws = { before };
+        this.source = source;
+    }
+}
+nodeImpl.Parentheses = Parentheses;
+class Punctuator extends TokenValue {
+    constructor(value, before, source) {
+        super("Punctuator", value, before, source);
+    }
+}
+nodeImpl.Punctuator = Punctuator;
+class Root extends Container {
+    constructor(source) {
+        super();
+        this.type = "Root";
+        this.nodes = [];
+        this.tokens = [];
+        this.errors = [];
+        this.raws = { after: "" };
+        this.source = source;
+    }
+}
+nodeImpl.Root = Root;
+class Operator extends TokenValue {
+    constructor(value, before, source) {
+        super("Operator", value, before, source);
+    }
+}
+nodeImpl.Operator = Operator;
+var factory = {};
+var minus = "-".charCodeAt(0);
+var plus = "+".charCodeAt(0);
+var dot = ".".charCodeAt(0);
+var exp = "e".charCodeAt(0);
+var EXP = "E".charCodeAt(0);
+var unit = function (value) {
+    var pos = 0;
+    var length = value.length;
+    var dotted = false;
+    var sciPos = -1;
+    var containsNumber = false;
+    var code;
+    while (pos < length) {
+        code = value.charCodeAt(pos);
+        if (code >= 48 && code <= 57) {
+            containsNumber = true;
+        }
+        else if (code === exp || code === EXP) {
+            if (sciPos > -1) {
+                break;
+            }
+            sciPos = pos;
+        }
+        else if (code === dot) {
+            if (dotted) {
+                break;
+            }
+            dotted = true;
+        }
+        else if (code === plus || code === minus) {
+            if (pos !== 0) {
+                break;
+            }
+        }
+        else {
+            break;
+        }
+        pos += 1;
+    }
+    if (sciPos + 1 === pos)
+        pos--;
+    return containsNumber
+        ? {
+            number: value.slice(0, pos),
+            unit: value.slice(pos)
+        }
+        : false;
+};
+Object.defineProperty(factory, "__esModule", { value: true });
+const valueParserUnit = unit;
+const Impl$1 = nodeImpl;
+const LENGTH_UNITS = [
+    "em",
+    "ex",
+    "ch",
+    "rem",
+    "vw",
+    "vh",
+    "vmin",
+    "vmax",
+    "px",
+    "mm",
+    "cm",
+    "in",
+    "pt",
+    "pc",
+    "Q",
+    "vm",
+];
+const ANGLE_UNITS = ["deg", "grad", "turn", "rad"];
+const TIME_UNITS = ["s", "ms"];
+const FREQUENCY_UNITS = ["Hz", "kHz"];
+const RESOLUTION_UNITS = ["dpi", "dpcm", "dppm"];
+const FLEX_UNITS = ["fr"];
+const L_LENGTH_UNITS = LENGTH_UNITS.map(u => u.toLowerCase());
+const L_ANGLE_UNITS = ANGLE_UNITS.map(u => u.toLowerCase());
+const L_TIME_UNITS = TIME_UNITS.map(u => u.toLowerCase());
+const L_FREQUENCY_UNITS = FREQUENCY_UNITS.map(u => u.toLowerCase());
+const L_RESOLUTION_UNITS = RESOLUTION_UNITS.map(u => u.toLowerCase());
+const L_FLEX_UNITS = FLEX_UNITS.map(u => u.toLowerCase());
+function newPunctuator(token, before) {
+    if (token.value === "," || token.value === ")") {
+        return newTokenNode(Impl$1.Punctuator, token, token.value, before);
+    }
+    throw new Error(`illegal argument error "${token.value}"`);
+}
+factory.newPunctuator = newPunctuator;
+function newOperator(token, before) {
+    return newTokenNode(Impl$1.Operator, token, token.value, before);
+}
+factory.newOperator = newOperator;
+function newString(token, before) {
+    return newTokenNode(Impl$1.StringNode, token, token.value, before);
+}
+factory.newString = newString;
+function newWordNode(token, before) {
+    return newValueNode(token, before);
+}
+factory.newWordNode = newWordNode;
+function newFunction(token, before, open) {
+    return new Impl$1.FunctionNode(token.value, before, {
+        start: token.source.start,
+        end: open.source.end,
+    });
+}
+factory.newFunction = newFunction;
+function newParentheses(token, before) {
+    return new Impl$1.Parentheses(before, {
+        start: token.source.start,
+        end: token.source.end,
+    });
+}
+factory.newParentheses = newParentheses;
+function newMathExpression(left, op, right) {
+    const opNode = typeof op === "string"
+        ? newTokenNode(Impl$1.Operator, { source: { start: { index: 0 }, end: { index: 0 } } }, op, " ")
+        : op;
+    const { before } = left.raws;
+    left.raws.before = "";
+    return new Impl$1.MathExpression(left, opNode, right, before, {
+        start: left.source.start,
+        operator: opNode.source,
+        end: right.source.end,
+    });
+}
+factory.newMathExpression = newMathExpression;
+function newValueNode(token, before) {
+    if (token.type === "word") {
+        const parsedUnit = valueParserUnit(token.value);
+        if (parsedUnit) {
+            const n = newNumNode(parsedUnit, token, before);
+            if (n) {
+                return n;
+            }
+        }
+    }
+    return newTokenNode(Impl$1.Word, token, token.value, before);
+}
+function newNumNode(parsedUnit, token, before) {
+    const { source } = token;
+    if (!parsedUnit.unit) {
+        return new Impl$1.NumberValue(parsedUnit.number, before, source);
+    }
+    const lunit = parsedUnit.unit.toLowerCase();
+    function unitNode(WithUnitValue, unit) {
+        const n = new WithUnitValue(parsedUnit.number, unit, before, source);
+        if (unit !== parsedUnit.unit) {
+            n.raws.unit = {
+                raw: parsedUnit.unit,
+                value: unit,
+            };
+        }
+        return n;
+    }
+    let unitIndex;
+    if ((unitIndex = L_LENGTH_UNITS.indexOf(lunit)) >= 0) {
+        return unitNode(Impl$1.LengthValue, LENGTH_UNITS[unitIndex]);
+    }
+    if ((unitIndex = L_ANGLE_UNITS.indexOf(lunit)) >= 0) {
+        return unitNode(Impl$1.AngleValue, ANGLE_UNITS[unitIndex]);
+    }
+    if ((unitIndex = L_TIME_UNITS.indexOf(lunit)) >= 0) {
+        return unitNode(Impl$1.TimeValue, TIME_UNITS[unitIndex]);
+    }
+    if ((unitIndex = L_FREQUENCY_UNITS.indexOf(lunit)) >= 0) {
+        return unitNode(Impl$1.FrequencyValue, FREQUENCY_UNITS[unitIndex]);
+    }
+    if ((unitIndex = L_RESOLUTION_UNITS.indexOf(lunit)) >= 0) {
+        return unitNode(Impl$1.ResolutionValue, RESOLUTION_UNITS[unitIndex]);
+    }
+    if ((unitIndex = L_FLEX_UNITS.indexOf(lunit)) >= 0) {
+        return unitNode(Impl$1.FlexValue, FLEX_UNITS[unitIndex]);
+    }
+    if (lunit === "%") {
+        return unitNode(Impl$1.PercentageValue, "%");
+    }
+    return null;
+}
+function newTokenNode(TokenValue, token, value, before) {
+    const { source } = token;
+    return new TokenValue(value, before, source);
+}
+var calcNotation = {};
+Object.defineProperty(calcNotation, "__esModule", { value: true });
+const RE_CALC = /^(-(webkit|mox)-)?calc/iu;
+const RE_MIN = /^(-(webkit|mox)-)?min/iu;
+const RE_MAX = /^(-(webkit|mox)-)?max/iu;
+const RE_CLAMP = /^(-(webkit|mox)-)?clamp/iu;
+function isCalc(name) {
+    return RE_CALC.test(name);
+}
+calcNotation.isCalc = isCalc;
+function isMin(name) {
+    return RE_MIN.test(name);
+}
+calcNotation.isMin = isMin;
+function isMax(name) {
+    return RE_MAX.test(name);
+}
+calcNotation.isMax = isMax;
+function isClamp(name) {
+    return RE_CLAMP.test(name);
+}
+calcNotation.isClamp = isClamp;
+function isMathFunction(name) {
+    return isCalc(name) || isClamp(name) || isMin(name) || isMax(name);
+}
+calcNotation.isMathFunction = isMathFunction;
+var utils = {};
+Object.defineProperty(utils, "__esModule", { value: true });
+function isComma(node) {
+    return node.type === "Punctuator" && node.value === ",";
+}
+utils.isComma = isComma;
+function getFunctionArguments(fn) {
+    const { nodes } = fn;
+    const first = nodes[0];
+    if (!first || isComma(first)) {
+        return null;
+    }
+    const result = [first];
+    const length = nodes.length;
+    for (let index = 1; index < length; index++) {
+        const comma = nodes[index++];
+        if (!isComma(comma)) {
+            return null;
+        }
+        const arg = nodes[index];
+        if (!arg || isComma(arg)) {
+            return null;
+        }
+        result.push(arg);
+    }
+    return result;
+}
+utils.getFunctionArguments = getFunctionArguments;
+Object.defineProperty(parser, "__esModule", { value: true });
+const AST$2 = ast;
+const Impl = nodeImpl;
+const factory_1$1 = factory;
+const calc_notation_1$2 = calcNotation;
+const utils_1$2 = utils;
+const MAYBE_FUNCTION = /^([^-+0-9.]|-[^+0-9.])/u;
+const PRECEDENCE = {
+    "*": 3,
+    "/": 3,
+    "+": 2,
+    "-": 2,
+};
+function srcLoc(node) {
+    return node.source || { start: { index: 0 }, end: { index: 0 } };
+}
+function isExpression(node) {
+    if (node && node.type !== "Punctuator" && node.type !== "Operator") {
+        return node;
+    }
+    return null;
+}
+let Parser$1 = class Parser {
+    constructor(tokenizer, _options) {
+        this.tokenizer = tokenizer;
+        this.root = new Impl.Root({
+            start: {
+                index: 0,
+            },
+            end: {
+                index: 0,
+            },
+        });
+        this.rescans = [];
+        this.tokens = this.root.tokens;
+        this.errors = this.root.errors;
+    }
+    parse() {
+        let state = {
+            container: this.root,
+            fnName: "",
+            post() {
+            },
+            eof() {
+            },
+        };
+        while (state) {
+            state = this.processExpressions(state);
+        }
+        const { tokens } = this;
+        if (tokens.length > 0) {
+            srcLoc(this.root).end.index =
+                tokens[tokens.length - 1].source.end.index;
+        }
+        this.errors.unshift(...this.tokenizer.errors);
+        this.errors.sort((e1, e2) => e1.index - e2.index);
+        return this.root;
+    }
+    reportParseError(code, index = 0) {
+        if (this.errors.find(e => e.code === code && e.index === index)) {
+            return;
+        }
+        const error = AST$2.ParseError.fromCode(code, index);
+        this.errors.push(error);
+    }
+    processExpressions(state) {
+        let tokenSet;
+        while ((tokenSet = this.scan())) {
+            const { token } = tokenSet;
+            switch (token.type) {
+                case "word":
+                    if (MAYBE_FUNCTION.test(token.value)) {
+                        const next = this.scan();
+                        if (next) {
+                            if (!next.raws &&
+                                next.token.type === "punctuator" &&
+                                next.token.value === "(") {
+                                return this.processFunction(token, tokenSet.raws, next.token, state);
+                            }
+                            this.back(next);
+                        }
+                    }
+                    state.container.push(factory_1$1.newWordNode(token, tokenSet.raws));
+                    break;
+                case "string":
+                    state.container.push(factory_1$1.newString(token, tokenSet.raws));
+                    break;
+                case "operator":
+                    this.checkAndMergeMathExpr(state, PRECEDENCE[token.value]);
+                    state.container.push(factory_1$1.newOperator(token, tokenSet.raws));
+                    break;
+                case "punctuator":
+                    this.checkAndMergeMathExpr(state);
+                    return this.processPunctuator(token, tokenSet.raws, state);
+            }
+        }
+        this.postStack(state);
+        state.eof();
+        return null;
+    }
+    checkAndMergeMathExpr(state, currPrecedence) {
+        const { container } = state;
+        const { nodes } = container;
+        if (nodes.length >= 3) {
+            const bfOp = nodes[nodes.length - 2];
+            if (bfOp.type === "Operator" && PRECEDENCE[bfOp.value]) {
+                if (currPrecedence == null ||
+                    currPrecedence <= PRECEDENCE[bfOp.value]) {
+                    const math = this.mergeMathExpr(state);
+                    if (math) {
+                        container.push(math);
+                    }
+                }
+            }
+        }
+    }
+    processPunctuator(token, before, state) {
+        const { container, parent } = state;
+        if (token.value === "(") {
+            const node = factory_1$1.newParentheses(token, before);
+            container.push(node);
+            return this.createNestedStateContainer(node, state.fnName, state);
+        }
+        this.postStack(state);
+        if (token.value === ")") {
+            if (parent) {
+                state.post(token, before);
+                return parent;
+            }
+            this.reportParseError("unexpected-parenthesis", token.source.start.index);
+        }
+        container.push(factory_1$1.newPunctuator(token, before));
+        return state;
+    }
+    processFunction(token, before, open, state) {
+        const node = factory_1$1.newFunction(token, before, open);
+        state.container.push(node);
+        return this.createNestedStateContainer(node, node.name, state);
+    }
+    createNestedStateContainer(node, fnName, state) {
+        return {
+            container: node,
+            parent: state,
+            fnName,
+            post(close, beforeClose) {
+                if (beforeClose) {
+                    node.raws.beforeClose = beforeClose;
+                }
+                srcLoc(node).end = close.source.end;
+            },
+            eof: () => {
+                node.unclosed = true;
+                const last = this.tokens[this.tokens.length - 1];
+                const lastChild = node.last;
+                if (lastChild) {
+                    srcLoc(node).end = srcLoc(lastChild).end;
+                }
+                this.reportParseError("eof-in-bracket", last.source.end.index);
+                state.eof();
+            },
+        };
+    }
+    mergeMathExpr(state) {
+        const { container: { nodes }, } = state;
+        const right = nodes.pop();
+        const op = nodes.pop();
+        const left = nodes.pop() || null;
+        const restore = () => {
+            if (left) {
+                nodes.push(left);
+            }
+            nodes.push(op, right);
+        };
+        const reportError = (node) => {
+            if (calc_notation_1$2.isMathFunction(state.fnName)) {
+                this.reportParseError("unexpected-calc-token", srcLoc(node).start.index);
+            }
+        };
+        const rightExpr = isExpression(right);
+        if (utils_1$2.isComma(op)) {
+            if (!rightExpr) {
+                reportError(right);
+            }
+            restore();
+            return null;
+        }
+        if (!left) {
+            reportError(isExpression(op) ? right : op);
+            restore();
+            return null;
+        }
+        const leftExpr = isExpression(left);
+        if (!leftExpr) {
+            reportError(isExpression(nodes[nodes.length - 1]) ? op : left);
+            restore();
+            return null;
+        }
+        if (op.type !== "Operator") {
+            reportError(op);
+            restore();
+            return null;
+        }
+        if (!rightExpr) {
+            reportError(right);
+            restore();
+            return null;
+        }
+        return factory_1$1.newMathExpression(leftExpr, op, rightExpr);
+    }
+    postStack(state) {
+        const { container } = state;
+        const { nodes } = container;
+        while (nodes.length > 1) {
+            const math = this.mergeMathExpr(state);
+            if (math) {
+                container.push(math);
+            }
+            else {
+                return;
+            }
+        }
+    }
+    scan() {
+        const re = this.rescans.shift();
+        if (re) {
+            return re;
+        }
+        let raws = "";
+        let token = this.tokenizer.nextToken();
+        while (token) {
+            this.tokens.push(token);
+            if (token.type === "whitespace" ||
+                token.type === "comment" ||
+                token.type === "inline-comment") {
+                raws += token.value;
+            }
+            else {
+                return {
+                    token,
+                    raws,
+                };
+            }
+            token = this.tokenizer.nextToken();
+        }
+        if (raws) {
+            this.root.raws.after = raws;
+        }
+        return null;
+    }
+    back(tokenset) {
+        this.rescans.unshift(tokenset);
+    }
+};
+parser.Parser = Parser$1;
+var tokenizer = {};
+var unicode = {};
+(function (exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.EOF = -1;
+    exports.NULL = 0x00;
+    exports.TAB = 0x09;
+    exports.CR = 0x0d;
+    exports.LF = 0x0a;
+    exports.FF = 0x0c;
+    exports.SPACE = 0x20;
+    exports.DQUOTE = 0x22;
+    exports.SQUOTE = 0x27;
+    exports.LPAREN = 0x28;
+    exports.RPAREN = 0x29;
+    exports.STAR = 0x2a;
+    exports.PLUS = 0x2b;
+    exports.COMMA = 0x2c;
+    exports.MINUS = 0x2d;
+    exports.DOT = 0x2e;
+    exports.SLASH = 0x2f;
+    exports.LBRACKET = 0x5b;
+    exports.BACKSLASH = 0x5c;
+    exports.RBRACKET = 0x5d;
+    exports.LBRACE = 0x7b;
+    exports.RBRACE = 0x7d;
+    function isWhitespace(cc) {
+        return cc === exports.TAB || cc === exports.LF || cc === exports.FF || cc === exports.CR || cc === exports.SPACE;
+    }
+    exports.isWhitespace = isWhitespace;
+    function isDigit(cc) {
+        return cc >= 0x30 && cc <= 0x39;
+    }
+    exports.isDigit = isDigit;
+    function isLetter(cc) {
+        return ((cc >= 0x61 && cc <= 0x7a) ||
+            (cc >= 0x41 && cc <= 0x5a));
+    }
+    exports.isLetter = isLetter;
+}(unicode));
+Object.defineProperty(tokenizer, "__esModule", { value: true });
+const AST$1 = ast;
+const unicode_1 = unicode;
+function isPunctuator(cc) {
+    return cc === unicode_1.LPAREN || cc === unicode_1.RPAREN || cc === unicode_1.COMMA;
+}
+function maybeNumber(cc) {
+    return unicode_1.isDigit(cc) || cc === unicode_1.DOT;
+}
+function isQuotes(cc) {
+    return cc === unicode_1.DQUOTE || cc === unicode_1.SQUOTE;
+}
+function getRightBracket(cc) {
+    if (cc === unicode_1.LPAREN) {
+        return unicode_1.RPAREN;
+    }
+    if (cc === unicode_1.LBRACE) {
+        return unicode_1.RBRACE;
+    }
+    return unicode_1.RBRACKET;
+}
+let Tokenizer$1 = class Tokenizer {
+    constructor(text, options) {
+        this.lastCode = unicode_1.NULL;
+        this.rescan = false;
+        this.token = null;
+        this.lastTokenType = null;
+        this.errors = [];
+        this.text = text;
+        this.offset = -1;
+        this.state = "SCAN";
+        this.nextTokenOffset = 0;
+        this.options = Object.assign({
+            allowInlineCommnets: true,
+        }, options || {});
+    }
+    nextToken() {
+        while (this.token == null) {
+            const cc = this.scan();
+            this.state = this[this.state](cc) || "SCAN";
+            if (cc === unicode_1.EOF && !this.rescan) {
+                break;
+            }
+        }
+        const { token } = this;
+        this.token = null;
+        return token;
+    }
+    scan() {
+        if (this.rescan) {
+            this.rescan = false;
+            return this.lastCode;
+        }
+        return this.next();
+    }
+    next() {
+        if (this.offset < this.text.length) {
+            this.offset++;
+        }
+        if (this.offset >= this.text.length) {
+            return (this.lastCode = unicode_1.EOF);
+        }
+        return (this.lastCode = this.text.charCodeAt(this.offset));
+    }
+    back() {
+        this.rescan = true;
+    }
+    reportParseError(code) {
+        const error = AST$1.ParseError.fromCode(code, this.offset);
+        this.errors.push(error);
+    }
+    getCode(indexOffset = 0) {
+        return this.text.charCodeAt(this.nextTokenOffset + indexOffset);
+    }
+    commitToken(type, indexOffset = 0) {
+        const start = this.nextTokenOffset;
+        const offset = this.offset + indexOffset + 1;
+        const value = this.text.slice(start, offset);
+        this.token = {
+            type,
+            value,
+            source: {
+                start: {
+                    index: start,
+                },
+                end: {
+                    index: offset,
+                },
+            },
+        };
+        this.nextTokenOffset = offset;
+        this.lastTokenType = type;
+    }
+    SCAN(cc) {
+        if (unicode_1.isWhitespace(cc)) {
+            return "WHITESPACE";
+        }
+        if (cc === unicode_1.DQUOTE) {
+            return "DQUOTE";
+        }
+        if (cc === unicode_1.SQUOTE) {
+            return "SQUOTE";
+        }
+        if (cc === unicode_1.SLASH) {
+            return "SLASH";
+        }
+        if (cc === unicode_1.MINUS) {
+            return "MINUS";
+        }
+        if (cc === unicode_1.PLUS) {
+            return "PLUS";
+        }
+        if (cc === unicode_1.STAR) {
+            this.commitToken("operator");
+            return "SCAN";
+        }
+        if (isPunctuator(cc)) {
+            this.commitToken("punctuator");
+            return "SCAN";
+        }
+        if (cc === unicode_1.LBRACKET) {
+            return "LBRACKET";
+        }
+        if (cc === unicode_1.LBRACE) {
+            return "LBRACE";
+        }
+        if (cc === unicode_1.EOF) {
+            return "SCAN";
+        }
+        return "WORD";
+    }
+    WORD(cc) {
+        while (!unicode_1.isWhitespace(cc) &&
+            !isPunctuator(cc) &&
+            cc !== unicode_1.PLUS &&
+            cc !== unicode_1.STAR &&
+            cc !== unicode_1.SLASH &&
+            !isQuotes(cc) &&
+            cc !== unicode_1.EOF) {
+            if (cc === unicode_1.MINUS) {
+                const st = this.getCode();
+                if (maybeNumber(st) ||
+                    ((st === unicode_1.MINUS || st === unicode_1.PLUS) &&
+                        maybeNumber(this.getCode(1)))) {
+                    this.commitToken("word", -1);
+                    return "MINUS";
+                }
+            }
+            else if (cc === unicode_1.LBRACE || cc === unicode_1.LBRACKET || cc === unicode_1.LPAREN) {
+                this.skipBrakets(this.next(), getRightBracket(cc));
+            }
+            cc = this.next();
+        }
+        this.commitToken("word", -1);
+        this.back();
+    }
+    LBRACKET(cc) {
+        this.skipBrakets(cc, unicode_1.RBRACKET);
+        return "WORD";
+    }
+    LBRACE(cc) {
+        this.skipBrakets(cc, unicode_1.RBRACE);
+        return "WORD";
+    }
+    WHITESPACE(cc) {
+        while (unicode_1.isWhitespace(cc)) {
+            cc = this.next();
+        }
+        this.commitToken("whitespace", -1);
+        this.back();
+    }
+    SLASH(cc) {
+        if (cc === unicode_1.STAR) {
+            return "COMMENT";
+        }
+        if (cc === unicode_1.SLASH && this.options.allowInlineCommnets) {
+            return "INLINE_COMMENT";
+        }
+        this.commitToken("operator", -1);
+        this.back();
+    }
+    COMMENT(cc) {
+        while (cc !== unicode_1.EOF) {
+            if (cc === unicode_1.STAR) {
+                cc = this.next();
+                if (cc === unicode_1.SLASH) {
+                    this.commitToken("comment");
+                    return;
+                }
+            }
+            cc = this.next();
+        }
+        this.commitToken("comment", -1);
+        this.reportParseError("eof-in-comment");
+    }
+    INLINE_COMMENT(cc) {
+        while (cc !== unicode_1.EOF) {
+            if (cc === unicode_1.LF || cc === unicode_1.FF) {
+                this.commitToken("inline-comment");
+                return;
+            }
+            if (cc === unicode_1.CR) {
+                cc = this.next();
+                if (cc === unicode_1.LF) {
+                    this.commitToken("inline-comment");
+                    return;
+                }
+                this.commitToken("inline-comment", -1);
+                return this.back();
+            }
+            cc = this.next();
+        }
+        this.commitToken("inline-comment", -1);
+    }
+    MINUS(cc) {
+        if (this.lastTokenType === "word" ||
+            cc === unicode_1.EOF ||
+            (cc !== unicode_1.MINUS && !maybeNumber(cc) && !unicode_1.isLetter(cc))) {
+            this.commitToken("operator", -1);
+            this.back();
+            return;
+        }
+        return "WORD";
+    }
+    PLUS(cc) {
+        if (this.lastTokenType !== "word") {
+            if (maybeNumber(cc)) {
+                return "WORD";
+            }
+        }
+        this.commitToken("operator", -1);
+        this.back();
+    }
+    DQUOTE(cc) {
+        this.skipString(cc, unicode_1.DQUOTE);
+    }
+    SQUOTE(cc) {
+        this.skipString(cc, unicode_1.SQUOTE);
+    }
+    skipBrakets(cc, end) {
+        const closeStack = [];
+        while (cc !== unicode_1.EOF) {
+            if (end === cc) {
+                const nextTargetBracket = closeStack.pop() || null;
+                if (!nextTargetBracket) {
+                    return;
+                }
+                end = nextTargetBracket;
+            }
+            else if (cc === unicode_1.LBRACE || cc === unicode_1.LBRACKET || cc === unicode_1.LPAREN) {
+                if (end) {
+                    closeStack.push(end);
+                }
+                end = getRightBracket(cc);
+            }
+            cc = this.next();
+        }
+        this.reportParseError("eof-in-bracket");
+    }
+    skipString(cc, end) {
+        while (cc !== unicode_1.EOF) {
+            if (cc === unicode_1.BACKSLASH) {
+                cc = this.next();
+            }
+            else if (cc === end) {
+                this.commitToken("string");
+                return;
+            }
+            cc = this.next();
+        }
+        this.commitToken("string", -1);
+        this.reportParseError("eof-in-string");
+    }
+};
+tokenizer.Tokenizer = Tokenizer$1;
+var resolvedType = {};
+Object.defineProperty(resolvedType, "__esModule", { value: true });
+const calc_notation_1$1 = calcNotation;
+const utils_1$1 = utils;
+function getResolvedType$1(expr) {
+    const left = getType(expr.left);
+    const right = getType(expr.right);
+    const { operator } = expr;
+    switch (operator) {
+        case "+":
+        case "-":
+            if (left === "Unknown" || right === "Unknown") {
+                return "Unknown";
+            }
+            if (left === right) {
+                return left;
+            }
+            if (left === "Number" || right === "Number") {
+                return "invalid";
+            }
+            if (left === "Percentage") {
+                return right;
+            }
+            if (right === "Percentage") {
+                return left;
+            }
+            return "invalid";
+        case "*":
+            if (left === "Unknown" || right === "Unknown") {
+                return "Unknown";
+            }
+            if (left === "Number") {
+                return right;
+            }
+            if (right === "Number") {
+                return left;
+            }
+            return "invalid";
+        case "/":
+            if (right === "Unknown") {
+                return "Unknown";
+            }
+            if (right === "Number") {
+                return left;
+            }
+            return "invalid";
+    }
+    return "Unknown";
+}
+resolvedType.getResolvedType = getResolvedType$1;
+function getExpressionType(expr) {
+    const { type } = expr;
+    if (type === "Number" ||
+        type === "Length" ||
+        type === "Angle" ||
+        type === "Time" ||
+        type === "Frequency" ||
+        type === "Resolution" ||
+        type === "Percentage" ||
+        type === "Flex") {
+        return type;
+    }
+    return "Unknown";
+}
+function getType(expr) {
+    if (expr.type === "MathExpression") {
+        const rtype = getResolvedType$1(expr);
+        return rtype === "invalid" ? "Unknown" : rtype;
+    }
+    if (expr.type === "Parentheses") {
+        if (expr.nodes.length === 1) {
+            return getType(expr.nodes[0]);
+        }
+        return "Unknown";
+    }
+    if (expr.type === "Function") {
+        if (calc_notation_1$1.isCalc(expr.name)) {
+            return getCalcFunctionType(expr);
+        }
+        if (calc_notation_1$1.isMin(expr.name) || calc_notation_1$1.isMax(expr.name)) {
+            return getMinMaxFunctionType(expr);
+        }
+        if (calc_notation_1$1.isClamp(expr.name)) {
+            return getClampFunctionType(expr);
+        }
+        return "Unknown";
+    }
+    return getExpressionType(expr);
+}
+function getCalcFunctionType(fn) {
+    if (fn.nodes.length === 1) {
+        return getFunctionArgumentsType(fn);
+    }
+    return "Unknown";
+}
+function getMinMaxFunctionType(fn) {
+    return getFunctionArgumentsType(fn);
+}
+function getClampFunctionType(fn) {
+    if (fn.nodes.length === 5) {
+        return getFunctionArgumentsType(fn);
+    }
+    return "Unknown";
+}
+function getFunctionArgumentsType(fn) {
+    const args = utils_1$1.getFunctionArguments(fn);
+    if (!args) {
+        return "Unknown";
+    }
+    const types = args.map(getType);
+    let result = null;
+    for (const type of types) {
+        if (!result || result === "Percentage") {
+            result = type;
+        }
+        else if (type === "Percentage")
+            ;
+        else if (result !== type) {
+            return "Unknown";
+        }
+    }
+    return result || "Unknown";
+}
+var reducer = {};
+Object.defineProperty(reducer, "__esModule", { value: true });
+const calc_notation_1 = calcNotation;
+const utils_1 = utils;
+function reduce(expr) {
+    return reduceExpression$1(expr);
+}
+reducer.reduce = reduce;
+function reduceMathExpression(expr) {
+    const left = reduceExpression$1(expr.left);
+    const right = reduceExpression$1(expr.right);
+    if (!left || !right) {
+        return null;
+    }
+    switch (expr.operator) {
+        case "+":
+        case "-":
+            return reduceAddSub(left, expr.operator, right);
+        case "/":
+            return reduceDivision(left, right);
+        case "*":
+            return reduceMultiple(left, right);
+    }
+    return null;
+}
+function reduceAddSub(left, operator, right) {
+    if (left.type !== right.type) {
+        return null;
+    }
+    const ope = operator === "-"
+        ? (ln, rn) => ln - rn
+        : (ln, rn) => ln + rn;
+    if (left.type === "Number") {
+        return {
+            type: "Number",
+            value: ope(left.value, right.value),
+        };
+    }
+    const lunit = left.unit;
+    const runit = right.unit;
+    if (lunit === runit) {
+        return {
+            type: left.type,
+            value: ope(left.value, right.value),
+            unit: left.unit,
+        };
+    }
+    return null;
+}
+function reduceDivision(left, right) {
+    if (right.type !== "Number") {
+        return null;
+    }
+    if (left.type === "Number") {
+        return {
+            type: "Number",
+            value: left.value / right.value,
+        };
+    }
+    return {
+        type: left.type,
+        value: left.value / right.value,
+        unit: left.unit,
+    };
+}
+function reduceMultiple(left, right) {
+    if (left.type === "Number") {
+        if (right.type === "Number") {
+            return {
+                type: "Number",
+                value: left.value * right.value,
+            };
+        }
+        return {
+            type: right.type,
+            value: left.value * right.value,
+            unit: right.unit,
+        };
+    }
+    else if (right.type === "Number") {
+        return {
+            type: left.type,
+            value: left.value * right.value,
+            unit: left.unit,
+        };
+    }
+    return null;
+}
+function reduceExpression$1(expr) {
+    if (expr.type === "Number" ||
+        expr.type === "Length" ||
+        expr.type === "Angle" ||
+        expr.type === "Time" ||
+        expr.type === "Frequency" ||
+        expr.type === "Resolution" ||
+        expr.type === "Percentage" ||
+        expr.type === "Flex") {
+        return expr;
+    }
+    if (expr.type === "MathExpression") {
+        return reduceMathExpression(expr);
+    }
+    if (expr.type === "Parentheses" || expr.type === "Root") {
+        if (expr.nodes.length === 1) {
+            return reduceExpression$1(expr.nodes[0]);
+        }
+    }
+    else if (expr.type === "Function") {
+        if (expr.type === "Function") {
+            if (calc_notation_1.isCalc(expr.name)) {
+                return getCalcNumber(expr);
+            }
+        }
+    }
+    return null;
+}
+function getCalcNumber(fn) {
+    const args = utils_1.getFunctionArguments(fn);
+    if (args && args.length === 1) {
+        return reduceExpression$1(args[0]);
+    }
+    return null;
+}
+Object.defineProperty(cssCalc, "__esModule", { value: true });
+var parser_1 = parser;
+cssCalc.Parser = parser_1.Parser;
+var tokenizer_1 = tokenizer;
+cssCalc.Tokenizer = tokenizer_1.Tokenizer;
+var stringifier_1 = stringifier;
+cssCalc.Stringifier = stringifier_1.Stringifier;
+var resolved_type_1 = resolvedType;
+cssCalc.getResolvedType = resolved_type_1.getResolvedType;
+var reducer_1 = reducer;
+cssCalc.reduceExpression = reducer_1.reduce;
+var factory_1 = factory;
+cssCalc.newMathExpression = factory_1.newMathExpression;
+Object.defineProperty(dist, "__esModule", { value: true });
+const AST = ast;
+dist.AST = AST;
+const css_calc_1 = cssCalc;
+dist.Parser = css_calc_1.Parser;
+dist.Tokenizer = css_calc_1.Tokenizer;
+dist.Stringifier = css_calc_1.Stringifier;
+dist.getResolvedType = css_calc_1.getResolvedType;
+var reduceExpression = dist.reduceExpression = css_calc_1.reduceExpression;
+dist.mathExpr = css_calc_1.newMathExpression;
+function parse$1(code, options) {
+    const tokenizer = new css_calc_1.Tokenizer(code, options);
+    return new css_calc_1.Parser(tokenizer, options).parse();
+}
+var parse_1 = dist.parse = parse$1;
+function stringify(node, options) {
+    const stringifier = new css_calc_1.Stringifier(options);
+    return stringifier.stringify(node);
+}
+dist.stringify = stringify;
+dist.default = {
+    parse: parse$1,
+    stringify,
+    getResolvedType: css_calc_1.getResolvedType,
+    reduceExpression: css_calc_1.reduceExpression,
+    mathExpr: css_calc_1.newMathExpression,
+    Parser: css_calc_1.Parser,
+    Tokenizer: css_calc_1.Tokenizer,
+    Stringifier: css_calc_1.Stringifier,
+    AST,
+};
+
+const mathChars = ['+', '-', '*', '/'];
+/**
+ * Checks expressions like: 8 / 4 * 7px 8 * 5px 2 * 4px
+ * and divides them into 3 single values:
+ * ['8 / 4 * 7px', '8 * 5px', '2 * 4px']
+ *
+ * It splits everything by " " spaces, then checks in which places
+ * there is a space but with no math operater left or right of it,
+ * then determines this must mean it's a multi-value separator
+ */
+function splitMultiIntoSingleValues(expr) {
+    const tokens = expr.split(' ');
+    const indexes = [];
+    let skipNextIteration = false;
+    tokens.forEach((tok, i) => {
+        const left = i > 0 ? tokens[i - 1] : '';
+        const right = tokens[i + 1] ?? '';
+        // conditions under which math expr is valid
+        const conditions = [
+            mathChars.includes(tok),
+            mathChars.includes(right) && mathChars.includes(left),
+            left === '' && mathChars.includes(right),
+            right === '' && mathChars.includes(left),
+            tokens.length <= 1, // expr is valid if it's a simple 1 token expression
+        ];
+        if (conditions.every(cond => !cond)) {
+            if (!skipNextIteration) {
+                indexes.push(i);
+                skipNextIteration = true;
+            }
+            else {
+                skipNextIteration = false;
+            }
+        }
+    });
+    if (indexes.length > 0) {
+        indexes.push(tokens.length);
+        const exprArr = [];
+        let currIndex = 0;
+        indexes.forEach(i => {
+            const singleValue = tokens.slice(currIndex, i + 1).join(' ');
+            if (singleValue) {
+                exprArr.push(singleValue);
+            }
+            currIndex = i + 1;
+        });
+        return exprArr;
+    }
+    return [expr];
+}
+function parseAndReduce(expr) {
+    // We check for px unit
+    const hasPx = expr.match('px');
+    // Remove it here so we can evaluate expressions like 16px + 24px
+    const calcParsed = parse_1(expr.replace(/px/g, ''), {});
+    const reduced = reduceExpression(calcParsed);
+    if (reduced === null) {
+        return expr;
+    }
+    // Put back the px unit if needed and if reduced doesn't come with one
+    return `${Number.parseFloat(reduced.value.toFixed(3))}${reduced.unit ?? (hasPx ? 'px' : '')}`;
+}
+function checkAndEvaluateMath(expr) {
+    if (expr === undefined) {
+        return expr;
+    }
+    const exprs = splitMultiIntoSingleValues(expr);
+    const reducedExprs = exprs.map(_expr => parseAndReduce(_expr));
+    return reducedExprs.join(' ');
+}
+
+/**
+ * Helper: Transforms dimensions to px
+ */
+function transformDimension(value) {
+    if (value === undefined || value.endsWith('px')) {
+        return value;
+    }
+    return `${value}px`;
+}
+
+const fontWeightMap = {
+    thin: 100,
+    extralight: 200,
+    ultralight: 200,
+    extraleicht: 200,
+    light: 300,
+    leicht: 300,
+    normal: 400,
+    regular: 400,
+    buch: 400,
+    medium: 500,
+    kraeftig: 500,
+    kräftig: 500,
+    semibold: 600,
+    demibold: 600,
+    halbfett: 600,
+    bold: 700,
+    dreiviertelfett: 700,
+    extrabold: 800,
+    ultabold: 800,
+    fett: 800,
+    black: 900,
+    heavy: 900,
+    super: 900,
+    extrafett: 900,
+};
+/**
+ * Helper: Transforms fontweight keynames to fontweight numbers (100, 200, 300 ... 900)
+ */
+function transformFontWeights(value) {
+    if (value === undefined) {
+        return value;
+    }
+    const mapped = fontWeightMap[value.toLowerCase()];
+    if (mapped) {
+        return `${mapped}`;
+    }
+    return value;
+}
+
+/**
+ * A simple guard function:
+ *
+ * ```js
+ * Math.min(Math.max(low, value), high)
+ * ```
+ */
+function guard(low, high, value) {
+  return Math.min(Math.max(low, value), high);
+}
+
+class ColorError extends Error {
+  constructor(color) {
+    super(`Failed to parse color: "${color}"`);
+  }
+}
+var ColorError$1 = ColorError;
+
+/**
+ * Parses a color into red, gree, blue, alpha parts
+ *
+ * @param color the input color. Can be a RGB, RBGA, HSL, HSLA, or named color
+ */
+function parseToRgba(color) {
+  if (typeof color !== 'string') throw new ColorError$1(color);
+  if (color.trim().toLowerCase() === 'transparent') return [0, 0, 0, 0];
+  let normalizedColor = color.trim();
+  normalizedColor = namedColorRegex.test(color) ? nameToHex(color) : color;
+  const reducedHexMatch = reducedHexRegex.exec(normalizedColor);
+  if (reducedHexMatch) {
+    const arr = Array.from(reducedHexMatch).slice(1);
+    return [...arr.slice(0, 3).map(x => parseInt(r(x, 2), 16)), parseInt(r(arr[3] || 'f', 2), 16) / 255];
+  }
+  const hexMatch = hexRegex.exec(normalizedColor);
+  if (hexMatch) {
+    const arr = Array.from(hexMatch).slice(1);
+    return [...arr.slice(0, 3).map(x => parseInt(x, 16)), parseInt(arr[3] || 'ff', 16) / 255];
+  }
+  const rgbaMatch = rgbaRegex.exec(normalizedColor);
+  if (rgbaMatch) {
+    const arr = Array.from(rgbaMatch).slice(1);
+    return [...arr.slice(0, 3).map(x => parseInt(x, 10)), parseFloat(arr[3] || '1')];
+  }
+  const hslaMatch = hslaRegex.exec(normalizedColor);
+  if (hslaMatch) {
+    const [h, s, l, a] = Array.from(hslaMatch).slice(1).map(parseFloat);
+    if (guard(0, 100, s) !== s) throw new ColorError$1(color);
+    if (guard(0, 100, l) !== l) throw new ColorError$1(color);
+    return [...hslToRgb(h, s, l), Number.isNaN(a) ? 1 : a];
+  }
+  throw new ColorError$1(color);
+}
+function hash(str) {
+  let hash = 5381;
+  let i = str.length;
+  while (i) {
+    hash = hash * 33 ^ str.charCodeAt(--i);
+  }
+
+  /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
+   * integers. Since we want the results to be always positive, convert the
+   * signed int to an unsigned by doing an unsigned bitshift. */
+  return (hash >>> 0) % 2341;
+}
+const colorToInt = x => parseInt(x.replace(/_/g, ''), 36);
+const compressedColorMap = '1q29ehhb 1n09sgk7 1kl1ekf_ _yl4zsno 16z9eiv3 1p29lhp8 _bd9zg04 17u0____ _iw9zhe5 _to73___ _r45e31e _7l6g016 _jh8ouiv _zn3qba8 1jy4zshs 11u87k0u 1ro9yvyo 1aj3xael 1gz9zjz0 _3w8l4xo 1bf1ekf_ _ke3v___ _4rrkb__ 13j776yz _646mbhl _nrjr4__ _le6mbhl 1n37ehkb _m75f91n _qj3bzfz 1939yygw 11i5z6x8 _1k5f8xs 1509441m 15t5lwgf _ae2th1n _tg1ugcv 1lp1ugcv 16e14up_ _h55rw7n _ny9yavn _7a11xb_ 1ih442g9 _pv442g9 1mv16xof 14e6y7tu 1oo9zkds 17d1cisi _4v9y70f _y98m8kc 1019pq0v 12o9zda8 _348j4f4 1et50i2o _8epa8__ _ts6senj 1o350i2o 1mi9eiuo 1259yrp0 1ln80gnw _632xcoy 1cn9zldc _f29edu4 1n490c8q _9f9ziet 1b94vk74 _m49zkct 1kz6s73a 1eu9dtog _q58s1rz 1dy9sjiq __u89jo3 _aj5nkwg _ld89jo3 13h9z6wx _qa9z2ii _l119xgq _bs5arju 1hj4nwk9 1qt4nwk9 1ge6wau6 14j9zlcw 11p1edc_ _ms1zcxe _439shk6 _jt9y70f _754zsow 1la40eju _oq5p___ _x279qkz 1fa5r3rv _yd2d9ip _424tcku _8y1di2_ _zi2uabw _yy7rn9h 12yz980_ __39ljp6 1b59zg0x _n39zfzp 1fy9zest _b33k___ _hp9wq92 1il50hz4 _io472ub _lj9z3eo 19z9ykg0 _8t8iu3a 12b9bl4a 1ak5yw0o _896v4ku _tb8k8lv _s59zi6t _c09ze0p 1lg80oqn 1id9z8wb _238nba5 1kq6wgdi _154zssg _tn3zk49 _da9y6tc 1sg7cv4f _r12jvtt 1gq5fmkz 1cs9rvci _lp9jn1c _xw1tdnb 13f9zje6 16f6973h _vo7ir40 _bt5arjf _rc45e4t _hr4e100 10v4e100 _hc9zke2 _w91egv_ _sj2r1kk 13c87yx8 _vqpds__ _ni8ggk8 _tj9yqfb 1ia2j4r4 _7x9b10u 1fc9ld4j 1eq9zldr _5j9lhpx _ez9zl6o _md61fzm'.split(' ').reduce((acc, next) => {
+  const key = colorToInt(next.substring(0, 3));
+  const hex = colorToInt(next.substring(3)).toString(16);
+
+  // NOTE: padStart could be used here but it breaks Node 6 compat
+  // https://github.com/ricokahler/color2k/issues/351
+  let prefix = '';
+  for (let i = 0; i < 6 - hex.length; i++) {
+    prefix += '0';
+  }
+  acc[key] = `${prefix}${hex}`;
+  return acc;
+}, {});
+
+/**
+ * Checks if a string is a CSS named color and returns its equivalent hex value, otherwise returns the original color.
+ */
+function nameToHex(color) {
+  const normalizedColorName = color.toLowerCase().trim();
+  const result = compressedColorMap[hash(normalizedColorName)];
+  if (!result) throw new ColorError$1(color);
+  return `#${result}`;
+}
+const r = (str, amount) => Array.from(Array(amount)).map(() => str).join('');
+const reducedHexRegex = new RegExp(`^#${r('([a-f0-9])', 3)}([a-f0-9])?$`, 'i');
+const hexRegex = new RegExp(`^#${r('([a-f0-9]{2})', 3)}([a-f0-9]{2})?$`, 'i');
+const rgbaRegex = new RegExp(`^rgba?\\(\\s*(\\d+)\\s*${r(',\\s*(\\d+)\\s*', 2)}(?:,\\s*([\\d.]+))?\\s*\\)$`, 'i');
+const hslaRegex = /^hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%(?:\s*,\s*([\d.]+))?\s*\)$/i;
+const namedColorRegex = /^[a-z]+$/i;
+const roundColor = color => {
+  return Math.round(color * 255);
+};
+const hslToRgb = (hue, saturation, lightness) => {
+  let l = lightness / 100;
+  if (saturation === 0) {
+    // achromatic
+    return [l, l, l].map(roundColor);
+  }
+
+  // formulae from https://en.wikipedia.org/wiki/HSL_and_HSV
+  const huePrime = (hue % 360 + 360) % 360 / 60;
+  const chroma = (1 - Math.abs(2 * l - 1)) * (saturation / 100);
+  const secondComponent = chroma * (1 - Math.abs(huePrime % 2 - 1));
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+  if (huePrime >= 0 && huePrime < 1) {
+    red = chroma;
+    green = secondComponent;
+  } else if (huePrime >= 1 && huePrime < 2) {
+    red = secondComponent;
+    green = chroma;
+  } else if (huePrime >= 2 && huePrime < 3) {
+    green = chroma;
+    blue = secondComponent;
+  } else if (huePrime >= 3 && huePrime < 4) {
+    green = secondComponent;
+    blue = chroma;
+  } else if (huePrime >= 4 && huePrime < 5) {
+    red = secondComponent;
+    blue = chroma;
+  } else if (huePrime >= 5 && huePrime < 6) {
+    red = chroma;
+    blue = secondComponent;
+  }
+  const lightnessModification = l - chroma / 2;
+  const finalRed = red + lightnessModification;
+  const finalGreen = green + lightnessModification;
+  const finalBlue = blue + lightnessModification;
+  return [finalRed, finalGreen, finalBlue].map(roundColor);
+};
+
+/**
+ * Helper: Transforms hex rgba colors used in figma tokens:
+ * rgba(#ffffff, 0.5) =? rgba(255, 255, 255, 0.5).
+ * This is kind of like an alpha() function.
+ */
+function transformHEXRGBa(value) {
+    if (value === undefined) {
+        return value;
+    }
+    const match = /rgba\((?<hex>.+),\s*(?<alpha>.+)\)/g.exec(value);
+    if (match && match.groups) {
+        const { hex, alpha } = match.groups;
+        const [r, g, b] = parseToRgba(hex);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    return value;
+}
+
+// A is m x n. B is n x p. product is m x p.
+function multiplyMatrices (A, B) {
+	let m = A.length;
+
+	if (!Array.isArray(A[0])) {
+		// A is vector, convert to [[a, b, c, ...]]
+		A = [A];
+	}
+
+	if (!Array.isArray(B[0])) {
+		// B is vector, convert to [[a], [b], [c], ...]]
+		B = B.map(x => [x]);
+	}
+
+	let p = B[0].length;
+	let B_cols = B[0].map((_, i) => B.map(x => x[i])); // transpose B
+	let product = A.map(row => B_cols.map(col => {
+		let ret = 0;
+
+		if (!Array.isArray(row)) {
+			for (let c of col) {
+				ret += row * c;
+			}
+
+			return ret;
+		}
+
+		for (let i=0; i < row.length; i++) {
+			ret += row[i] * (col[i] || 0);
+		}
+
+		return ret;
+	}));
+
+	if (m === 1) {
+		product = product[0]; // Avoid [[a, b, c, ...]]
+	}
+
+	if (p === 1) {
+		return product.map(x => x[0]); // Avoid [[a], [b], [c], ...]]
+	}
+
+	return product;
+}
+
+/**
+ * Various utility functions
+ */
+
+/**
+ * Check if a value is a string (including a String object)
+ * @param {*} str - Value to check
+ * @returns {boolean}
+ */
+function isString (str) {
+	return type(str) === "string";
+}
+
+/**
+ * Determine the internal JavaScript [[Class]] of an object.
+ * @param {*} o - Value to check
+ * @returns {string}
+ */
+function type (o) {
+	let str = Object.prototype.toString.call(o);
+
+	return (str.match(/^\[object\s+(.*?)\]$/)[1] || "").toLowerCase();
+}
+
+/**
+ * Round a number to a certain number of significant digits
+ * @param {number} n - The number to round
+ * @param {number} precision - Number of significant digits
+ */
+function toPrecision (n, precision) {
+	n = +n;
+	precision = +precision;
+	let integerLength = (Math.floor(n) + "").length;
+
+	if (precision > integerLength) {
+		return +n.toFixed(precision - integerLength);
+	}
+	else {
+		let p10 = 10 ** (integerLength - precision);
+		return Math.round(n / p10) * p10;
+	}
+}
+
+/**
+* Parse a CSS function, regardless of its name and arguments
+* @param String str String to parse
+* @return {{name, args, rawArgs}}
+*/
+function parseFunction (str) {
+	if (!str) {
+		return;
+	}
+
+	str = str.trim();
+
+	const isFunctionRegex = /^([a-z]+)\((.+?)\)$/i;
+	const isNumberRegex = /^-?[\d.]+$/;
+	let parts = str.match(isFunctionRegex);
+
+	if (parts) {
+		// It is a function, parse args
+		let args = [];
+		parts[2].replace(/\/?\s*([-\w.]+(?:%|deg)?)/g, ($0, arg) => {
+			if (/%$/.test(arg)) {
+				// Convert percentages to 0-1 numbers
+				arg = new Number(arg.slice(0, -1) / 100);
+				arg.type = "<percentage>";
+			}
+			else if (/deg$/.test(arg)) {
+				// Drop deg from degrees and convert to number
+				// TODO handle other units too
+				arg = new Number(+arg.slice(0, -3));
+				arg.type = "<angle>";
+				arg.unit = "deg";
+			}
+			else if (isNumberRegex.test(arg)) {
+				// Convert numerical args to numbers
+				arg = new Number(arg);
+				arg.type = "<number>";
+			}
+
+			if ($0.startsWith("/")) {
+				// It's alpha
+				arg = arg instanceof Number? arg : new Number(arg);
+				arg.alpha = true;
+			}
+
+			args.push(arg);
+		});
+
+		return {
+			name: parts[1].toLowerCase(),
+			rawName: parts[1],
+			rawArgs: parts[2],
+			// An argument could be (as of css-color-4):
+			// a number, percentage, degrees (hue), ident (in color())
+			args
+		};
+	}
+}
+
+function last (arr) {
+	return arr[arr.length - 1];
+}
+
+function interpolate (start, end, p) {
+	if (isNaN(start)) {
+		return end;
+	}
+
+	if (isNaN(end)) {
+		return start;
+	}
+
+	return start + (end - start) * p;
+}
+
+function interpolateInv (start, end, value) {
+	return (value - start) / (end - start);
+}
+
+function mapRange (from, to, value) {
+	return interpolate(to[0], to[1], interpolateInv(from[0], from[1], value));
+}
+
+function parseCoordGrammar (coordGrammars) {
+	return coordGrammars.map(coordGrammar => {
+		return coordGrammar.split("|").map(type => {
+			type = type.trim();
+			let range = type.match(/^(<[a-z]+>)\[(-?[.\d]+),\s*(-?[.\d]+)\]?$/);
+
+			if (range) {
+				let ret = new String(range[1]);
+				ret.range = [+range[2], +range[3]];
+				return ret;
+			}
+
+			return type;
+		});
+	});
+}
+
+var util = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	isString: isString,
+	type: type,
+	toPrecision: toPrecision,
+	parseFunction: parseFunction,
+	last: last,
+	interpolate: interpolate,
+	interpolateInv: interpolateInv,
+	mapRange: mapRange,
+	parseCoordGrammar: parseCoordGrammar,
+	multiplyMatrices: multiplyMatrices
+});
+
+/**
+ * A class for adding deep extensibility to any piece of JS code
+ */
+class Hooks {
+	add (name, callback, first) {
+		if (typeof arguments[0] != "string") {
+			// Multiple hooks
+			for (var name in arguments[0]) {
+				this.add(name, arguments[0][name], arguments[1]);
+			}
+
+			return;
+		}
+
+		(Array.isArray(name)? name : [name]).forEach(function (name) {
+			this[name] = this[name] || [];
+
+			if (callback) {
+				this[name][first? "unshift" : "push"](callback);
+			}
+		}, this);
+	}
+
+	run (name, env) {
+		this[name] = this[name] || [];
+		this[name].forEach(function (callback) {
+			callback.call(env && env.context? env.context : env, env);
+		});
+	}
+}
+/**
+ * The instance of {@link Hooks} used throughout Color.js
+ */
+const hooks = new Hooks();
+
+// Global defaults one may want to configure
+
+var defaults = {
+	gamut_mapping: "lch.c",
+	precision: 5,
+	deltaE: "76", // Default deltaE method
+};
+
+const WHITES = {
+	// for compatibility, the four-digit chromaticity-derived ones everyone else uses
+	D50: [0.3457 / 0.3585, 1.00000, (1.0 - 0.3457 - 0.3585) / 0.3585],
+	D65: [0.3127 / 0.3290, 1.00000, (1.0 - 0.3127 - 0.3290) / 0.3290],
+};
+
+function getWhite (name) {
+	if (Array.isArray(name)) {
+		return name;
+	}
+
+	return WHITES[name];
+}
+
+// Adapt XYZ from white point W1 to W2
+function adapt$1 (W1, W2, XYZ, options = {}) {
+	W1 = getWhite(W1);
+	W2 = getWhite(W2);
+
+	if (!W1 || !W2) {
+		throw new TypeError(`Missing white point to convert ${!W1? "from" : ""}${!W1&&!W2? "/" : ""}${!W2? "to" : ""}`);
+	}
+
+	if (W1 === W2) {
+		// Same whitepoints, no conversion needed
+		return XYZ;
+	}
+
+	let env = {W1, W2, XYZ, options};
+
+	hooks.run("chromatic-adaptation-start", env);
+
+	if (!env.M) {
+		if (env.W1 === WHITES.D65 && env.W2 === WHITES.D50) {
+			env.M = [
+				[  1.0479298208405488,    0.022946793341019088,  -0.05019222954313557 ],
+				[  0.029627815688159344,  0.990434484573249,     -0.01707382502938514 ],
+				[ -0.009243058152591178,  0.015055144896577895,   0.7518742899580008  ]
+			];
+		}
+		else if (env.W1 === WHITES.D50 && env.W2 === WHITES.D65) {
+
+			env.M = [
+				[  0.9554734527042182,   -0.023098536874261423,  0.0632593086610217   ],
+				[ -0.028369706963208136,  1.0099954580058226,    0.021041398966943008 ],
+				[  0.012314001688319899, -0.020507696433477912,  1.3303659366080753   ]
+			];
+		}
+	}
+
+	hooks.run("chromatic-adaptation-end", env);
+
+	if (env.M) {
+		return multiplyMatrices(env.M, env.XYZ);
+	}
+	else {
+		throw new TypeError("Only Bradford CAT with white points D50 and D65 supported for now.");
+	}
+}
+
+const ε$4 = .000075;
+
+/**
+ * Class to represent a color space
+ */
+class ColorSpace {
+	constructor (options) {
+		this.id = options.id;
+		this.name = options.name;
+		this.base = options.base ? ColorSpace.get(options.base) : null;
+		this.aliases = options.aliases;
+
+		if (this.base) {
+			this.fromBase = options.fromBase;
+			this.toBase = options.toBase;
+		}
+
+		// Coordinate metadata
+
+		let coords = options.coords ?? this.base.coords;
+		this.coords = coords;
+
+		// White point
+
+		let white = options.white ?? this.base.white ?? "D65";
+		this.white = getWhite(white);
+
+		// Sort out formats
+
+		this.formats = options.formats ?? {};
+
+		for (let name in this.formats) {
+			let format = this.formats[name];
+			format.type ||= "function";
+			format.name ||= name;
+		}
+
+		if (options.cssId && !this.formats.functions?.color) {
+			this.formats.color = { id: options.cssId };
+			Object.defineProperty(this, "cssId", {value: options.cssId});
+		}
+		else if (this.formats?.color && !this.formats?.color.id) {
+			this.formats.color.id = this.id;
+		}
+
+		// Other stuff
+		this.referred = options.referred;
+
+		// Compute ancestors and store them, since they will never change
+		this.#path = this.#getPath().reverse();
+
+		hooks.run("colorspace-init-end", this);
+	}
+
+	inGamut (coords, {epsilon = ε$4} = {}) {
+		if (this.isPolar) {
+			// Do not check gamut through polar coordinates
+			coords = this.toBase(coords);
+
+			return this.base.inGamut(coords, {epsilon});
+		}
+
+		let coordMeta = Object.values(this.coords);
+
+		return coords.every((c, i) => {
+			let meta = coordMeta[i];
+
+			if (meta.type !== "angle" && meta.range) {
+				if (Number.isNaN(c)) {
+					// NaN is always in gamut
+					return true;
+				}
+
+				let [min, max] = meta.range;
+				return (min === undefined || c >= min - epsilon)
+				    && (max === undefined || c <= max + epsilon);
+			}
+
+			return true;
+		});
+	}
+
+	get cssId () {
+		return this.formats.functions?.color?.id || this.id;
+	}
+
+	get isPolar () {
+		for (let id in this.coords) {
+			if (this.coords[id].type === "angle") {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	#processFormat (format) {
+		if (format.coords && !format.coordGrammar) {
+			format.type ||= "function";
+			format.name ||= "color";
+
+			// Format has not been processed
+			format.coordGrammar = parseCoordGrammar(format.coords);
+
+			let coordFormats = Object.entries(this.coords).map(([id, coordMeta], i) => {
+				// Preferred format for each coord is the first one
+				let outputType = format.coordGrammar[i][0];
+
+				let fromRange = coordMeta.range || coordMeta.refRange;
+				let toRange = outputType.range, suffix = "";
+
+				// Non-strict equals intentional since outputType could be a string object
+				if (outputType == "<percentage>") {
+					toRange = [0, 100];
+					suffix = "%";
+				}
+				else if (outputType == "<angle>") {
+					suffix = "deg";
+				}
+
+				return  {fromRange, toRange, suffix};
+			});
+
+			format.serializeCoords = (coords, precision) => {
+				return coords.map((c, i) => {
+					let {fromRange, toRange, suffix} = coordFormats[i];
+
+					if (fromRange && toRange) {
+						c = mapRange(fromRange, toRange, c);
+					}
+
+					c = toPrecision(c, precision);
+
+					if (suffix) {
+						c += suffix;
+					}
+
+					return c;
+				});
+			};
+		}
+
+		return format;
+	}
+
+	getFormat (format) {
+		if (typeof format === "object") {
+			format = this.#processFormat(format);
+			return format;
+		}
+
+		let ret;
+		if (format === "default") {
+			// Get first format
+			ret = Object.values(this.formats)[0];
+		}
+		else {
+			ret = this.formats[format];
+		}
+
+		if (ret) {
+			ret = this.#processFormat(ret);
+			return ret;
+		}
+
+		return null;
+	}
+
+	#path;
+
+	#getPath () {
+		let ret = [this];
+
+		for (let space = this; space = space.base;) {
+			ret.push(space);
+		}
+
+		return ret;
+	}
+
+	to (space, coords) {
+		if (arguments.length === 1) {
+			[space, coords] = [space.space, space.coords];
+		}
+
+		space = ColorSpace.get(space);
+
+		if (this === space) {
+			// Same space, no change needed
+			return coords;
+		}
+
+		// Convert NaN to 0, which seems to be valid in every coordinate of every color space
+		coords = coords.map(c => Number.isNaN(c)? 0 : c);
+
+		// Find connection space = lowest common ancestor in the base tree
+		let myPath = this.#path;
+		let otherPath = space.#path;
+
+		let connectionSpace, connectionSpaceIndex;
+
+		for (let i=0; i < myPath.length; i++) {
+			if (myPath[i] === otherPath[i]) {
+				connectionSpace = myPath[i];
+				connectionSpaceIndex = i;
+			}
+			else {
+				break;
+			}
+		}
+
+		if (!connectionSpace) {
+			// This should never happen
+			throw new Error(`Cannot convert between color spaces ${this} and ${space}: no connection space was found`);
+		}
+
+		// Go up from current space to connection space
+		for (let i = myPath.length - 1; i > connectionSpaceIndex; i--) {
+			coords = myPath[i].toBase(coords);
+		}
+
+		// Go down from connection space to target space
+		for (let i = connectionSpaceIndex + 1; i < otherPath.length; i++) {
+			coords = otherPath[i].fromBase(coords);
+		}
+
+		return coords;
+	}
+
+	from (space, coords) {
+		if (arguments.length === 1) {
+			[space, coords] = [space.space, space.coords];
+		}
+
+		space = ColorSpace.get(space);
+
+		return space.to(this, coords);
+	}
+
+	toString () {
+		return `${this.name} (${this.id})`;
+	}
+
+	getMinCoords () {
+		let ret = [];
+
+		for (let id in this.coords) {
+			let meta = this.coords[id];
+			let range = meta.range || meta.refRange;
+			ret.push(range?.min ?? 0);
+		}
+
+		return ret;
+	}
+
+	static registry = {};
+
+	// Returns array of unique color spaces
+	static get all () {
+		return [...new Set(Object.values(ColorSpace.registry))];
+	}
+
+	static register (id, space) {
+		if (arguments.length === 1) {
+			space = arguments[0];
+			id = space.id;
+		}
+
+		space = this.get(space);
+
+		if (this.registry[id] && this.registry[id] !== space) {
+			throw new Error(`Duplicate color space registration: '${id}'`);
+		}
+		this.registry[id] = space;
+
+		// Register aliases when called without an explicit ID.
+		if (arguments.length === 1 && space.aliases) {
+			for (let alias of space.aliases) {
+				this.register(alias, space);
+			}
+		}
+
+		return space;
+	}
+
+	/**
+	 * Lookup ColorSpace object by name
+	 * @param {ColorSpace | string} name
+	 */
+	static get (space, ...alternatives) {
+		if (!space || space instanceof ColorSpace) {
+			return space;
+		}
+
+		let argType = type(space);
+
+		if (argType === "string") {
+			// It's a color space id
+			let ret = ColorSpace.registry[space.toLowerCase()];
+
+			if (!ret) {
+				throw new TypeError(`No color space found with id = "${space}"`);
+			}
+
+			return ret;
+		}
+
+		if (alternatives.length) {
+			return ColorSpace.get(...alternatives);
+		}
+
+		throw new TypeError(`${space} is not a valid color space`);
+	}
+
+	/**
+	 * Get metadata about a coordinate of a color space
+	 *
+	 * @static
+	 * @param {Array | string} ref
+	 * @param {ColorSpace | string} [workingSpace]
+	 * @return {Object}
+	 */
+	static resolveCoord (ref, workingSpace) {
+		let coordType = type(ref);
+		let space, coord;
+
+		if (coordType === "string") {
+			if (ref.includes(".")) {
+				// Absolute coordinate
+				[space, coord] = ref.split(".");
+			}
+			else {
+				// Relative coordinate
+				[space, coord] = [, ref];
+			}
+		}
+		else if (Array.isArray(ref)) {
+			[space, coord] = ref;
+		}
+		else {
+			// Object
+			space = ref.space;
+			coord = ref.coordId;
+		}
+
+		space = ColorSpace.get(space);
+
+		if (!space) {
+			space = workingSpace;
+		}
+
+		if (!space) {
+			throw new TypeError(`Cannot resolve coordinate reference ${ref}: No color space specified and relative references are not allowed here`);
+		}
+
+		coordType = type(coord);
+
+		if (coordType === "number" || coordType === "string" && coord >= 0) {
+			// Resolve numerical coord
+			let meta = Object.entries(space.coords)[coord];
+
+			if (meta) {
+				return {space, id: meta[0], index: coord, ...meta[1]};
+			}
+		}
+
+		space = ColorSpace.get(space);
+
+		let normalizedCoord = coord.toLowerCase();
+
+		let i = 0;
+		for (let id in space.coords) {
+			let meta = space.coords[id];
+
+			if (id.toLowerCase() === normalizedCoord || meta.name?.toLowerCase() === normalizedCoord) {
+				return {space, id, index: i, ...meta};
+			}
+
+			i++;
+		}
+
+		throw new TypeError(`No "${coord}" coordinate found in ${space.name}. Its coordinates are: ${Object.keys(space.coords).join(", ")}`);
+	}
+
+	static DEFAULT_FORMAT = {
+		type: "functions",
+		name: "color",
+	};
+}
+
+var XYZ_D65 = new ColorSpace({
+	id: "xyz-d65",
+	name: "XYZ D65",
+	coords: {
+		x: {name: "X"},
+		y: {name: "Y"},
+		z: {name: "Z"},
+	},
+	white: "D65",
+	formats: {
+		color: {
+			ids: ["xyz-d65", "xyz"],
+		}
+	},
+	aliases: ["xyz"],
+});
+
+/**
+ * Convenience class for RGB color spaces
+ * @extends {ColorSpace}
+ */
+class RGBColorSpace extends ColorSpace {
+	/**
+	 * Creates a new RGB ColorSpace.
+	 * If coords are not specified, they will use the default RGB coords.
+	 * Instead of `fromBase()` and `toBase()` functions,
+	 * you can specify to/from XYZ matrices and have `toBase()` and `fromBase()` automatically generated.
+	 * @param {*} options - Same options as {@link ColorSpace} plus:
+	 * @param {number[][]} options.toXYZ_M - Matrix to convert to XYZ
+	 * @param {number[][]} options.fromXYZ_M - Matrix to convert from XYZ
+	 */
+	constructor (options) {
+		if (!options.coords) {
+			options.coords = {
+				r: {
+					range: [0, 1],
+					name: "Red"
+				},
+				g: {
+					range: [0, 1],
+					name: "Green"
+				},
+				b: {
+					range: [0, 1],
+					name: "Blue"
+				}
+			};
+		}
+
+		if (!options.base) {
+			options.base = XYZ_D65;
+		}
+
+		if (options.toXYZ_M && options.fromXYZ_M) {
+			options.toBase ??= rgb => {
+				let xyz = multiplyMatrices(options.toXYZ_M, rgb);
+
+				if (this.white !== this.base.white) {
+					// Perform chromatic adaptation
+					xyz = adapt$1(this.white, this.base.white, xyz);
+				}
+
+				return xyz;
+			};
+
+			options.fromBase ??= xyz => {
+				xyz = adapt$1(this.base.white, this.white, xyz);
+				return multiplyMatrices(options.fromXYZ_M, xyz);
+			};
+		}
+
+		options.referred ??= "display";
+
+		super(options);
+	}
+}
+
+// CSS color to Color object
+function parse (str) {
+	let env = {"str": String(str)?.trim()};
+	hooks.run("parse-start", env);
+
+	if (env.color) {
+		return env.color;
+	}
+
+	env.parsed = parseFunction(env.str);
+
+	if (env.parsed) {
+		// Is a functional syntax
+		let name = env.parsed.name;
+
+		if (name === "color") {
+			// color() function
+			let id = env.parsed.args.shift();
+			let alpha = env.parsed.rawArgs.indexOf("/") > 0? env.parsed.args.pop() : 1;
+
+			for (let space of ColorSpace.all) {
+				let colorSpec = space.getFormat("color");
+
+				if (colorSpec) {
+					if (id === colorSpec.id || colorSpec.ids?.includes(id)) {
+						// From https://drafts.csswg.org/css-color-4/#color-function
+						// If more <number>s or <percentage>s are provided than parameters that the colorspace takes, the excess <number>s at the end are ignored.
+						// If less <number>s or <percentage>s are provided than parameters that the colorspace takes, the missing parameters default to 0. (This is particularly convenient for multichannel printers where the additional inks are spot colors or varnishes that most colors on the page won’t use.)
+						let argCount = Object.keys(space.coords).length;
+						let coords = Array(argCount).fill(0);
+						coords.forEach((_, i) => coords[i] = env.parsed.args[i] || 0);
+
+						return {spaceId: space.id, coords, alpha};
+					}
+				}
+			}
+
+			// Not found
+			let didYouMean = "";
+			if (id in ColorSpace.registry) {
+				// Used color space id instead of color() id, these are often different
+				let cssId = ColorSpace.registry[id].formats?.functions?.color?.id;
+
+				if (cssId) {
+					didYouMean = `Did you mean color(${cssId})?`;
+				}
+			}
+			throw new TypeError(`Cannot parse color(${id}). ` + (didYouMean || "Missing a plugin?"));
+		}
+		else {
+			for (let space of ColorSpace.all) {
+				// color space specific function
+				let format = space.getFormat(name);
+				if (format && format.type === "function") {
+					let alpha = 1;
+
+					if (format.lastAlpha || last(env.parsed.args).alpha) {
+						alpha = env.parsed.args.pop();
+					}
+
+					let coords = env.parsed.args;
+
+					if (format.coordGrammar) {
+						Object.entries(space.coords).forEach(([id, coordMeta], i) => {
+							let coordGrammar = format.coordGrammar[i];
+							let providedType = coords[i]?.type;
+
+							// Find grammar alternative that matches the provided type
+							// Non-strict equals is intentional because we are comparing w/ string objects
+							coordGrammar = coordGrammar.find(c => c == providedType);
+
+							// Check that each coord conforms to its grammar
+							if (!coordGrammar) {
+								// Type does not exist in the grammar, throw
+								let coordName = coordMeta.name || id;
+								throw new TypeError(`${providedType} not allowed for ${coordName} in ${name}()`);
+							}
+
+							let fromRange = coordGrammar.range;
+
+							if (providedType === "<percentage>") {
+								fromRange ||= [0, 1];
+							}
+
+							let toRange = coordMeta.range || coordMeta.refRange;
+
+							if (fromRange && toRange) {
+
+								coords[i] = mapRange(fromRange, toRange, coords[i]);
+							}
+						});
+					}
+
+					return {
+						spaceId: space.id,
+						coords, alpha
+					};
+				}
+			}
+		}
+	}
+	else {
+		// Custom, colorspace-specific format
+		for (let space of ColorSpace.all) {
+
+			for (let formatId in space.formats) {
+				let format = space.formats[formatId];
+
+				if (format.type !== "custom") {
+					continue;
+				}
+
+				if (format.test && !format.test(env.str)) {
+					continue;
+				}
+
+				let color = format.parse(env.str);
+
+				if (color) {
+					color.alpha ??= 1;
+					return color;
+				}
+			}
+		}
+	}
+
+
+	// If we're here, we couldn't parse
+	throw new TypeError(`Could not parse ${str} as a color. Missing a plugin?`);
+}
+
+/**
+ * Resolves a color reference (object or string) to a plain color object
+ * @param {Color | {space, coords, alpha} | string} color
+ * @returns {{space, coords, alpha}}
+ */
+function getColor (color) {
+	if (!color) {
+		throw new TypeError("Empty color reference");
+	}
+
+	if (isString(color)) {
+		color = parse(color);
+	}
+
+	// Object fixup
+	let space = color.space || color.spaceId;
+
+	if (!(space instanceof ColorSpace)) {
+		// Convert string id to color space object
+		color.space = ColorSpace.get(space);
+	}
+
+	if (color.alpha === undefined) {
+		color.alpha = 1;
+	}
+
+	return color;
+}
+
+/**
+ * Get the coordinates of a color in another color space
+ *
+ * @param {string | ColorSpace} space
+ * @returns {number[]}
+ */
+function getAll (color, space) {
+	space = ColorSpace.get(space);
+	return space.from(color);
+}
+
+function get (color, prop) {
+	let {space, index} = ColorSpace.resolveCoord(prop, color.space);
+	let coords = getAll(color, space);
+	return coords[index];
+}
+
+function setAll (color, space, coords) {
+	space = ColorSpace.get(space);
+	color.coords = space.to(color.space, coords);
+	return color;
+}
+
+// Set properties and return current instance
+function set (color, prop, value) {
+	color = getColor(color);
+
+	if (arguments.length === 2 && type(arguments[1]) === "object") {
+		// Argument is an object literal
+		let object = arguments[1];
+		for (let p in object) {
+			set(color, p, object[p]);
+		}
+	}
+	else {
+		if (typeof value === "function") {
+			value = value(get(color, prop));
+		}
+
+		let {space, index} = ColorSpace.resolveCoord(prop, color.space);
+		let coords = getAll(color, space);
+		coords[index] = value;
+		setAll(color, space, coords);
+	}
+
+	return color;
+}
+
+var XYZ_D50 = new ColorSpace({
+	id: "xyz-d50",
+	name: "XYZ D50",
+	white: "D50",
+	base: XYZ_D65,
+	fromBase: coords => adapt$1(XYZ_D65.white, "D50", coords),
+	toBase: coords => adapt$1("D50", XYZ_D65.white, coords),
+	formats: {
+		color: {}
+	},
+});
+
+// κ * ε  = 2^3 = 8
+const ε$3 = 216/24389;  // 6^3/29^3 == (24/116)^3
+const ε3$1 = 24/116;
+const κ$1 = 24389/27;   // 29^3/3^3
+
+let white$1 = WHITES.D50;
+
+var lab = new ColorSpace({
+	id: "lab",
+	name: "Lab",
+	coords: {
+		l: {
+			refRange: [0, 100],
+			name: "L"
+		},
+		a: {
+			refRange: [-125, 125]
+		},
+		b: {
+			refRange: [-125, 125]
+		}
+	},
+
+	// Assuming XYZ is relative to D50, convert to CIE Lab
+	// from CIE standard, which now defines these as a rational fraction
+	white: white$1,
+
+	base: XYZ_D50,
+	// Convert D50-adapted XYX to Lab
+	//  CIE 15.3:2004 section 8.2.1.1
+	fromBase (XYZ) {
+		// compute xyz, which is XYZ scaled relative to reference white
+		let xyz = XYZ.map((value, i) => value / white$1[i]);
+
+		// now compute f
+		let f = xyz.map(value => value > ε$3 ? Math.cbrt(value) : (κ$1 * value + 16)/116);
+
+		return [
+			(116 * f[1]) - 16, 	 // L
+			500 * (f[0] - f[1]), // a
+			200 * (f[1] - f[2])  // b
+		];
+	},
+	// Convert Lab to D50-adapted XYZ
+	// Same result as CIE 15.3:2004 Appendix D although the derivation is different
+	// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+	toBase (Lab) {
+		// compute f, starting with the luminance-related term
+		let f = [];
+		f[1] = (Lab[0] + 16)/116;
+		f[0] = Lab[1]/500 + f[1];
+		f[2] = f[1] - Lab[2]/200;
+
+		// compute xyz
+		let xyz = [
+			f[0]   > ε3$1  ?  Math.pow(f[0], 3)            : (116*f[0]-16)/κ$1,
+			Lab[0] > 8   ?  Math.pow((Lab[0]+16)/116, 3) : Lab[0]/κ$1,
+			f[2]   > ε3$1  ?  Math.pow(f[2], 3)            : (116*f[2]-16)/κ$1
+		];
+
+		// Compute XYZ by scaling xyz by reference white
+		return xyz.map((value, i) => value * white$1[i]);
+	},
+
+	formats: {
+		"lab": {
+			coords: ["<number> | <percentage>", "<number>", "<number>"],
+		}
+	}
+});
+
+function constrain (angle) {
+	return ((angle % 360) + 360) % 360;
+}
+
+function adjust (arc, angles) {
+	if (arc === "raw") {
+		return angles;
+	}
+
+	let [a1, a2] = angles.map(constrain);
+
+	let angleDiff = a2 - a1;
+
+	if (arc === "increasing") {
+		if (angleDiff < 0) {
+			a2 += 360;
+		}
+	}
+	else if (arc === "decreasing") {
+		if (angleDiff > 0) {
+			a1 += 360;
+		}
+	}
+	else if (arc === "longer") {
+		if (-180 < angleDiff && angleDiff < 180) {
+			if (angleDiff > 0) {
+				a2 += 360;
+			}
+			else {
+				a1 += 360;
+			}
+		}
+	}
+	else if (arc === "shorter") {
+		if (angleDiff > 180) {
+			a1 += 360;
+		}
+		else if (angleDiff < -180) {
+			a2 += 360;
+		}
+	}
+
+	return [a1, a2];
+}
+
+var lch = new ColorSpace({
+	id: "lch",
+	name: "LCH",
+	coords: {
+		l: {
+			refRange: [0, 100],
+			name: "Lightness"
+		},
+		c: {
+			refRange: [0, 150],
+			name: "Chroma"
+		},
+		h: {
+			refRange: [0, 360],
+			type: "angle",
+			name: "Hue"
+		}
+	},
+
+	base: lab,
+	fromBase (Lab) {
+		// Convert to polar form
+		let [L, a, b] = Lab;
+		let hue;
+		const ε = 0.02;
+
+		if (Math.abs(a) < ε && Math.abs(b) < ε) {
+			hue = NaN;
+		}
+		else {
+			hue = Math.atan2(b, a) * 180 / Math.PI;
+		}
+
+		return [
+			L, // L is still L
+			Math.sqrt(a ** 2 + b ** 2), // Chroma
+			constrain(hue) // Hue, in degrees [0 to 360)
+		];
+	},
+	toBase (LCH) {
+		// Convert from polar form
+		let [Lightness, Chroma, Hue] = LCH;
+		// Clamp any negative Chroma
+		if (Chroma < 0) {
+			Chroma = 0;
+		}		// Deal with NaN Hue
+		if (isNaN(Hue)) {
+			Hue = 0;
+		}
+		return [
+			Lightness, // L is still L
+			Chroma * Math.cos(Hue * Math.PI / 180), // a
+			Chroma * Math.sin(Hue * Math.PI / 180)  // b
+		];
+	},
+
+	formats: {
+		"lch": {
+			coords: ["<number> | <percentage>", "<number>", "<number> | <angle>"],
+		}
+	}
+});
+
+// deltaE2000 is a statistically significant improvement
+// and is recommended by the CIE and Idealliance
+// especially for color differences less than 10 deltaE76
+// but is wicked complicated
+// and many implementations have small errors!
+// DeltaE2000 is also discontinuous; in case this
+// matters to you, use deltaECMC instead.
+
+const Gfactor = 25 ** 7;
+const π$1 = Math.PI;
+const r2d = 180 / π$1;
+const d2r$1 = π$1 / 180;
+
+function deltaE2000 (color, sample, {kL = 1, kC = 1, kH = 1} = {}) {
+	// Given this color as the reference
+	// and the function parameter as the sample,
+	// calculate deltaE 2000.
+
+	// This implementation assumes the parametric
+	// weighting factors kL, kC and kH
+	// for the influence of viewing conditions
+	// are all 1, as sadly seems typical.
+	// kL should be increased for lightness texture or noise
+	// and kC increased for chroma noise
+
+	let [L1, a1, b1] = lab.from(color);
+	let C1 = lch.from(lab, [L1, a1, b1])[1];
+	let [L2, a2, b2] = lab.from(sample);
+	let C2 = lch.from(lab, [L2, a2, b2])[1];
+
+	// Check for negative Chroma,
+	// which might happen through
+	// direct user input of LCH values
+
+	if (C1 < 0) {
+		C1 = 0;
+	}
+	if (C2 < 0) {
+		C2 = 0;
+	}
+
+	let Cbar = (C1 + C2)/2; // mean Chroma
+
+	// calculate a-axis asymmetry factor from mean Chroma
+	// this turns JND ellipses for near-neutral colors back into circles
+	let C7 = Cbar ** 7;
+
+	let G = 0.5 * (1 - Math.sqrt(C7/(C7 + Gfactor)));
+
+	// scale a axes by asymmetry factor
+	// this by the way is why there is no Lab2000 colorspace
+	let adash1 = (1 + G) * a1;
+	let adash2 = (1 + G) * a2;
+
+	// calculate new Chroma from scaled a and original b axes
+	let Cdash1 = Math.sqrt(adash1 ** 2 + b1 ** 2);
+	let Cdash2 = Math.sqrt(adash2 ** 2 + b2 ** 2);
+
+	// calculate new hues, with zero hue for true neutrals
+	// and in degrees, not radians
+
+	let h1 = (adash1 === 0 && b1 === 0)? 0: Math.atan2(b1, adash1);
+	let h2 = (adash2 === 0 && b2 === 0)? 0: Math.atan2(b2, adash2);
+
+	if (h1 < 0) {
+		h1 += 2 * π$1;
+	}
+	if (h2 < 0) {
+		h2 += 2 * π$1;
+	}
+
+	h1 *= r2d;
+	h2 *= r2d;
+
+	// Lightness and Chroma differences; sign matters
+	let ΔL = L2 - L1;
+	let ΔC = Cdash2 - Cdash1;
+
+	// Hue difference, getting the sign correct
+	let hdiff = h2 - h1;
+	let hsum = h1 + h2;
+	let habs = Math.abs(hdiff);
+	let Δh;
+
+	if (Cdash1 * Cdash2 === 0) {
+		Δh = 0;
+	}
+	else if (habs <= 180) {
+		Δh = hdiff;
+	}
+	else if (hdiff > 180) {
+		Δh = hdiff - 360;
+	}
+	else if (hdiff < -180) {
+		Δh = hdiff + 360;
+	}
+	else {
+		console.log("the unthinkable has happened");
+	}
+
+	// weighted Hue difference, more for larger Chroma
+	let ΔH = 2 * Math.sqrt(Cdash2 * Cdash1) * Math.sin(Δh * d2r$1 / 2);
+
+	// calculate mean Lightness and Chroma
+	let Ldash = (L1 + L2)/2;
+	let Cdash = (Cdash1 + Cdash2)/2;
+	let Cdash7 = Math.pow(Cdash, 7);
+
+	// Compensate for non-linearity in the blue region of Lab.
+	// Four possibilities for hue weighting factor,
+	// depending on the angles, to get the correct sign
+	let hdash;
+	if (Cdash1 * Cdash2 === 0) {
+		hdash = hsum;   // which should be zero
+	}
+	else if (habs <= 180) {
+		hdash = hsum / 2;
+	}
+	else if (hsum < 360) {
+		hdash = (hsum + 360) / 2;
+	}
+	else {
+		hdash = (hsum - 360) / 2;
+	}
+
+	// positional corrections to the lack of uniformity of CIELAB
+	// These are all trying to make JND ellipsoids more like spheres
+
+	// SL Lightness crispening factor
+	// a background with L=50 is assumed
+	let lsq = (Ldash - 50) ** 2;
+	let SL = 1 + ((0.015 * lsq) / Math.sqrt(20 + lsq));
+
+	// SC Chroma factor, similar to those in CMC and deltaE 94 formulae
+	let SC = 1 + 0.045 * Cdash;
+
+	// Cross term T for blue non-linearity
+	let T = 1;
+	T -= (0.17 * Math.cos((     hdash - 30)  * d2r$1));
+	T += (0.24 * Math.cos(  2 * hdash        * d2r$1));
+	T += (0.32 * Math.cos(((3 * hdash) + 6)  * d2r$1));
+	T -= (0.20 * Math.cos(((4 * hdash) - 63) * d2r$1));
+
+	// SH Hue factor depends on Chroma,
+	// as well as adjusted hue angle like deltaE94.
+	let SH = 1 + 0.015 * Cdash * T;
+
+	// RT Hue rotation term compensates for rotation of JND ellipses
+	// and Munsell constant hue lines
+	// in the medium-high Chroma blue region
+	// (Hue 225 to 315)
+	let Δθ = 30 * Math.exp(-1 * (((hdash - 275)/25) ** 2));
+	let RC = 2 * Math.sqrt(Cdash7/(Cdash7 + Gfactor));
+	let RT = -1 * Math.sin(2 * Δθ * d2r$1) * RC;
+
+	// Finally calculate the deltaE, term by term as root sume of squares
+	let dE = (ΔL / (kL * SL)) ** 2;
+	dE += (ΔC / (kC * SC)) ** 2;
+	dE += (ΔH / (kH * SH)) ** 2;
+	dE += RT * (ΔC / (kC * SC)) * (ΔH / (kH * SH));
+	return Math.sqrt(dE);
+	// Yay!!!
+}
+
+const ε$2 = .000075;
+
+/**
+ * Check if a color is in gamut of either its own or another color space
+ * @return {Boolean} Is the color in gamut?
+ */
+function inGamut (color, space = color.space, {epsilon = ε$2} = {}) {
+	color = getColor(color);
+	space = ColorSpace.get(space);
+	let coords = color.coords;
+
+	if (space !== color.space) {
+		coords = space.from(color);
+	}
+
+	return space.inGamut(coords, {epsilon});
+}
+
+function clone (color) {
+	return {
+		space: color.space,
+		coords: color.coords.slice(),
+		alpha: color.alpha
+	};
+}
+
+/**
+ * Force coordinates to be in gamut of a certain color space.
+ * Mutates the color it is passed.
+ * @param {Object} options
+ * @param {string} options.method - How to force into gamut.
+ *        If "clip", coordinates are just clipped to their reference range.
+ *        If in the form [colorSpaceId].[coordName], that coordinate is reduced
+ *        until the color is in gamut. Please note that this may produce nonsensical
+ *        results for certain coordinates (e.g. hue) or infinite loops if reducing the coordinate never brings the color in gamut.
+ * @param {ColorSpace|string} options.space - The space whose gamut we want to map to
+ */
+function toGamut (color, {method = defaults.gamut_mapping, space = color.space} = {}) {
+	if (isString(arguments[1])) {
+		space = arguments[1];
+	}
+
+	space = ColorSpace.get(space);
+
+	if (inGamut(color, space, {epsilon: 0})) {
+		return color;
+	}
+
+	// 3 spaces:
+	// color.space: current color space
+	// space: space whose gamut we are mapping to
+	// mapSpace: space with the coord we're reducing
+	let spaceColor = to(color, space);
+
+	if (method !== "clip" && !inGamut(color, space)) {
+		let clipped = toGamut(clone(spaceColor), {method: "clip", space});
+		if (deltaE2000(color, clipped) > 2) {
+			// Reduce a coordinate of a certain color space until the color is in gamut
+			let coordMeta = ColorSpace.resolveCoord(method);
+			let mapSpace = coordMeta.space;
+			let coordId = coordMeta.id;
+
+			let mappedColor = to(spaceColor, mapSpace);
+			let bounds = coordMeta.range || coordMeta.refRange;
+			let min = bounds[0];
+			let ε = .01; // for deltaE
+			let low = min;
+			let high = get(mappedColor, coordId);
+
+			while (high - low > ε) {
+				let clipped = clone(mappedColor);
+				clipped = toGamut(clipped, {space, method: "clip"});
+				let deltaE = deltaE2000(mappedColor, clipped);
+
+				if (deltaE - 2 < ε) {
+					low = get(mappedColor, coordId);
+				}
+				else {
+					high = get(mappedColor, coordId);
+				}
+
+				set(mappedColor, coordId, (low + high) / 2);
+			}
+
+			spaceColor = to(mappedColor, space);
+		}
+		else {
+			spaceColor = clipped;
+		}
+	}
+
+	if (method === "clip" // Dumb coord clipping
+		// finish off smarter gamut mapping with clip to get rid of ε, see #17
+		|| !inGamut(spaceColor, space, {epsilon: 0})
+	) {
+		let bounds = Object.values(space.coords).map(c => c.range || []);
+
+		spaceColor.coords = spaceColor.coords.map((c, i) => {
+			let [min, max] = bounds[i];
+
+			if (min !== undefined) {
+				c = Math.max(min, c);
+			}
+
+			if (max !== undefined) {
+				c = Math.min(c, max);
+			}
+
+			return c;
+		});
+	}
+
+	if (space !== color.space) {
+		spaceColor = to(spaceColor, color.space);
+	}
+
+	color.coords = spaceColor.coords;
+	return color;
+}
+
+toGamut.returns = "color";
+
+/**
+ * Convert to color space and return a new color
+ * @param {Object|string} space - Color space object or id
+ * @param {Object} options
+ * @param {boolean} options.inGamut - Whether to force resulting color in gamut
+ * @returns {Color}
+ */
+function to (color, space, {inGamut} = {}) {
+	color = getColor(color);
+	space = ColorSpace.get(space);
+
+	let coords = space.from(color);
+	let ret = {space, coords, alpha: color.alpha};
+
+	if (inGamut) {
+		ret = toGamut(ret);
+	}
+
+	return ret;
+}
+
+to.returns = "color";
+
+/**
+ * Generic toString() method, outputs a color(spaceId ...coords) function, a functional syntax, or custom formats defined by the color space
+ * @param {Object} options
+ * @param {number} options.precision - Significant digits
+ * @param {boolean} options.inGamut - Adjust coordinates to fit in gamut first? [default: false]
+ */
+function serialize (color, {
+	precision = defaults.precision,
+	format = "default",
+	inGamut: inGamut$1 = true,
+	...customOptions
+} = {}) {
+	let ret;
+
+	color = getColor(color);
+
+	let formatId = format;
+	format = color.space.getFormat(format)
+		   ?? color.space.getFormat("default")
+		   ?? ColorSpace.DEFAULT_FORMAT;
+
+	inGamut$1 ||= format.toGamut;
+
+	let coords = color.coords;
+
+	// Convert NaN to zeros to have a chance at a valid CSS color
+	// Also convert -0 to 0
+	// This also clones it so we can manipulate it
+	coords = coords.map(c => c? c : 0);
+
+	if (inGamut$1 && !inGamut(color)) {
+		coords = toGamut(clone(color), inGamut$1 === true? undefined : inGamut$1).coords;
+	}
+
+	if (format.type === "custom") {
+		customOptions.precision = precision;
+
+		if (format.serialize) {
+			ret = format.serialize(coords, color.alpha, customOptions);
+		}
+		else {
+			throw new TypeError(`format ${formatId} can only be used to parse colors, not for serialization`);
+		}
+	}
+	else {
+		// Functional syntax
+		let name = format.name || "color";
+
+		if (format.serializeCoords) {
+			coords = format.serializeCoords(coords, precision);
+		}
+		else {
+			if (precision !== null) {
+				coords = coords.map(c => toPrecision(c, precision));
+			}
+		}
+
+		let args = [...coords];
+
+		if (name === "color") {
+			// If output is a color() function, add colorspace id as first argument
+			let cssId = format.id || format.ids?.[0] || color.space.id;
+			args.unshift(cssId);
+		}
+
+		let alpha = color.alpha;
+		if (precision !== null) {
+			alpha = toPrecision(alpha, precision);
+		}
+
+		let strAlpha = color.alpha < 1 && !format.noAlpha? `${format.commas? "," : " /"} ${alpha}` : "";
+		ret = `${name}(${args.join(format.commas? ", " : " ")}${strAlpha})`;
+	}
+
+	return ret;
+}
+
+// convert an array of linear-light rec2020 values to CIE XYZ
+// using  D65 (no chromatic adaptation)
+// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+// 0 is actually calculated as  4.994106574466076e-17
+const toXYZ_M$5 = [
+	[ 0.6369580483012914, 0.14461690358620832,  0.1688809751641721  ],
+	[ 0.2627002120112671, 0.6779980715188708,   0.05930171646986196 ],
+	[ 0.000000000000000,  0.028072693049087428, 1.060985057710791   ]
+];
+
+// from ITU-R BT.2124-0 Annex 2 p.3
+const fromXYZ_M$5 = [
+	[  1.716651187971268,  -0.355670783776392, -0.253366281373660  ],
+	[ -0.666684351832489,   1.616481236634939,  0.0157685458139111 ],
+	[  0.017639857445311,  -0.042770613257809,  0.942103121235474  ]
+];
+
+var REC2020Linear = new RGBColorSpace({
+	id: "rec2020-linear",
+	name: "Linear REC.2020",
+	white: "D65",
+	toXYZ_M: toXYZ_M$5,
+	fromXYZ_M: fromXYZ_M$5,
+	formats: {
+		color: {},
+	}
+});
+
+// import sRGB from "./srgb.js";
+
+const α = 1.09929682680944;
+const β = 0.018053968510807;
+
+var REC2020 = new RGBColorSpace({
+	id: "rec2020",
+	name: "REC.2020",
+	base: REC2020Linear,
+	// Non-linear transfer function from Rec. ITU-R BT.2020-2 table 4
+	toBase (RGB) {
+		return RGB.map(function (val) {
+			if (val < β * 4.5 ) {
+				return val / 4.5;
+			}
+
+			return Math.pow((val + α -1 ) / α, 1/0.45);
+		});
+	},
+	fromBase (RGB) {
+		return RGB.map(function (val) {
+			if (val >= β ) {
+				return α * Math.pow(val, 0.45) - (α - 1);
+			}
+
+			return 4.5 * val;
+		});
+	},
+	formats: {
+		color: {},
+	}
+});
+
+const toXYZ_M$4 = [
+	[0.4865709486482162, 0.26566769316909306, 0.1982172852343625],
+	[0.2289745640697488, 0.6917385218365064,  0.079286914093745],
+	[0.0000000000000000, 0.04511338185890264, 1.043944368900976]
+];
+
+const fromXYZ_M$4 = [
+	[ 2.493496911941425,   -0.9313836179191239, -0.40271078445071684],
+	[-0.8294889695615747,   1.7626640603183463,  0.023624685841943577],
+	[ 0.03584583024378447, -0.07617238926804182, 0.9568845240076872]
+];
+
+var P3Linear = new RGBColorSpace({
+	id: "p3-linear",
+	name: "Linear P3",
+	white: "D65",
+	toXYZ_M: toXYZ_M$4,
+	fromXYZ_M: fromXYZ_M$4
+});
+
+// This is the linear-light version of sRGB
+// as used for example in SVG filters
+// or in Canvas
+
+// This matrix was calculated directly from the RGB and white chromaticities
+// when rounded to 8 decimal places, it agrees completely with the official matrix
+// see https://github.com/w3c/csswg-drafts/issues/5922
+const toXYZ_M$3 = [
+	[ 0.41239079926595934, 0.357584339383878,   0.1804807884018343  ],
+	[ 0.21263900587151027, 0.715168678767756,   0.07219231536073371 ],
+	[ 0.01933081871559182, 0.11919477979462598, 0.9505321522496607  ]
+];
+
+// This matrix is the inverse of the above;
+// again it agrees with the official definition when rounded to 8 decimal places
+const fromXYZ_M$3 = [
+	[  3.2409699419045226,  -1.537383177570094,   -0.4986107602930034  ],
+	[ -0.9692436362808796,   1.8759675015077202,   0.04155505740717559 ],
+	[  0.05563007969699366, -0.20397695888897652,  1.0569715142428786  ]
+];
+
+var sRGBLinear = new RGBColorSpace({
+	id: "srgb-linear",
+	name: "Linear sRGB",
+	white: "D65",
+	toXYZ_M: toXYZ_M$3,
+	fromXYZ_M: fromXYZ_M$3,
+	formats: {
+		color: {}
+	},
+});
+
+/* List of CSS color keywords
+ * Note that this does not include currentColor, transparent,
+ * or system colors
+ */
+
+// To produce: Visit https://www.w3.org/TR/css-color-4/#named-colors
+// and run in the console:
+// copy($$("tr", $(".named-color-table tbody")).map(tr => `"${tr.cells[2].textContent.trim()}": [${tr.cells[4].textContent.trim().split(/\s+/).map(c => c === "0"? "0" : c === "255"? "1" : c + " / 255").join(", ")}]`).join(",\n"))
+var KEYWORDS = {
+	"aliceblue": [240 / 255, 248 / 255, 1],
+	"antiquewhite": [250 / 255, 235 / 255, 215 / 255],
+	"aqua": [0, 1, 1],
+	"aquamarine": [127 / 255, 1, 212 / 255],
+	"azure": [240 / 255, 1, 1],
+	"beige": [245 / 255, 245 / 255, 220 / 255],
+	"bisque": [1, 228 / 255, 196 / 255],
+	"black": [0, 0, 0],
+	"blanchedalmond": [1, 235 / 255, 205 / 255],
+	"blue": [0, 0, 1],
+	"blueviolet": [138 / 255, 43 / 255, 226 / 255],
+	"brown": [165 / 255, 42 / 255, 42 / 255],
+	"burlywood": [222 / 255, 184 / 255, 135 / 255],
+	"cadetblue": [95 / 255, 158 / 255, 160 / 255],
+	"chartreuse": [127 / 255, 1, 0],
+	"chocolate": [210 / 255, 105 / 255, 30 / 255],
+	"coral": [1, 127 / 255, 80 / 255],
+	"cornflowerblue": [100 / 255, 149 / 255, 237 / 255],
+	"cornsilk": [1, 248 / 255, 220 / 255],
+	"crimson": [220 / 255, 20 / 255, 60 / 255],
+	"cyan": [0, 1, 1],
+	"darkblue": [0, 0, 139 / 255],
+	"darkcyan": [0, 139 / 255, 139 / 255],
+	"darkgoldenrod": [184 / 255, 134 / 255, 11 / 255],
+	"darkgray": [169 / 255, 169 / 255, 169 / 255],
+	"darkgreen": [0, 100 / 255, 0],
+	"darkgrey": [169 / 255, 169 / 255, 169 / 255],
+	"darkkhaki": [189 / 255, 183 / 255, 107 / 255],
+	"darkmagenta": [139 / 255, 0, 139 / 255],
+	"darkolivegreen": [85 / 255, 107 / 255, 47 / 255],
+	"darkorange": [1, 140 / 255, 0],
+	"darkorchid": [153 / 255, 50 / 255, 204 / 255],
+	"darkred": [139 / 255, 0, 0],
+	"darksalmon": [233 / 255, 150 / 255, 122 / 255],
+	"darkseagreen": [143 / 255, 188 / 255, 143 / 255],
+	"darkslateblue": [72 / 255, 61 / 255, 139 / 255],
+	"darkslategray": [47 / 255, 79 / 255, 79 / 255],
+	"darkslategrey": [47 / 255, 79 / 255, 79 / 255],
+	"darkturquoise": [0, 206 / 255, 209 / 255],
+	"darkviolet": [148 / 255, 0, 211 / 255],
+	"deeppink": [1, 20 / 255, 147 / 255],
+	"deepskyblue": [0, 191 / 255, 1],
+	"dimgray": [105 / 255, 105 / 255, 105 / 255],
+	"dimgrey": [105 / 255, 105 / 255, 105 / 255],
+	"dodgerblue": [30 / 255, 144 / 255, 1],
+	"firebrick": [178 / 255, 34 / 255, 34 / 255],
+	"floralwhite": [1, 250 / 255, 240 / 255],
+	"forestgreen": [34 / 255, 139 / 255, 34 / 255],
+	"fuchsia": [1, 0, 1],
+	"gainsboro": [220 / 255, 220 / 255, 220 / 255],
+	"ghostwhite": [248 / 255, 248 / 255, 1],
+	"gold": [1, 215 / 255, 0],
+	"goldenrod": [218 / 255, 165 / 255, 32 / 255],
+	"gray": [128 / 255, 128 / 255, 128 / 255],
+	"green": [0, 128 / 255, 0],
+	"greenyellow": [173 / 255, 1, 47 / 255],
+	"grey": [128 / 255, 128 / 255, 128 / 255],
+	"honeydew": [240 / 255, 1, 240 / 255],
+	"hotpink": [1, 105 / 255, 180 / 255],
+	"indianred": [205 / 255, 92 / 255, 92 / 255],
+	"indigo": [75 / 255, 0, 130 / 255],
+	"ivory": [1, 1, 240 / 255],
+	"khaki": [240 / 255, 230 / 255, 140 / 255],
+	"lavender": [230 / 255, 230 / 255, 250 / 255],
+	"lavenderblush": [1, 240 / 255, 245 / 255],
+	"lawngreen": [124 / 255, 252 / 255, 0],
+	"lemonchiffon": [1, 250 / 255, 205 / 255],
+	"lightblue": [173 / 255, 216 / 255, 230 / 255],
+	"lightcoral": [240 / 255, 128 / 255, 128 / 255],
+	"lightcyan": [224 / 255, 1, 1],
+	"lightgoldenrodyellow": [250 / 255, 250 / 255, 210 / 255],
+	"lightgray": [211 / 255, 211 / 255, 211 / 255],
+	"lightgreen": [144 / 255, 238 / 255, 144 / 255],
+	"lightgrey": [211 / 255, 211 / 255, 211 / 255],
+	"lightpink": [1, 182 / 255, 193 / 255],
+	"lightsalmon": [1, 160 / 255, 122 / 255],
+	"lightseagreen": [32 / 255, 178 / 255, 170 / 255],
+	"lightskyblue": [135 / 255, 206 / 255, 250 / 255],
+	"lightslategray": [119 / 255, 136 / 255, 153 / 255],
+	"lightslategrey": [119 / 255, 136 / 255, 153 / 255],
+	"lightsteelblue": [176 / 255, 196 / 255, 222 / 255],
+	"lightyellow": [1, 1, 224 / 255],
+	"lime": [0, 1, 0],
+	"limegreen": [50 / 255, 205 / 255, 50 / 255],
+	"linen": [250 / 255, 240 / 255, 230 / 255],
+	"magenta": [1, 0, 1],
+	"maroon": [128 / 255, 0, 0],
+	"mediumaquamarine": [102 / 255, 205 / 255, 170 / 255],
+	"mediumblue": [0, 0, 205 / 255],
+	"mediumorchid": [186 / 255, 85 / 255, 211 / 255],
+	"mediumpurple": [147 / 255, 112 / 255, 219 / 255],
+	"mediumseagreen": [60 / 255, 179 / 255, 113 / 255],
+	"mediumslateblue": [123 / 255, 104 / 255, 238 / 255],
+	"mediumspringgreen": [0, 250 / 255, 154 / 255],
+	"mediumturquoise": [72 / 255, 209 / 255, 204 / 255],
+	"mediumvioletred": [199 / 255, 21 / 255, 133 / 255],
+	"midnightblue": [25 / 255, 25 / 255, 112 / 255],
+	"mintcream": [245 / 255, 1, 250 / 255],
+	"mistyrose": [1, 228 / 255, 225 / 255],
+	"moccasin": [1, 228 / 255, 181 / 255],
+	"navajowhite": [1, 222 / 255, 173 / 255],
+	"navy": [0, 0, 128 / 255],
+	"oldlace": [253 / 255, 245 / 255, 230 / 255],
+	"olive": [128 / 255, 128 / 255, 0],
+	"olivedrab": [107 / 255, 142 / 255, 35 / 255],
+	"orange": [1, 165 / 255, 0],
+	"orangered": [1, 69 / 255, 0],
+	"orchid": [218 / 255, 112 / 255, 214 / 255],
+	"palegoldenrod": [238 / 255, 232 / 255, 170 / 255],
+	"palegreen": [152 / 255, 251 / 255, 152 / 255],
+	"paleturquoise": [175 / 255, 238 / 255, 238 / 255],
+	"palevioletred": [219 / 255, 112 / 255, 147 / 255],
+	"papayawhip": [1, 239 / 255, 213 / 255],
+	"peachpuff": [1, 218 / 255, 185 / 255],
+	"peru": [205 / 255, 133 / 255, 63 / 255],
+	"pink": [1, 192 / 255, 203 / 255],
+	"plum": [221 / 255, 160 / 255, 221 / 255],
+	"powderblue": [176 / 255, 224 / 255, 230 / 255],
+	"purple": [128 / 255, 0, 128 / 255],
+	"rebeccapurple": [102 / 255, 51 / 255, 153 / 255],
+	"red": [1, 0, 0],
+	"rosybrown": [188 / 255, 143 / 255, 143 / 255],
+	"royalblue": [65 / 255, 105 / 255, 225 / 255],
+	"saddlebrown": [139 / 255, 69 / 255, 19 / 255],
+	"salmon": [250 / 255, 128 / 255, 114 / 255],
+	"sandybrown": [244 / 255, 164 / 255, 96 / 255],
+	"seagreen": [46 / 255, 139 / 255, 87 / 255],
+	"seashell": [1, 245 / 255, 238 / 255],
+	"sienna": [160 / 255, 82 / 255, 45 / 255],
+	"silver": [192 / 255, 192 / 255, 192 / 255],
+	"skyblue": [135 / 255, 206 / 255, 235 / 255],
+	"slateblue": [106 / 255, 90 / 255, 205 / 255],
+	"slategray": [112 / 255, 128 / 255, 144 / 255],
+	"slategrey": [112 / 255, 128 / 255, 144 / 255],
+	"snow": [1, 250 / 255, 250 / 255],
+	"springgreen": [0, 1, 127 / 255],
+	"steelblue": [70 / 255, 130 / 255, 180 / 255],
+	"tan": [210 / 255, 180 / 255, 140 / 255],
+	"teal": [0, 128 / 255, 128 / 255],
+	"thistle": [216 / 255, 191 / 255, 216 / 255],
+	"tomato": [1, 99 / 255, 71 / 255],
+	"turquoise": [64 / 255, 224 / 255, 208 / 255],
+	"violet": [238 / 255, 130 / 255, 238 / 255],
+	"wheat": [245 / 255, 222 / 255, 179 / 255],
+	"white": [1, 1, 1],
+	"whitesmoke": [245 / 255, 245 / 255, 245 / 255],
+	"yellow": [1, 1, 0],
+	"yellowgreen": [154 / 255, 205 / 255, 50 / 255]
+};
+
+let coordGrammar = Array(3).fill("<percentage> | <number>[0, 255]");
+let coordGrammarNumber = Array(3).fill("<number>[0, 255]");
+
+var sRGB = new RGBColorSpace({
+	id: "srgb",
+	name: "sRGB",
+	base: sRGBLinear,
+	fromBase: rgb => {
+		// convert an array of linear-light sRGB values in the range 0.0-1.0
+		// to gamma corrected form
+		// https://en.wikipedia.org/wiki/SRGB
+		return rgb.map(val => {
+			let sign = val < 0? -1 : 1;
+			let abs = val * sign;
+
+			if (abs > 0.0031308) {
+				return sign * (1.055 * (abs ** (1/2.4)) - 0.055);
+			}
+
+			return 12.92 * val;
+		});
+	},
+	toBase: rgb => {
+		// convert an array of sRGB values in the range 0.0 - 1.0
+		// to linear light (un-companded) form.
+		// https://en.wikipedia.org/wiki/SRGB
+		return rgb.map(val => {
+			let sign = val < 0? -1 : 1;
+			let abs = val * sign;
+
+			if (abs < 0.04045) {
+				return val / 12.92;
+			}
+
+			return sign * (((abs + 0.055) / 1.055) ** 2.4);
+		});
+	},
+	formats: {
+		"rgb": {
+			coords: coordGrammar,
+		},
+		"rgb_number": {
+			name: "rgb",
+			commas: true,
+			coords: coordGrammarNumber,
+			noAlpha: true,
+		},
+		"color": { /* use defaults */ },
+		"rgba": {
+			coords: coordGrammar,
+			commas: true,
+			lastAlpha: true,
+		},
+		"rgba_number": {
+			name: "rgba",
+			commas: true,
+			coords: coordGrammarNumber
+		},
+		"hex": {
+			type: "custom",
+			toGamut: true,
+			test: str => /^#([a-f0-9]{3,4}){1,2}$/i.test(str),
+			parse (str) {
+				if (str.length <= 5) {
+					// #rgb or #rgba, duplicate digits
+					str = str.replace(/[a-f0-9]/gi, "$&$&");
+				}
+
+				let rgba = [];
+				str.replace(/[a-f0-9]{2}/gi, component => {
+					rgba.push(parseInt(component, 16) / 255);
+				});
+
+				return {
+					spaceId: "srgb",
+					coords: rgba.slice(0, 3),
+					alpha: rgba.slice(3)[0]
+				};
+			},
+			serialize: (coords, alpha, {
+				collapse = true // collapse to 3-4 digit hex when possible?
+			} = {}) => {
+				if (alpha < 1) {
+					coords.push(alpha);
+				}
+
+				coords = coords.map(c => Math.round(c * 255));
+
+				let collapsible = collapse && coords.every(c => c % 17 === 0);
+
+				let hex = coords.map(c => {
+					if (collapsible) {
+						return (c/17).toString(16);
+					}
+
+					return c.toString(16).padStart(2, "0");
+				}).join("");
+
+				return "#" + hex;
+			}
+		},
+		"keyword": {
+			type: "custom",
+			test: str => /^[a-z]+$/i.test(str),
+			parse (str) {
+				str = str.toLowerCase();
+				let ret = {spaceId: "srgb", coords: null, alpha: 1};
+
+				if (str === "transparent") {
+					ret.coords = KEYWORDS.black;
+					ret.alpha = 0;
+				}
+				else {
+					ret.coords = KEYWORDS[str];
+				}
+
+				if (ret.coords) {
+					return ret;
+				}
+			}
+		},
+	}
+});
+
+var P3 = new RGBColorSpace({
+	id: "p3",
+	name: "P3",
+	base: P3Linear,
+	// Gamma encoding/decoding is the same as sRGB
+	fromBase: sRGB.fromBase,
+	toBase: sRGB.toBase,
+	formats: {
+		color: {
+			id: "display-p3",
+		}
+	},
+});
+
+// Default space for CSS output. Code in Color.js makes this wider if there's a DOM available
+defaults.display_space = sRGB;
+
+if (typeof CSS !== "undefined" && CSS.supports) {
+	// Find widest supported color space for CSS
+	for (let space of [lab, REC2020, P3]) {
+		let coords = space.getMinCoords();
+		let color = {space, coords, alpha: 1};
+		let str = serialize(color);
+
+		if (CSS.supports("color", str)) {
+			defaults.display_space = space;
+			break;
+		}
+	}
+}
+
+/**
+ * Returns a serialization of the color that can actually be displayed in the browser.
+ * If the default serialization can be displayed, it is returned.
+ * Otherwise, the color is converted to Lab, REC2020, or P3, whichever is the widest supported.
+ * In Node.js, this is basically equivalent to `serialize()` but returns a `String` object instead.
+ *
+ * @export
+ * @param {{space, coords} | Color | string} color
+ * @param {*} [options={}] Options to be passed to serialize()
+ * @param {ColorSpace | string} [options.space = defaults.display_space] Color space to use for serialization if default is not supported
+ * @returns {String} String object containing the serialized color with a color property containing the converted color (or the original, if no conversion was necessary)
+ */
+function display (color, {space = defaults.display_space, ...options} = {}) {
+	let ret = serialize(color, options);
+
+	if (typeof CSS === "undefined" || CSS.supports("color", ret) || !defaults.display_space) {
+		ret = new String(ret);
+		ret.color = color;
+	}
+	else {
+		// If we're here, what we were about to output is not supported
+		// Fall back to fallback space
+		let fallbackColor = to(color, space);
+		ret = new String(serialize(fallbackColor, options));
+		ret.color = fallbackColor;
+	}
+
+	return ret;
+}
+
+/**
+ * Euclidean distance of colors in an arbitrary color space
+ */
+function distance (color1, color2, space = "lab") {
+	space = ColorSpace.get(space);
+
+	let coords1 = space.from(color1);
+	let coords2 = space.from(color2);
+
+	return Math.sqrt(coords1.reduce((acc, c1, i) => {
+		let c2 = coords2[i];
+		if (isNaN(c1) || isNaN(c2)) {
+			return acc;
+		}
+
+		return acc + (c2 - c1) ** 2;
+	}, 0));
+}
+
+function equals (color1, color2) {
+	color1 = getColor(color1);
+	color2 = getColor(color2);
+
+	return color1.space === color2.space
+		   && color1.alpha === color2.alpha
+		   && color1.coords.every((c, i) => c === color2.coords[i]);
+}
+
+/**
+ * Relative luminance
+ */
+
+function getLuminance (color) {
+	return get(color, [XYZ_D65, "y"]);
+}
+
+function setLuminance (color, value) {
+	set(color, [XYZ_D65, "y"], value);
+}
+
+function register$2 (Color) {
+	Object.defineProperty(Color.prototype, "luminance", {
+		get () {
+			return getLuminance(this);
+		},
+		set (value) {
+			setLuminance(this, value);
+		}
+	});
+}
+
+var luminance = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	getLuminance: getLuminance,
+	setLuminance: setLuminance,
+	register: register$2
+});
+
+// WCAG 2.0 contrast https://www.w3.org/TR/WCAG20-TECHS/G18.html
+
+function contrastWCAG21 (color1, color2) {
+	color1 = getColor(color1);
+	color2 = getColor(color2);
+
+	let Y1 = Math.max(getLuminance(color1), 0);
+	let Y2 = Math.max(getLuminance(color2), 0);
+
+	if (Y2 > Y1) {
+		[Y1, Y2] = [Y2, Y1];
+	}
+
+	return (Y1 + .05) / (Y2 + .05);
+}
+
+// APCA 0.0.98G
+
+// exponents
+const normBG = 0.56;
+const normTXT = 0.57;
+const revTXT = 0.62;
+const revBG = 0.65;
+
+// clamps
+const blkThrs = 0.022;
+const blkClmp = 1.414;
+const loClip = 0.1;
+const deltaYmin = 0.0005;
+
+// scalers
+// see https://github.com/w3c/silver/issues/645
+const scaleBoW = 1.14;
+const loBoWoffset = 0.027;
+const scaleWoB= 1.14;
+
+function fclamp (Y) {
+	if (Y >= blkThrs) {
+		return Y;
+	}
+	return Y + (blkThrs - Y) ** blkClmp;
+}
+
+function linearize (val) {
+	let sign = val < 0? -1 : 1;
+	let abs = Math.abs(val);
+	return sign * Math.pow(abs, 2.4);
+}
+
+// Not symmetric, requires a foreground (text) color, and a background color
+function contrastAPCA (background, foreground) {
+	foreground = getColor(foreground);
+	background = getColor(background);
+
+	let S;
+	let C;
+	let Sapc;
+
+	// Myndex as-published, assumes sRGB inputs
+	let R, G, B;
+
+	foreground = to(foreground, "srgb");
+	// Should these be clamped to in-gamut values?
+
+	// Calculates "screen luminance" with non-standard simple gamma EOTF
+	// weights should be from CSS Color 4, not the ones here which are via Myndex and copied from Lindbloom
+	[R, G, B] = foreground.coords;
+	let lumTxt = linearize(R) * 0.2126729 + linearize(G) * 0.7151522 + linearize(B) * 0.0721750;
+
+	background = to(background, "srgb");
+	[R, G, B] = background.coords;
+	let lumBg = linearize(R) * 0.2126729 + linearize(G) * 0.7151522 + linearize(B) * 0.0721750;
+
+	// toe clamping of very dark values to account for flare
+	let Ytxt = fclamp(lumTxt);
+	let Ybg = fclamp(lumBg);
+
+	// are we "Black on White" (dark on light), or light on dark?
+	let BoW = Ybg > Ytxt;
+
+	// why is this a delta, when Y is not perceptually uniform?
+	// Answer: it is a noise gate, see
+	// https://github.com/LeaVerou/color.js/issues/208
+	if (Math.abs(Ybg - Ytxt) < deltaYmin) {
+		C = 0;
+	}
+	else {
+		if (BoW) {
+			// dark text on light background
+			S = Ybg ** normBG - Ytxt ** normTXT;
+			C = S * scaleBoW;
+		}
+		else {
+			// light text on dark background
+			S = Ybg ** revBG - Ytxt ** revTXT;
+			C = S * scaleWoB;
+		}
+	}
+	if (Math.abs(C) < loClip) {
+		Sapc = 0;
+	}
+	else if (C > 0) {
+		// not clear whether Woffset is loBoWoffset or loWoBoffset
+		// but they have the same value
+		Sapc = C - loBoWoffset;
+	}
+	else {
+		Sapc = C + loBoWoffset;
+	}
+
+	return Sapc * 100;
+}
+
+// Michelson  luminance contrast
+
+function contrastMichelson (color1, color2) {
+	color1 = getColor(color1);
+	color2 = getColor(color2);
+
+	let Y1 = Math.max(getLuminance(color1), 0);
+	let Y2 = Math.max(getLuminance(color2), 0);
+
+	if (Y2 > Y1) {
+		[Y1, Y2] = [Y2, Y1];
+	}
+
+	let denom = (Y1 + Y2);
+	return denom === 0 ? 0 : (Y1 - Y2) / denom;
+}
+
+// Weber luminance contrast
+
+// the darkest sRGB color above black is #000001 and this produces
+// a plain Weber contrast of ~45647.
+// So, setting the divide-by-zero result at 50000 is a reasonable
+// max clamp for the plain Weber
+const max = 50000;
+
+function contrastWeber (color1, color2) {
+	color1 = getColor(color1);
+	color2 = getColor(color2);
+
+	let Y1 = Math.max(getLuminance(color1), 0);
+	let Y2 = Math.max(getLuminance(color2), 0);
+
+	if (Y2 > Y1) {
+		[Y1, Y2] = [Y2, Y1];
+	}
+
+	return Y2 === 0 ? max : (Y1 - Y2) / Y2;
+}
+
+// CIE Lightness difference, as used by Google Material Design
+
+function contrastLstar (color1, color2) {
+	color1 = getColor(color1);
+	color2 = getColor(color2);
+
+	let L1 = get(color1, [lab, "l"]);
+	let L2 = get(color2, [lab, "l"]);
+
+	return Math.abs(L1 - L2);
+}
+
+// κ * ε  = 2^3 = 8
+const ε$1 = 216/24389;  // 6^3/29^3 == (24/116)^3
+const ε3 = 24/116;
+const κ = 24389/27;   // 29^3/3^3
+
+let white = WHITES.D65;
+
+var lab_d65 = new ColorSpace({
+	id: "lab-d65",
+	name: "Lab D65",
+	coords: {
+		l: {
+			refRange: [0, 100],
+			name: "L"
+		},
+		a: {
+			refRange: [-125, 125]
+		},
+		b: {
+			refRange: [-125, 125]
+		}
+	},
+
+	// Assuming XYZ is relative to D65, convert to CIE Lab
+	// from CIE standard, which now defines these as a rational fraction
+	white,
+
+	base: XYZ_D65,
+	// Convert D65-adapted XYZ to Lab
+	//  CIE 15.3:2004 section 8.2.1.1
+	fromBase (XYZ) {
+		// compute xyz, which is XYZ scaled relative to reference white
+		let xyz = XYZ.map((value, i) => value / white[i]);
+
+		// now compute f
+		let f = xyz.map(value => value > ε$1 ? Math.cbrt(value) : (κ * value + 16)/116);
+
+		return [
+			(116 * f[1]) - 16, 	 // L
+			500 * (f[0] - f[1]), // a
+			200 * (f[1] - f[2])  // b
+		];
+	},
+	// Convert Lab to D65-adapted XYZ
+	// Same result as CIE 15.3:2004 Appendix D although the derivation is different
+	// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+	toBase (Lab) {
+		// compute f, starting with the luminance-related term
+		let f = [];
+		f[1] = (Lab[0] + 16)/116;
+		f[0] = Lab[1]/500 + f[1];
+		f[2] = f[1] - Lab[2]/200;
+
+		// compute xyz
+		let xyz = [
+			f[0]   > ε3  ?  Math.pow(f[0], 3)            : (116*f[0]-16)/κ,
+			Lab[0] > 8   ?  Math.pow((Lab[0]+16)/116, 3) : Lab[0]/κ,
+			f[2]   > ε3  ?  Math.pow(f[2], 3)            : (116*f[2]-16)/κ
+		];
+
+		// Compute XYZ by scaling xyz by reference white
+		return xyz.map((value, i) => value * white[i]);
+	},
+
+	formats: {
+		"lab-d65": {
+			coords: ["<number> | <percentage>", "<number>", "<number>"],
+		}
+	}
+});
+
+// Delta Phi Star perceptual lightness contrast
+
+const phi = Math.pow(5, 0.5) * 0.5 + 0.5; // Math.phi can be used if Math.js
+
+function contrastDeltaPhi (color1, color2) {
+	color1 = getColor(color1);
+	color2 = getColor(color2);
+
+	let Lstr1 = get(color1, [lab_d65, "l"]);
+	let Lstr2 = get(color2, [lab_d65, "l"]);
+
+	let deltaPhiStar = Math.abs(Math.pow(Lstr1, phi) - Math.pow(Lstr2, phi));
+
+	let contrast = Math.pow(deltaPhiStar, (1 / phi)) * Math.SQRT2 - 40;
+
+	return (contrast < 7.5) ? 0.0 : contrast ;
+}
+
+var contrastMethods = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	contrastWCAG21: contrastWCAG21,
+	contrastAPCA: contrastAPCA,
+	contrastMichelson: contrastMichelson,
+	contrastWeber: contrastWeber,
+	contrastLstar: contrastLstar,
+	contrastDeltaPhi: contrastDeltaPhi
+});
+
+function contrast (background, foreground, o = {}) {
+	if (isString(o)) {
+		o = {algorithm: o};
+	}
+
+	let {algorithm, ...rest} = o;
+
+	if (!algorithm) {
+		let algorithms = Object.keys(contrastMethods).map(a => a.replace(/^contrast/, "")).join(", ");
+		throw new TypeError(`contrast() function needs a contrast algorithm. Please specify one of: ${algorithms}`);
+	}
+
+	background = getColor(background);
+	foreground = getColor(foreground);
+
+	for (let a in contrastMethods) {
+		if ("contrast" + algorithm.toLowerCase() === a.toLowerCase()) {
+			return contrastMethods[a](background, foreground, rest);
+		}
+	}
+
+	throw new TypeError(`Unknown contrast algorithm: ${algorithm}`);
+}
+
+// Chromaticity coordinates
+function uv (color) {
+	let [X, Y, Z] = getAll(color, XYZ_D65);
+	let denom = X + 15 * Y + 3 * Z;
+	return [4 * X / denom, 9 * Y / denom];
+}
+
+function xy (color) {
+	let [X, Y, Z] = getAll(color, XYZ_D65);
+	let  sum = X + Y + Z;
+	return [X / sum, Y / sum];
+}
+
+function register$1 (Color) {
+	// no setters, as lightness information is lost
+	// when converting color to chromaticity
+	Object.defineProperty(Color.prototype, "uv", {
+		get () {
+			return uv(this);
+		}
+	});
+
+	Object.defineProperty(Color.prototype, "xy", {
+		get () {
+			return xy(this);
+		}
+	});
+}
+
+var chromaticity = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	uv: uv,
+	xy: xy,
+	register: register$1
+});
+
+function deltaE76 (color, sample) {
+	return distance(color, sample, "lab");
+}
+
+// More accurate color-difference formulae
+// than the simple 1976 Euclidean distance in Lab
+
+// CMC by the Color Measurement Committee of the
+// Bradford Society of Dyeists and Colorsts, 1994.
+// Uses LCH rather than Lab,
+// with different weights for L, C and H differences
+// A nice increase in accuracy for modest increase in complexity
+const π = Math.PI;
+const d2r = π / 180;
+
+function deltaECMC (color, sample, {l = 2, c = 1} = {}) {
+	// Given this color as the reference
+	// and a sample,
+	// calculate deltaE CMC.
+
+	// This implementation assumes the parametric
+	// weighting factors l:c are 2:1
+	// which is typical for non-textile uses.
+
+	let [L1, a1, b1] = lab.from(color);
+	let [, C1, H1] = lch.from(lab, [L1, a1, b1]);
+	let [L2, a2, b2] = lab.from(sample);
+	let C2 = lch.from(lab, [L2, a2, b2])[1];
+
+	// let [L1, a1, b1] = color.getAll(lab);
+	// let C1 = color.get("lch.c");
+	// let H1 = color.get("lch.h");
+	// let [L2, a2, b2] = sample.getAll(lab);
+	// let C2 = sample.get("lch.c");
+
+	// Check for negative Chroma,
+	// which might happen through
+	// direct user input of LCH values
+
+	if (C1 < 0) {
+		C1 = 0;
+	}
+	if (C2 < 0) {
+		C2 = 0;
+	}
+
+	// we don't need H2 as ΔH is calculated from Δa, Δb and ΔC
+
+	// Lightness and Chroma differences
+	// These are (color - sample), unlike deltaE2000
+	let ΔL = L1 - L2;
+	let ΔC = C1 - C2;
+
+	let Δa = a1 - a2;
+	let Δb = b1 - b2;
+
+	// weighted Hue difference, less for larger Chroma difference
+
+	let H2 = (Δa ** 2) + (Δb ** 2) - (ΔC ** 2);
+	// due to roundoff error it is possible that, for zero a and b,
+	// ΔC > Δa + Δb is 0, resulting in attempting
+	// to take the square root of a negative number
+
+	// trying instead the equation from Industrial Color Physics
+	// By Georg A. Klein
+
+	// let ΔH = ((a1 * b2) - (a2 * b1)) / Math.sqrt(0.5 * ((C2 * C1) + (a2 * a1) + (b2 * b1)));
+	// console.log({ΔH});
+	// This gives the same result to 12 decimal places
+	// except it sometimes NaNs when trying to root a negative number
+
+	// let ΔH = Math.sqrt(H2); we never actually use the root, it gets squared again!!
+
+	// positional corrections to the lack of uniformity of CIELAB
+	// These are all trying to make JND ellipsoids more like spheres
+
+	// SL Lightness crispening factor, depends entirely on L1 not L2
+	let SL = 0.511;	// linear portion of the Y to L transfer function
+	if (L1 >= 16) {	// cubic portion
+		SL = (0.040975 * L1) / (1 + 0.01765 * L1);
+	}
+
+	// SC Chroma factor
+	let SC = ((0.0638 * C1) / (1 + 0.0131 * C1)) + 0.638;
+
+	// Cross term T for blue non-linearity
+	let T;
+	if ( Number.isNaN(H1)) {
+		H1 = 0;
+	}
+
+	if (H1 >= 164 && H1 <= 345) {
+		T = 0.56 + Math.abs(0.2 * Math.cos((H1 + 168) * d2r));
+	}
+	else {
+		T = 0.36 + Math.abs(0.4 * Math.cos((H1 + 35) * d2r));
+	}
+	// console.log({T});
+
+	// SH Hue factor also depends on C1,
+	let C4 = Math.pow(C1, 4);
+	let F = Math.sqrt(C4 / (C4 + 1900));
+	let SH = SC * ((F * T) + 1 - F);
+
+	// Finally calculate the deltaE, term by term as root sume of squares
+	let dE = (ΔL / (l * SL)) ** 2;
+	dE += (ΔC / (c * SC)) ** 2;
+	dE += (H2 / (SH ** 2));
+	// dE += (ΔH / SH)  ** 2;
+	return Math.sqrt(dE);
+	// Yay!!!
+}
+
+const Yw$1 = 203;	// absolute luminance of media white
+
+var XYZ_Abs_D65 = new ColorSpace({
+// Absolute CIE XYZ, with a D65 whitepoint,
+// as used in most HDR colorspaces as a starting point.
+// SDR spaces are converted per BT.2048
+// so that diffuse, media white is 203 cd/m²
+	id: "xyz-abs-d65",
+	name: "Absolute XYZ D65",
+	coords: {
+		x: {
+			refRange: [0, 9504.7],
+			name: "Xa",
+		},
+		y: {
+			refRange: [0, 10000],
+			name: "Ya",
+		},
+		z: {
+			refRange: [0, 10888.3],
+			name: "Za",
+		}
+	},
+
+	base: XYZ_D65,
+	fromBase (XYZ) {
+		// Make XYZ absolute, not relative to media white
+		// Maximum luminance in PQ is 10,000 cd/m²
+		// Relative XYZ has Y=1 for media white
+		return XYZ.map (v => Math.max(v * Yw$1, 0));
+	},
+	toBase (AbsXYZ) {
+		// Convert to media-white relative XYZ
+		return AbsXYZ.map(v => Math.max(v / Yw$1, 0));
+	}
+});
+
+const b$1 = 1.15;
+const g = 0.66;
+const n$1 = 2610 / (2 ** 14);
+const ninv$1 = (2 ** 14) / 2610;
+const c1$2 = 3424 / (2 ** 12);
+const c2$2 = 2413 / (2 ** 7);
+const c3$2 = 2392 / (2 ** 7);
+const p = 1.7 * 2523 / (2 ** 5);
+const pinv = (2 ** 5) / (1.7 * 2523);
+const d = -0.56;
+const d0 = 1.6295499532821566E-11;
+
+const XYZtoCone_M = [
+	[  0.41478972, 0.579999,  0.0146480 ],
+	[ -0.2015100,  1.120649,  0.0531008 ],
+	[ -0.0166008,  0.264800,  0.6684799 ]
+];
+// XYZtoCone_M inverted
+const ConetoXYZ_M = [
+	[  1.9242264357876067,  -1.0047923125953657,  0.037651404030618   ],
+	[  0.35031676209499907,  0.7264811939316552, -0.06538442294808501 ],
+	[ -0.09098281098284752, -0.3127282905230739,  1.5227665613052603  ]
+];
+const ConetoIab_M = [
+	[  0.5,       0.5,       0        ],
+	[  3.524000, -4.066708,  0.542708 ],
+	[  0.199076,  1.096799, -1.295875 ]
+];
+// ConetoIab_M inverted
+const IabtoCone_M = [
+	[ 1,                   0.1386050432715393,   0.05804731615611886 ],
+	[ 0.9999999999999999, -0.1386050432715393,  -0.05804731615611886 ],
+	[ 0.9999999999999998, -0.09601924202631895, -0.8118918960560388  ]
+];
+
+var Jzazbz = new ColorSpace({
+	id: "jzazbz",
+	name: "Jzazbz",
+	coords: {
+		jz: {
+			refRange: [0, 1],
+			name: "Jz",
+		},
+		az: {
+			refRange: [-0.5, 0.5],
+		},
+		bz: {
+			refRange: [-0.5, 0.5],
+		}
+	},
+
+	base: XYZ_Abs_D65,
+	fromBase (XYZ) {
+		// First make XYZ absolute, not relative to media white
+		// Maximum luminance in PQ is 10,000 cd/m²
+		// Relative XYZ has Y=1 for media white
+		// BT.2048 says media white Y=203 at PQ 58
+
+		let [ Xa, Ya, Za ] = XYZ;
+
+		// modify X and Y
+		let Xm = (b$1 * Xa) - ((b$1 - 1) * Za);
+		let Ym = (g * Ya) - ((g - 1) * Xa);
+
+		// move to LMS cone domain
+		let LMS = multiplyMatrices(XYZtoCone_M, [ Xm, Ym, Za ]);
+
+		// PQ-encode LMS
+		let PQLMS = LMS.map (function (val) {
+			let num = c1$2 + (c2$2 * ((val / 10000) ** n$1));
+			let denom = 1 + (c3$2 * ((val / 10000) ** n$1));
+
+			return (num / denom)  ** p;
+		});
+
+		// almost there, calculate Iz az bz
+		let [ Iz, az, bz] = multiplyMatrices(ConetoIab_M, PQLMS);
+		// console.log({Iz, az, bz});
+
+		let Jz = ((1 + d) * Iz) / (1 + (d * Iz)) - d0;
+		return [Jz, az, bz];
+	},
+	toBase (Jzazbz) {
+		let [Jz, az, bz] = Jzazbz;
+		let Iz = (Jz + d0) / (1 + d - d * (Jz + d0));
+
+		// bring into LMS cone domain
+		let PQLMS = multiplyMatrices(IabtoCone_M, [ Iz, az, bz ]);
+
+		// convert from PQ-coded to linear-light
+		let LMS = PQLMS.map(function (val) {
+			let num = (c1$2 - (val ** pinv));
+			let denom = (c3$2 * (val ** pinv)) - c2$2;
+			let x = 10000 * ((num / denom) ** ninv$1);
+
+			return (x); 	// luminance relative to diffuse white, [0, 70 or so].
+		});
+
+		// modified abs XYZ
+		let [ Xm, Ym, Za ] = multiplyMatrices(ConetoXYZ_M, LMS);
+
+		// restore standard D50 relative XYZ, relative to media white
+		let Xa = (Xm + ((b$1 -1) * Za)) / b$1;
+		let Ya = (Ym + ((g -1) * Xa)) / g;
+		return [ Xa, Ya, Za ];
+	},
+
+	formats: {
+		// https://drafts.csswg.org/css-color-hdr/#Jzazbz
+		"color": {}
+	}
+});
+
+var jzczhz = new ColorSpace({
+	id: "jzczhz",
+	name: "JzCzHz",
+	coords: {
+		jz: {
+			refRange: [0, 1],
+			name: "Jz",
+		},
+		cz: {
+			refRange: [0, 1],
+			name: "Chroma",
+		},
+		hz: {
+			refRange: [0, 360],
+			type: "angle",
+			name: "Hue",
+		}
+	},
+
+	base: Jzazbz,
+	fromBase (jzazbz) {
+		// Convert to polar form
+		let [Jz, az, bz] = jzazbz;
+		let hue;
+		const ε = 0.0002; // chromatic components much smaller than a,b
+
+		if (Math.abs(az) < ε && Math.abs(bz) < ε) {
+			hue = NaN;
+		}
+		else {
+			hue = Math.atan2(bz, az) * 180 / Math.PI;
+		}
+
+		return [
+			Jz, // Jz is still Jz
+			Math.sqrt(az ** 2 + bz ** 2), // Chroma
+			constrain(hue) // Hue, in degrees [0 to 360)
+		];
+	},
+	toBase (jzczhz) {
+		// Convert from polar form
+		// debugger;
+		return [
+			jzczhz[0], // Jz is still Jz
+			jzczhz[1] * Math.cos(jzczhz[2] * Math.PI / 180), // az
+			jzczhz[1] * Math.sin(jzczhz[2] * Math.PI / 180)  // bz
+		];
+	},
+	formats: {
+		color: {}
+	},
+});
+
+// More accurate color-difference formulae
+// than the simple 1976 Euclidean distance in Lab
+
+// Uses JzCzHz, which has improved perceptual uniformity
+// and thus a simple Euclidean root-sum of ΔL² ΔC² ΔH²
+// gives good results.
+
+function deltaEJz (color, sample) {
+	// Given this color as the reference
+	// and a sample,
+	// calculate deltaE in JzCzHz.
+	let [Jz1, Cz1, Hz1] = jzczhz.from(color);
+	let [Jz2, Cz2, Hz2] = jzczhz.from(sample);
+
+	// Lightness and Chroma differences
+	// sign does not matter as they are squared.
+	let ΔJ = Jz1 - Jz2;
+	let ΔC = Cz1 - Cz2;
+
+	// length of chord for ΔH
+	if ((Number.isNaN(Hz1)) && (Number.isNaN(Hz2))) {
+		// both undefined hues
+		Hz1 = 0;
+		Hz2 = 0;
+	}
+	else if (Number.isNaN(Hz1)) {
+		// one undefined, set to the defined hue
+		Hz1 = Hz2;
+	}
+	else if (Number.isNaN(Hz2)) {
+		Hz2 = Hz1;
+	}
+
+	let Δh = Hz1 - Hz2;
+	let ΔH = 2 * Math.sqrt(Cz1 * Cz2) * Math.sin((Δh / 2) * (Math.PI / 180));
+
+	return Math.sqrt(ΔJ ** 2 + ΔC ** 2 + ΔH ** 2);
+}
+
+const c1$1 = 3424 / 4096;
+const c2$1 = 2413 / 128;
+const c3$1 = 2392 / 128;
+const m1 = 2610 / 16384;
+const m2 = 2523 / 32;
+const im1 = 16384 / 2610;
+const im2 = 32 / 2523;
+
+// The matrix below includes the 4% crosstalk components
+// and is from the Dolby "What is ICtCp" paper"
+const XYZtoLMS_M$1 = [
+	[ 0.3592,  0.6976, -0.0358],
+	[-0.1922,  1.1004,  0.0755],
+	[ 0.0070,  0.0749,  0.8434]
+];
+// linear-light Rec.2020 to LMS, again with crosstalk
+// rational terms from Jan Fröhlich,
+// Encoding High Dynamic Range andWide Color Gamut Imagery, p.97
+// and ITU-R BT.2124-0 p.2
+/*
+const Rec2020toLMS_M = [
+	[ 1688 / 4096,  2146 / 4096,   262 / 4096 ],
+	[  683 / 4096,  2951 / 4096,   462 / 4096 ],
+	[   99 / 4096,   309 / 4096,  3688 / 4096 ]
+];
+*/
+// this includes the Ebner LMS coefficients,
+// the rotation, and the scaling to [-0.5,0.5] range
+// rational terms from Fröhlich p.97
+// and ITU-R BT.2124-0 pp.2-3
+const LMStoIPT_M = [
+	[  2048 / 4096,   2048 / 4096,       0      ],
+	[  6610 / 4096, -13613 / 4096,  7003 / 4096 ],
+	[ 17933 / 4096, -17390 / 4096,  -543 / 4096 ]
+];
+
+// inverted matrices, calculated from the above
+const IPTtoLMS_M = [
+	[0.99998889656284013833, 0.00860505014728705821,  0.1110343715986164786 ],
+	[1.0000111034371598616, -0.00860505014728705821, -0.1110343715986164786 ],
+	[1.000032063391005412,   0.56004913547279000113, -0.32063391005412026469],
+];
+/*
+const LMStoRec2020_M = [
+	[ 3.4375568932814012112,   -2.5072112125095058195,   0.069654319228104608382],
+	[-0.79142868665644156125,   1.9838372198740089874,  -0.19240853321756742626 ],
+	[-0.025646662911506476363, -0.099240248643945566751, 1.1248869115554520431  ]
+];
+*/
+const LMStoXYZ_M$1 = [
+	[ 2.0701800566956135096,   -1.3264568761030210255,    0.20661600684785517081 ],
+	[ 0.36498825003265747974,   0.68046736285223514102,  -0.045421753075853231409],
+	[-0.049595542238932107896, -0.049421161186757487412,  1.1879959417328034394  ]
+];
+
+// Only the PQ form of ICtCp is implemented here. There is also an HLG form.
+// from Dolby, "WHAT IS ICTCP?"
+// https://professional.dolby.com/siteassets/pdfs/ictcp_dolbywhitepaper_v071.pdf
+// and
+// Dolby, "Perceptual Color Volume
+// Measuring the Distinguishable Colors of HDR and WCG Displays"
+// https://professional.dolby.com/siteassets/pdfs/dolby-vision-measuring-perceptual-color-volume-v7.1.pdf
+var ictcp = new ColorSpace({
+	id: "ictcp",
+	name: "ICTCP",
+	// From BT.2100-2 page 7:
+	// During production, signal values are expected to exceed the
+	// range E′ = [0.0 : 1.0]. This provides processing headroom and avoids
+	// signal degradation during cascaded processing. Such values of E′,
+	// below 0.0 or exceeding 1.0, should not be clipped during production
+	// and exchange.
+	// Values below 0.0 should not be clipped in reference displays (even
+	// though they represent “negative” light) to allow the black level of
+	// the signal (LB) to be properly set using test signals known as “PLUGE”
+	coords: {
+		i: {
+			refRange: [0, 1],	// Constant luminance,
+			name: "I"
+		},
+		ct: {
+			refRange: [-0.5, 0.5],	// Full BT.2020 gamut in range [-0.5, 0.5]
+			name: "CT"
+		},
+		cp: {
+			refRange: [-0.5, 0.5],
+			name: "CP"
+		}
+	},
+
+	base: XYZ_Abs_D65,
+	fromBase (XYZ) {
+		// move to LMS cone domain
+		let LMS = multiplyMatrices(XYZtoLMS_M$1, XYZ);
+
+		return LMStoICtCp(LMS);
+	},
+	toBase (ICtCp) {
+		let LMS = ICtCptoLMS(ICtCp);
+
+		return multiplyMatrices(LMStoXYZ_M$1, LMS);
+	},
+	formats: {
+		color: {}
+	},
+});
+
+function LMStoICtCp (LMS) {
+	// apply the PQ EOTF
+	// we can't ever be dividing by zero because of the "1 +" in the denominator
+	let PQLMS = LMS.map (function (val) {
+		let num = c1$1 + (c2$1 * ((val / 10000) ** m1));
+		let denom = 1 + (c3$1 * ((val / 10000) ** m1));
+
+		return (num / denom)  ** m2;
+	});
+
+	// LMS to IPT, with rotation for Y'C'bC'r compatibility
+	return multiplyMatrices(LMStoIPT_M, PQLMS);
+}
+
+function ICtCptoLMS (ICtCp) {
+	let PQLMS = multiplyMatrices(IPTtoLMS_M, ICtCp);
+
+	// From BT.2124-0 Annex 2 Conversion 3
+	let LMS = PQLMS.map (function (val) {
+		let num  = Math.max((val ** im2) - c1$1, 0);
+		let denom = (c2$1 - (c3$1 * (val ** im2)));
+		return 10000 * ((num / denom) ** im1);
+	});
+
+	return LMS;
+}
+
+// Delta E in ICtCp space,
+// which the ITU calls Delta E ITP, which is shorter
+// formulae from ITU Rec. ITU-R BT.2124-0
+
+function deltaEITP (color, sample) {
+	// Given this color as the reference
+	// and a sample,
+	// calculate deltaE in ICtCp
+	// which is simply the Euclidean distance
+
+	let [ I1, T1, P1 ] = ictcp.from(color);
+	let [ I2, T2, P2 ] = ictcp.from(sample);
+
+	// the 0.25 factor is to undo the encoding scaling in Ct
+	// the 720 is so that 1 deltaE = 1 JND
+	// per  ITU-R BT.2124-0 p.3
+
+	return 720 * Math.sqrt((I1 - I2) ** 2 + (0.25 * (T1 -T2) ** 2) + (P1 - P2) ** 2);
+}
+
+// Recalculated for consistent reference white
+// see https://github.com/w3c/csswg-drafts/issues/6642#issuecomment-943521484
+const XYZtoLMS_M = [
+	[ 0.8190224432164319,    0.3619062562801221,   -0.12887378261216414 ],
+	[ 0.0329836671980271,    0.9292868468965546,     0.03614466816999844 ],
+	[ 0.048177199566046255,  0.26423952494422764,    0.6335478258136937  ]
+];
+// inverse of XYZtoLMS_M
+const LMStoXYZ_M = [
+	[  1.2268798733741557,  -0.5578149965554813,   0.28139105017721583],
+	[ -0.04057576262431372,  1.1122868293970594,  -0.07171106666151701],
+	[ -0.07637294974672142, -0.4214933239627914,   1.5869240244272418 ]
+];
+const LMStoLab_M = [
+	[  0.2104542553,   0.7936177850,  -0.0040720468 ],
+	[  1.9779984951,  -2.4285922050,   0.4505937099 ],
+	[  0.0259040371,   0.7827717662,  -0.8086757660 ]
+];
+// LMStoIab_M inverted
+const LabtoLMS_M = [
+	[ 0.99999999845051981432,  0.39633779217376785678,   0.21580375806075880339  ],
+	[ 1.0000000088817607767,  -0.1055613423236563494,   -0.063854174771705903402 ],
+	[ 1.0000000546724109177,  -0.089484182094965759684, -1.2914855378640917399   ]
+];
+
+var OKLab = new ColorSpace({
+	id: "oklab",
+    name: "OKLab",
+    coords: {
+		l: {
+			refRange: [0, 1],
+			name: "L"
+		},
+		a: {
+			refRange: [-0.4, 0.4]
+		},
+		b: {
+			refRange: [-0.4, 0.4]
+		}
+    },
+
+	// Note that XYZ is relative to D65
+  white: "D65",
+	base: XYZ_D65,
+	fromBase (XYZ) {
+		// move to LMS cone domain
+		let LMS = multiplyMatrices(XYZtoLMS_M, XYZ);
+
+		// non-linearity
+		let LMSg = LMS.map(val => Math.cbrt(val));
+
+		return multiplyMatrices(LMStoLab_M, LMSg);
+
+	},
+	toBase (OKLab) {
+		// move to LMS cone domain
+		let LMSg = multiplyMatrices(LabtoLMS_M, OKLab);
+
+		// restore linearity
+		let LMS = LMSg.map(val => val ** 3);
+
+		return multiplyMatrices(LMStoXYZ_M, LMS);
+	},
+
+	formats: {
+		"oklab": {
+			coords: ["<number> | <percentage>", "<number>", "<number>"],
+		}
+	}
+});
+
+// More accurate color-difference formulae
+
+function deltaEOK (color, sample) {
+	// Given this color as the reference
+	// and a sample,
+	// calculate deltaEOK, term by term as root sum of squares
+	let [L1, a1, b1] = OKLab.from(color);
+	let [L2, a2, b2] = OKLab.from(sample);
+	let ΔL = L1 - L2;
+	let Δa = a1 - a2;
+	let Δb = b1 - b2;
+	return Math.sqrt(ΔL ** 2 + Δa ** 2 + Δb ** 2);
+}
+
+var deltaEMethods = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	deltaE76: deltaE76,
+	deltaECMC: deltaECMC,
+	deltaE2000: deltaE2000,
+	deltaEJz: deltaEJz,
+	deltaEITP: deltaEITP,
+	deltaEOK: deltaEOK
+});
+
+function deltaE (c1, c2, o = {}) {
+	if (isString(o)) {
+		o = {method: o};
+	}
+
+	let {method = defaults.deltaE, ...rest} = o;
+
+	c1 = getColor(c1);
+	c2 = getColor(c2);
+
+	for (let m in deltaEMethods) {
+		if ("deltae" + method.toLowerCase() === m.toLowerCase()) {
+			return deltaEMethods[m](c1, c2, rest);
+		}
+	}
+
+	throw new TypeError(`Unknown deltaE method: ${method}`);
+}
+
+function lighten$1 (color, amount = .25) {
+	let space = ColorSpace.get("oklch", "lch");
+	let lightness = [space, "l"];
+	return set(color, lightness, l => l * (1 + amount));
+}
+
+function darken$1 (color, amount = .25) {
+	let space = ColorSpace.get("oklch", "lch");
+	let lightness = [space, "l"];
+	return set(color, lightness, l => l * (1 - amount));
+}
+
+var variations = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	lighten: lighten$1,
+	darken: darken$1
+});
+
+/**
+ * Functions related to color interpolation
+ */
+
+/**
+ * Return an intermediate color between two colors
+ * Signatures: mix(c1, c2, p, options)
+ *             mix(c1, c2, options)
+ *             mix(color)
+ * @param {Color | string} c1 The first color
+ * @param {Color | string} [c2] The second color
+ * @param {number} [p=.5] A 0-1 percentage where 0 is c1 and 1 is c2
+ * @param {Object} [o={}]
+ * @return {Color}
+ */
+function mix$1 (c1, c2, p = .5, o = {}) {
+	[c1, c2] = [getColor(c1), getColor(c2)];
+
+	if (type(p) === "object") {
+		[p, o] = [.5, p];
+	}
+
+	let {space, outputSpace, premultiplied} = o;
+
+	let r = range(c1, c2, {space, outputSpace, premultiplied});
+	return r(p);
+}
+
+/**
+ *
+ * @param {Color | string | Function} c1 The first color or a range
+ * @param {Color | string} [c2] The second color if c1 is not a range
+ * @param {Object} [options={}]
+ * @return {Color[]}
+ */
+function steps (c1, c2, options = {}) {
+	let colorRange;
+
+	if (isRange(c1)) {
+		// Tweaking existing range
+		[colorRange, options] = [c1, c2];
+		[c1, c2] = colorRange.rangeArgs.colors;
+	}
+
+	let {
+		maxDeltaE, deltaEMethod,
+		steps = 2, maxSteps = 1000,
+		...rangeOptions
+	} = options;
+
+	if (!colorRange) {
+		[c1, c2] = [getColor(c1), getColor(c2)];
+		colorRange = range(c1, c2, rangeOptions);
+	}
+
+	let totalDelta = deltaE(c1, c2);
+	let actualSteps = maxDeltaE > 0? Math.max(steps, Math.ceil(totalDelta / maxDeltaE) + 1) : steps;
+	let ret = [];
+
+	if (maxSteps !== undefined) {
+		actualSteps = Math.min(actualSteps, maxSteps);
+	}
+
+	if (actualSteps === 1) {
+		ret = [{p: .5, color: colorRange(.5)}];
+	}
+	else {
+		let step = 1 / (actualSteps - 1);
+		ret = Array.from({length: actualSteps}, (_, i) => {
+			let p = i * step;
+			return {p, color: colorRange(p)};
+		});
+	}
+
+	if (maxDeltaE > 0) {
+		// Iterate over all stops and find max deltaE
+		let maxDelta = ret.reduce((acc, cur, i) => {
+			if (i === 0) {
+				return 0;
+			}
+
+			let ΔΕ = deltaE(cur.color, ret[i - 1].color, deltaEMethod);
+			return Math.max(acc, ΔΕ);
+		}, 0);
+
+		while (maxDelta > maxDeltaE) {
+			// Insert intermediate stops and measure maxDelta again
+			// We need to do this for all pairs, otherwise the midpoint shifts
+			maxDelta = 0;
+
+			for (let i = 1; (i < ret.length) && (ret.length < maxSteps); i++) {
+				let prev = ret[i - 1];
+				let cur = ret[i];
+
+				let p = (cur.p + prev.p) / 2;
+				let color = colorRange(p);
+				maxDelta = Math.max(maxDelta, deltaE(color, prev.color), deltaE(color, cur.color));
+				ret.splice(i, 0, {p, color: colorRange(p)});
+				i++;
+			}
+		}
+	}
+
+	ret = ret.map(a => a.color);
+
+	return ret;
+}
+/**
+ * Interpolate to color2 and return a function that takes a 0-1 percentage
+ * @param {Color | string | Function} color1 The first color or an existing range
+ * @param {Color | string} [color2] If color1 is a color, this is the second color
+ * @param {Object} [options={}]
+ * @returns {Function} A function that takes a 0-1 percentage and returns a color
+ */
+function range (color1, color2, options = {}) {
+	if (isRange(color1)) {
+		// Tweaking existing range
+		let [r, options] = [color1, color2];
+
+		return range(...r.rangeArgs.colors, {...r.rangeArgs.options, ...options});
+	}
+
+	let {space, outputSpace, progression, premultiplied} = options;
+
+	color1 = getColor(color1);
+	color2 = getColor(color2);
+
+	// Make sure we're working on copies of these colors
+	color1 = clone(color1);
+	color2 = clone(color2);
+
+	let rangeArgs = {colors: [color1, color2], options};
+
+	if (space) {
+		space = ColorSpace.get(space);
+	}
+	else {
+		space = ColorSpace.registry[defaults.interpolationSpace] || color1.space;
+	}
+
+	outputSpace = outputSpace? ColorSpace.get(outputSpace) : space;
+
+	color1 = to(color1, space);
+	color2 = to(color2, space);
+
+	// Gamut map to avoid areas of flat color
+	color1 = toGamut(color1);
+	color2 = toGamut(color2);
+
+	// Handle hue interpolation
+	// See https://github.com/w3c/csswg-drafts/issues/4735#issuecomment-635741840
+	if (space.coords.h && space.coords.h.type === "angle") {
+		let arc = options.hue = options.hue || "shorter";
+
+		let hue = [space, "h"];
+		let [θ1, θ2] = [get(color1, hue), get(color2, hue)];
+		[θ1, θ2] = adjust(arc, [θ1, θ2]);
+		set(color1, hue, θ1);
+		set(color2, hue, θ2);
+	}
+
+	if (premultiplied) {
+		// not coping with polar spaces yet
+		color1.coords = color1.coords.map(c => c * color1.alpha);
+		color2.coords = color2.coords.map(c => c * color2.alpha);
+	}
+
+	return Object.assign(p => {
+		p = progression? progression(p) : p;
+		let coords = color1.coords.map((start, i) => {
+			let end = color2.coords[i];
+			return interpolate(start, end, p);
+		});
+
+		let alpha = interpolate(color1.alpha, color2.alpha, p);
+		let ret = {space, coords, alpha};
+
+		if (premultiplied) {
+			// undo premultiplication
+			ret.coords = ret.coords.map(c => c / alpha);
+		}
+
+		if (outputSpace !== space) {
+			ret = to(ret, outputSpace);
+		}
+
+		return ret;
+	}, {
+		rangeArgs
+	});
+}
+function isRange (val) {
+	return type(val) === "function" && !!val.rangeArgs;
+}
+defaults.interpolationSpace = "lab";
+
+function register (Color) {
+	Color.defineFunction("mix", mix$1, {returns: "color"});
+	Color.defineFunction("range", range, {returns: "function<color>"});
+	Color.defineFunction("steps", steps, {returns: "array<color>"});
+}
+
+var interpolation = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	mix: mix$1,
+	steps: steps,
+	range: range,
+	isRange: isRange,
+	register: register
+});
+
+var HSL = new ColorSpace({
+	id: "hsl",
+	name: "HSL",
+	coords: {
+		h: {
+			refRange: [0, 360],
+			type: "angle",
+			name: "Hue"
+		},
+		s: {
+			range: [0, 100],
+			name: "Saturation"
+		},
+		l: {
+			range: [0, 100],
+			name: "Lightness"
+		}
+	},
+
+	base: sRGB,
+
+	// Adapted from https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
+	fromBase: rgb => {
+		let max = Math.max(...rgb);
+		let min = Math.min(...rgb);
+		let [r, g, b] = rgb;
+		let [h, s, l] = [NaN, 0, (min + max)/2];
+		let d = max - min;
+
+		if (d !== 0) {
+			s = (l === 0 || l === 1) ? 0 : (max - l) / Math.min(l, 1 - l);
+
+			switch (max) {
+				case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+				case g: h = (b - r) / d + 2; break;
+				case b: h = (r - g) / d + 4;
+			}
+
+			h = h * 60;
+		}
+
+		return [h, s * 100, l * 100];
+	},
+
+	// Adapted from https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB_alternative
+	toBase: hsl => {
+		let [h, s, l] = hsl;
+		h = h % 360;
+
+		if (h < 0) {
+			h += 360;
+		}
+
+		s /= 100;
+		l /= 100;
+
+		function f (n) {
+			let k = (n + h/30) % 12;
+			let a = s * Math.min(l, 1 - l);
+			return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+		}
+
+		return [f(0), f(8), f(4)];
+	},
+
+	formats: {
+		"hsl": {
+			toGamut: true,
+			coords: ["<number> | <angle>", "<percentage>", "<percentage>"],
+		},
+		"hsla": {
+			coords: ["<number> | <angle>", "<percentage>", "<percentage>"],
+			commas: true,
+			lastAlpha: true,
+		}
+	},
+});
+
+// The Hue, Whiteness Blackness (HWB) colorspace
+// See https://drafts.csswg.org/css-color-4/#the-hwb-notation
+// Note that, like HSL, calculations are done directly on
+// gamma-corrected sRGB values rather than linearising them first.
+
+var HSV = new ColorSpace({
+	id: "hsv",
+	name: "HSV",
+	coords: {
+		h: {
+			refRange: [0, 360],
+			type: "angle",
+			name: "Hue"
+		},
+		s: {
+			range: [0, 100],
+			name: "Saturation"
+		},
+		v: {
+			range: [0, 100],
+			name: "Value"
+		}
+	},
+
+	base: HSL,
+	// https://en.wikipedia.org/wiki/HSL_and_HSV#Interconversion
+	fromBase (hsl) {
+		let [h, s, l] = hsl;
+		s /= 100;
+		l /= 100;
+
+		let v = l + s * Math.min(l, 1 - l);
+
+		return [
+			h, // h is the same
+			v === 0? 0 : 200 * (1 - l / v), // s
+			100 * v
+		];
+	},
+	// https://en.wikipedia.org/wiki/HSL_and_HSV#Interconversion
+	toBase (hsv) {
+		let [h, s, v] = hsv;
+
+		s /= 100;
+		v /= 100;
+
+		let l = v * (1 - s/2);
+
+		return [
+			h, // h is the same
+			(l === 0 || l === 1)? 0 : ((v - l) / Math.min(l, 1 - l)) * 100,
+			l * 100
+		];
+	},
+	formats: {
+		color: {
+			toGamut: true,
+		}
+	}
+});
+
+// The Hue, Whiteness Blackness (HWB) colorspace
+// See https://drafts.csswg.org/css-color-4/#the-hwb-notation
+// Note that, like HSL, calculations are done directly on
+// gamma-corrected sRGB values rather than linearising them first.
+
+var hwb = new ColorSpace({
+	id: "hwb",
+	name: "HWB",
+	coords: {
+		h: {
+			refRange: [0, 360],
+			type: "angle",
+			name: "Hue"
+		},
+		w: {
+			range: [0, 100],
+			name: "Whiteness"
+		},
+		b: {
+			range: [0, 100],
+			name: "Blackness"
+		}
+	},
+
+	base: HSV,
+	fromBase (hsv) {
+		let [h, s, v] = hsv;
+
+		return [h, v * (100 - s) / 100, 100 - v];
+	},
+	toBase (hwb) {
+		let [h, w, b] = hwb;
+
+		// Now convert percentages to [0..1]
+		w /= 100;
+		b /= 100;
+
+		// Achromatic check (white plus black >= 1)
+		let sum = w + b;
+		if (sum >= 1) {
+			 let gray = w / sum;
+			 return [h, 0, gray * 100];
+		}
+
+		let v = (1 - b);
+		let s = (v === 0) ? 0 : 1 - w / v;
+		return [h, s * 100, v * 100];
+	},
+
+	formats: {
+		"hwb": {
+			toGamut: true,
+			coords: ["<number> | <angle>", "<percentage>", "<percentage>"],
+		}
+	}
+});
+
+// convert an array of linear-light a98-rgb values to CIE XYZ
+// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+// has greater numerical precision than section 4.3.5.3 of
+// https://www.adobe.com/digitalimag/pdfs/AdobeRGB1998.pdf
+// but the values below were calculated from first principles
+// from the chromaticity coordinates of R G B W
+const toXYZ_M$2 = [
+	[ 0.5766690429101305,   0.1855582379065463,   0.1882286462349947  ],
+	[ 0.29734497525053605,  0.6273635662554661,   0.07529145849399788 ],
+	[ 0.02703136138641234,  0.07068885253582723,  0.9913375368376388  ]
+];
+
+const fromXYZ_M$2 = [
+	[  2.0415879038107465,    -0.5650069742788596,   -0.34473135077832956 ],
+	[ -0.9692436362808795,     1.8759675015077202,    0.04155505740717557 ],
+	[  0.013444280632031142,  -0.11836239223101838,   1.0151749943912054  ]
+];
+
+var A98Linear = new RGBColorSpace({
+	id: "a98rgb-linear",
+	name: "Linear Adobe® 98 RGB compatible",
+	white: "D65",
+	toXYZ_M: toXYZ_M$2,
+	fromXYZ_M: fromXYZ_M$2
+});
+
+var a98rgb = new RGBColorSpace({
+	id: "a98rgb",
+	name: "Adobe® 98 RGB compatible",
+	base: A98Linear,
+	toBase: RGB => RGB.map(val => Math.pow(Math.abs(val), 563 / 256) * Math.sign(val)),
+	fromBase: RGB => RGB.map(val => Math.pow(Math.abs(val), 256 / 563) * Math.sign(val)),
+	formats: {
+		color: {
+			id: "a98-rgb"
+		}
+	},
+});
+
+// convert an array of  prophoto-rgb values to CIE XYZ
+// using  D50 (so no chromatic adaptation needed afterwards)
+// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+const toXYZ_M$1 = [
+	[ 0.7977604896723027,  0.13518583717574031,  0.0313493495815248     ],
+	[ 0.2880711282292934,  0.7118432178101014,   0.00008565396060525902 ],
+	[ 0.0,                 0.0,                  0.8251046025104601     ]
+];
+
+const fromXYZ_M$1 = [
+	[  1.3457989731028281,  -0.25558010007997534,  -0.05110628506753401 ],
+	[ -0.5446224939028347,   1.5082327413132781,    0.02053603239147973 ],
+	[  0.0,                  0.0,                   1.2119675456389454  ]
+];
+
+var ProPhotoLinear = new RGBColorSpace({
+	id: "prophoto-linear",
+	name: "Linear ProPhoto",
+	white: "D50",
+	base: XYZ_D50,
+	toXYZ_M: toXYZ_M$1,
+	fromXYZ_M: fromXYZ_M$1
+});
+
+const Et = 1/512;
+const Et2 = 16/512;
+
+var prophoto = new RGBColorSpace({
+	id: "prophoto",
+	name: "ProPhoto",
+	base: ProPhotoLinear,
+	toBase (RGB) {
+		// Transfer curve is gamma 1.8 with a small linear portion
+		return RGB.map(v => v < Et2? v / 16 : v ** 1.8);
+	},
+	fromBase (RGB) {
+		return RGB.map(v => v >= Et? v ** (1/1.8) : 16 * v);
+	},
+	formats: {
+		color: {
+			id: "prophoto-rgb"
+		}
+	},
+});
+
+var oklch = new ColorSpace({
+	id: "oklch",
+	name: "OKLCh",
+	coords: {
+		l: {
+			refRange: [0, 1],
+			name: "Lightness"
+		},
+		c: {
+			refRange: [0, 0.4],
+			name: "Chroma"
+		},
+		h: {
+			refRange: [0, 360],
+			type: "angle",
+			name: "Hue"
+		}
+	},
+	white: "D65",
+
+	base: OKLab,
+	fromBase (oklab) {
+		// Convert to polar form
+		let [L, a, b] = oklab;
+		let h;
+		const ε = 0.0002; // chromatic components much smaller than a,b
+
+		if (Math.abs(a) < ε && Math.abs(b) < ε) {
+			h = NaN;
+		}
+		else {
+			h = Math.atan2(b, a) * 180 / Math.PI;
+		}
+
+		return [
+			L, // OKLab L is still L
+			Math.sqrt(a ** 2 + b ** 2), // Chroma
+			constrain(h) // Hue, in degrees [0 to 360)
+		];
+	},
+	// Convert from polar form
+	toBase (oklch) {
+		let [L, C, h] = oklch;
+		let a, b;
+
+		// check for NaN hue
+		if (isNaN(h)) {
+			a = 0;
+			b = 0;
+		}
+		else {
+			a = C * Math.cos(h * Math.PI / 180);
+			b = C * Math.sin(h * Math.PI / 180);
+		}
+
+		return [ L, a, b ];
+	},
+
+	formats: {
+		"oklch": {
+			coords: ["<number> | <percentage>", "<number>", "<number> | <angle>"],
+		}
+	}
+});
+
+const Yw = 203;	// absolute luminance of media white, cd/m²
+const n = 2610 / (2 ** 14);
+const ninv = (2 ** 14) / 2610;
+const m = 2523 / (2 ** 5);
+const minv = (2 ** 5) / 2523;
+const c1 = 3424 / (2 ** 12);
+const c2 = 2413 / (2 ** 7);
+const c3 = 2392 / (2 ** 7);
+
+var rec2100Pq = new RGBColorSpace({
+	id: "rec2100pq",
+	name: "REC.2100-PQ",
+	base: REC2020Linear,
+	toBase (RGB) {
+		// given PQ encoded component in range [0, 1]
+		// return media-white relative linear-light
+		return RGB.map(function (val) {
+			let x = ((Math.max(((val ** minv) - c1), 0) / (c2 - (c3 * (val ** minv)))) ** ninv);
+			return (x * 10000 / Yw); 	// luminance relative to diffuse white, [0, 70 or so].
+		});
+	},
+	fromBase (RGB) {
+		// given media-white relative linear-light
+		// returnPQ encoded component in range [0, 1]
+		return RGB.map(function (val) {
+			let x = Math.max(val * Yw / 10000, 0); 	// absolute luminance of peak white is 10,000 cd/m².
+			let num = (c1 + (c2 * (x ** n)));
+			let denom = (1 + (c3 * (x ** n)));
+
+			return ((num / denom)  ** m);
+		});
+	},
+	formats: {
+		color: {
+			id: "rec2100-pq"
+		},
+	},
+});
+
+// FIXME see https://github.com/LeaVerou/color.js/issues/190
+
+const a = 0.17883277;
+const b = 0.28466892; // 1 - (4 * a)
+const c = 0.55991073; // 0.5 - a * Math.log(4 *a)
+
+const scale = 3.7743;	// Place 18% grey at HLG 0.38, so media white at 0.75
+
+var rec2100Hlg = new RGBColorSpace({
+	id: "rec2100hlg",
+	cssid: "rec2100-hlg",
+	name: "REC.2100-HLG",
+	referred: "scene",
+
+	base: REC2020Linear,
+	toBase (RGB) {
+		// given HLG encoded component in range [0, 1]
+		// return media-white relative linear-light
+		return RGB.map(function (val) {
+			// first the HLG EOTF
+			// ITU-R BT.2390-10 p.30 section
+			// 6.3 The hybrid log-gamma electro-optical transfer function (EOTF)
+			// Then scale by 3 so media white is 1.0
+			if (val <= 0.5) {
+				return (val ** 2) / 3 * scale;
+			}
+			return Math.exp(((val - c) / a) + b) / 12 * scale;
+		});
+	},
+	fromBase (RGB) {
+		// given media-white relative linear-light
+		// where diffuse white is 1.0,
+		// return HLG encoded component in range [0, 1]
+		return RGB.map(function (val) {
+			// first scale to put linear-light media white at 1/3
+			val /= scale;
+			// now the HLG OETF
+			// ITU-R BT.2390-10 p.23
+			// 6.1 The hybrid log-gamma opto-electronic transfer function (OETF)
+			if (val <= 1/12) {
+				return Math.sqrt( 3 * val);
+			}
+			return a * Math.log(12 * val - b) + c;
+		});
+	},
+	formats: {
+		color: {
+			id: "rec2100-hlg"
+		},
+	},
+});
+
+const CATs = {};
+
+hooks.add("chromatic-adaptation-start", env => {
+	if (env.options.method) {
+		env.M = adapt(env.W1, env.W2, env.options.method);
+	}
+});
+
+hooks.add("chromatic-adaptation-end", env => {
+	if (!env.M) {
+		env.M = adapt(env.W1, env.W2, env.options.method);
+	}
+});
+
+function defineCAT ({id, toCone_M, fromCone_M}) {
+	// Use id, toCone_M, fromCone_M like variables
+	CATs[id] = arguments[0];
+}
+function adapt (W1, W2, id = "Bradford") {
+	// adapt from a source whitepoint or illuminant W1
+	// to a destination whitepoint or illuminant W2,
+	// using the given chromatic adaptation transform (CAT)
+	// debugger;
+	let method = CATs[id];
+
+	let [ρs, γs, βs] = multiplyMatrices(method.toCone_M, W1);
+	let [ρd, γd, βd] = multiplyMatrices(method.toCone_M, W2);
+
+	// all practical illuminants have non-zero XYZ so no division by zero can occur below
+	let scale = [
+		[ρd/ρs,    0,      0      ],
+		[0,        γd/γs,  0      ],
+		[0,        0,      βd/βs  ]
+	];
+	// console.log({scale});
+
+	let scaled_cone_M = multiplyMatrices(scale, method.toCone_M);
+	let adapt_M	= multiplyMatrices(method.fromCone_M, scaled_cone_M);
+	// console.log({scaled_cone_M, adapt_M});
+	return adapt_M;
+}
+defineCAT({
+	id: "von Kries",
+	toCone_M: [
+		[  0.4002400,  0.7076000, -0.0808100 ],
+		[ -0.2263000,  1.1653200,  0.0457000 ],
+		[  0.0000000,  0.0000000,  0.9182200 ]
+	],
+	fromCone_M: [
+		[  1.8599364, -1.1293816,  0.2198974 ],
+		[  0.3611914,  0.6388125, -0.0000064 ],
+		[  0.0000000,  0.0000000,  1.0890636 ]
+	]
+});
+
+defineCAT({
+	id: "Bradford",
+	// Convert an array of XYZ values in the range 0.0 - 1.0
+	// to cone fundamentals
+	toCone_M: [
+		[  0.8951000,  0.2664000, -0.1614000 ],
+		[ -0.7502000,  1.7135000,  0.0367000 ],
+		[  0.0389000, -0.0685000,  1.0296000 ]
+	],
+	// and back
+	fromCone_M: [
+		[  0.9869929, -0.1470543,  0.1599627 ],
+		[  0.4323053,  0.5183603,  0.0492912 ],
+		[ -0.0085287,  0.0400428,  0.9684867 ]
+	]
+});
+
+defineCAT({
+	id: "CAT02",
+	// with complete chromatic adaptation to W2, so D = 1.0
+	toCone_M: [
+		[  0.7328000,  0.4296000, -0.1624000 ],
+		[ -0.7036000,  1.6975000,  0.0061000 ],
+		[  0.0030000,  0.0136000,  0.9834000 ]
+	],
+	fromCone_M: [
+		[  1.0961238, -0.2788690,  0.1827452 ],
+		[  0.4543690,  0.4735332,  0.0720978 ],
+		[ -0.0096276, -0.0056980,  1.0153256 ]
+	]
+});
+
+defineCAT({
+	id: "CAT16",
+	toCone_M: [
+		[  0.401288,  0.650173, -0.051461 ],
+		[ -0.250268,  1.204414,  0.045854 ],
+		[ -0.002079,  0.048952,  0.953127 ]
+	],
+	// the extra precision is needed to avoid roundtripping errors
+	fromCone_M: [
+		[  1.862067855087233e+0, -1.011254630531685e+0,   1.491867754444518e-1 ],
+		[  3.875265432361372e-1,  6.214474419314753e-1,  -8.973985167612518e-3 ],
+		[ -1.584149884933386e-2, -3.412293802851557e-2,   1.049964436877850e+0 ]
+	]
+});
+
+Object.assign(WHITES, {
+	// whitepoint values from ASTM E308-01 with 10nm spacing, 1931 2 degree observer
+	// all normalized to Y (luminance) = 1.00000
+	// Illuminant A is a tungsten electric light, giving a very warm, orange light.
+	A:  [1.09850, 1.00000, 0.35585],
+
+	// Illuminant C was an early approximation to daylight: illuminant A with a blue filter.
+	C:   [0.98074, 1.000000, 1.18232],
+
+	// The daylight series of illuminants simulate natural daylight.
+	// The color temperature (in degrees Kelvin/100) ranges from
+	// cool, overcast daylight (D50) to bright, direct sunlight (D65).
+	D55: [0.95682, 1.00000, 0.92149],
+	D75: [0.94972, 1.00000, 1.22638],
+
+	// Equal-energy illuminant, used in two-stage CAT16
+	E:   [1.00000, 1.00000, 1.00000],
+
+	// The F series of illuminants represent fluorescent lights
+	F2:  [0.99186, 1.00000, 0.67393],
+	F7:  [0.95041, 1.00000, 1.08747],
+	F11: [1.00962, 1.00000, 0.64350],
+});
+
+// The ACES whitepoint
+// see TB-2018-001 Derivation of the ACES White Point CIE Chromaticity Coordinates
+// also https://github.com/ampas/aces-dev/blob/master/documents/python/TB-2018-001/aces_wp.py
+// Similar to D60
+WHITES.ACES = [0.32168/0.33767, 1.00000, (1.00000 - 0.32168 - 0.33767)/0.33767];
+
+// convert an array of linear-light ACEScc values to CIE XYZ
+const toXYZ_M = [
+	[  0.6624541811085053,   0.13400420645643313,  0.1561876870049078  ],
+	[  0.27222871678091454,  0.6740817658111484,   0.05368951740793705 ],
+	[ -0.005574649490394108, 0.004060733528982826, 1.0103391003129971  ]
+];
+const fromXYZ_M = [
+	[  1.6410233796943257,   -0.32480329418479,    -0.23642469523761225  ],
+	[ -0.6636628587229829,    1.6153315916573379,   0.016756347685530137 ],
+	[  0.011721894328375376, -0.008284441996237409, 0.9883948585390215   ]
+];
+
+var ACEScg = new RGBColorSpace({
+	id: "acescg",
+	name: "ACEScg",
+
+	// ACEScg – A scene-referred, linear-light encoding of ACES Data
+	// https://docs.acescentral.com/specifications/acescg/
+	// uses the AP1 primaries, see section 4.3.1 Color primaries
+	coords: {
+		r: {
+			range: [0, 65504],
+			name: "Red"
+		},
+		g: {
+			range: [0, 65504],
+			name: "Green"
+		},
+		b: {
+			range: [0, 65504],
+			name: "Blue"
+		}
+	},
+
+	referred: "scene",
+
+	white: WHITES.ACES,
+
+	toXYZ_M,
+	fromXYZ_M,
+
+	formats: {
+		color: {}
+	},
+});
+
+// export default Color;
+
+const ε = 2 ** -16;
+
+// the smallest value which, in the 32bit IEEE 754 float encoding,
+// decodes as a non-negative value
+const ACES_min_nonzero = -0.35828683;
+
+// brightest encoded value, decodes to 65504
+const ACES_cc_max = (Math.log2(65504) + 9.72) / 17.52; // 1.468
+
+var acescc = new RGBColorSpace({
+	id: "acescc",
+	name: "ACEScc",
+	// see S-2014-003 ACEScc – A Logarithmic Encoding of ACES Data
+	// https://docs.acescentral.com/specifications/acescc/
+	// uses the AP1 primaries, see section 4.3.1 Color primaries
+
+	// Appendix A: "Very small ACES scene referred values below 7 1/4 stops
+	// below 18% middle gray are encoded as negative ACEScc values.
+	// These values should be preserved per the encoding in Section 4.4
+	// so that all positive ACES values are maintained."
+	coords: {
+		r: {
+			range: [ACES_min_nonzero, ACES_cc_max],
+			name: "Red"
+		},
+		g: {
+			range: [ACES_min_nonzero, ACES_cc_max],
+			name: "Green"
+		},
+		b: {
+			range: [ACES_min_nonzero, ACES_cc_max],
+			name: "Blue"
+		}
+	},
+	referred: "scene",
+
+	base: ACEScg,
+	// from section 4.4.2 Decoding Function
+	toBase (RGB) {
+		const low = (9.72 - 15) / 17.52; // -0.3014
+
+		return RGB.map(function (val) {
+			if (val <= low) {
+				return (2 ** ((val * 17.52) - 9.72) - ε) * 2; // very low values, below -0.3014
+			}
+			else if (val < ACES_cc_max) {
+				return 2 ** ((val * 17.52) - 9.72);
+			}
+			else { // val >= ACES_cc_max
+				return 65504;
+			}
+		});
+	},
+
+	// Non-linear encoding function from S-2014-003, section 4.4.1 Encoding Function
+	fromBase (RGB) {
+		return RGB.map(function (val) {
+			if (val <= 0) {
+				return (Math.log2(ε) + 9.72) / 17.52; // -0.3584
+			}
+			else if (val < ε) {
+				return  (Math.log2(ε + val * 0.5) + 9.72) / 17.52;
+			}
+			else { // val >= ε
+				return  (Math.log2(val) + 9.72) / 17.52;
+			}
+		});
+	},
+	// encoded media white (rgb 1,1,1) => linear  [ 222.861, 222.861, 222.861 ]
+	// encoded media black (rgb 0,0,0) => linear [ 0.0011857, 0.0011857, 0.0011857]
+	formats: {
+		color: {}
+	}
+});
+
+var spaces = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	XYZ_D65: XYZ_D65,
+	XYZ_D50: XYZ_D50,
+	XYZ_ABS_D65: XYZ_Abs_D65,
+	Lab_D65: lab_d65,
+	Lab: lab,
+	LCH: lch,
+	sRGB_Linear: sRGBLinear,
+	sRGB: sRGB,
+	HSL: HSL,
+	HWB: hwb,
+	HSV: HSV,
+	P3_Linear: P3Linear,
+	P3: P3,
+	A98RGB_Linear: A98Linear,
+	A98RGB: a98rgb,
+	ProPhoto_Linear: ProPhotoLinear,
+	ProPhoto: prophoto,
+	REC_2020_Linear: REC2020Linear,
+	REC_2020: REC2020,
+	OKLab: OKLab,
+	OKLCH: oklch,
+	Jzazbz: Jzazbz,
+	JzCzHz: jzczhz,
+	ICTCP: ictcp,
+	REC_2100_PQ: rec2100Pq,
+	REC_2100_HLG: rec2100Hlg,
+	ACEScg: ACEScg,
+	ACEScc: acescc
+});
+
+/**
+ * Class that represents a color
+ */
+class Color {
+	/**
+	 * Creates an instance of Color.
+	 * Signatures:
+	 * - `new Color(stringToParse)`
+	 * - `new Color(otherColor)`
+	 * - `new Color({space, coords, alpha})`
+	 * - `new Color(space, coords, alpha)`
+	 * - `new Color(spaceId, coords, alpha)`
+	 */
+	constructor (...args) {
+		let color;
+
+		if (args.length === 1) {
+			color = getColor(args[0]);
+		}
+
+		let space, coords, alpha;
+
+		if (color) {
+			space = color.space || color.spaceId;
+			coords = color.coords;
+			alpha = color.alpha;
+		}
+		else {
+			// default signature new Color(ColorSpace, array [, alpha])
+			[space, coords, alpha] = args;
+		}
+
+		this.#space = ColorSpace.get(space);
+		this.coords = coords? coords.slice() : [0, 0, 0];
+		this.alpha = alpha < 1? alpha : 1; // this also deals with NaN etc
+
+		// Convert "NaN" to NaN
+		for (let i = 0; i < this.coords.length; i++) {
+			if (this.coords[i] === "NaN") {
+				this.coords[i] = NaN;
+			}
+		}
+
+		// Define getters and setters for each coordinate
+		for (let id in this.#space.coords) {
+			Object.defineProperty(this, id, {
+				get: () => this.get(id),
+				set: value => this.set(id, value)
+			});
+		}
+	}
+
+	#space;
+
+	get space () {
+		return this.#space;
+	}
+
+	get spaceId () {
+		return this.#space.id;
+	}
+
+	clone () {
+		return new Color(this.space, this.coords, this.alpha);
+	}
+
+	toJSON () {
+		return {
+			spaceId: this.spaceId,
+			coords: this.coords,
+			alpha: this.alpha
+		};
+	}
+
+	display (...args) {
+		let ret = display(this, ...args);
+
+		// Convert color object to Color instance
+		ret.color = new Color(ret.color);
+
+		return ret;
+	}
+
+	/**
+	 * Get a color from the argument passed
+	 * Basically gets us the same result as new Color(color) but doesn't clone an existing color object
+	 */
+	static get (color, ...args) {
+		if (color instanceof Color) {
+			return color;
+		}
+
+		return new Color(color, ...args);
+	}
+
+	static defineFunction (name, code, o = code) {
+		let {instance = true, returns} = o;
+
+		let func = function (...args) {
+			let ret = code(...args);
+
+			if (returns === "color") {
+				ret = Color.get(ret);
+			}
+			else if (returns === "function<color>") {
+				let f = ret;
+				ret = function (...args) {
+					let ret = f(...args);
+					return Color.get(ret);
+				};
+				// Copy any function metadata
+				Object.assign(ret, f);
+			}
+			else if (returns === "array<color>") {
+				ret = ret.map(c => Color.get(c));
+			}
+
+			return ret;
+		};
+
+		if (!(name in Color)) {
+			Color[name] = func;
+		}
+
+		if (instance) {
+			Color.prototype[name] = function (...args) {
+				return func(this, ...args);
+			};
+		}
+	}
+
+	static defineFunctions (o) {
+		for (let name in o) {
+			Color.defineFunction(name, o[name], o[name]);
+		}
+	}
+
+	static extend (exports) {
+		if (exports.register) {
+			exports.register(Color);
+		}
+		else {
+			// No register method, just add the module's functions
+			for (let name in exports) {
+				Color.defineFunction(name, exports[name]);
+			}
+		}
+	}
+}
+Color.defineFunctions({
+	get,
+	getAll,
+	set,
+	setAll,
+	to,
+	equals,
+	inGamut,
+	toGamut,
+	distance,
+	toString: serialize,
+});
+
+Object.assign(Color, {
+	util,
+	hooks,
+	WHITES,
+	Space: ColorSpace,
+	spaces: ColorSpace.registry,
+	parse,
+
+	// Global defaults one may want to configure
+	defaults
+});
+
+for (let key of Object.keys(spaces)) {
+	ColorSpace.register(spaces[key]);
+}
+
+/**
+ * This plugin defines getters and setters for color[spaceId]
+ * e.g. color.lch on *any* color gives us the lch coords
+ */
+
+// Add space accessors to existing color spaces
+for (let id in ColorSpace.registry) {
+	addSpaceAccessors(id, ColorSpace.registry[id]);
+}
+
+// Add space accessors to color spaces not yet created
+hooks.add("colorspace-init-end", space => {
+	addSpaceAccessors(space.id, space);
+	space.aliases?.forEach(alias => {
+		addSpaceAccessors(alias, space);
+	});
+});
+
+function addSpaceAccessors (id, space) {
+	// Coordinates can be looked up by both id and name
+	Object.keys(space.coords);
+	Object.values(space.coords).map(c => c.name);
+
+
+	let propId = id.replace(/-/g, "_");
+
+	Object.defineProperty(Color.prototype, propId, {
+		// Convert coords to coords in another colorspace and return them
+		// Source colorspace: this.spaceId
+		// Target colorspace: id
+		get () {
+			let ret = this.getAll(id);
+
+			if (typeof Proxy === "undefined") {
+				// If proxies are not supported, just return a static array
+				return ret;
+			}
+
+			// Enable color.spaceId.coordName syntax
+			return new Proxy(ret, {
+				has: (obj, property) => {
+					try {
+						ColorSpace.resolveCoord([space, property]);
+						return true;
+					}
+					catch (e) {}
+
+					return Reflect.has(obj, property);
+				},
+				get: (obj, property, receiver) => {
+					if (property && typeof property !== "symbol" && !(property in obj)) {
+						let {index} = ColorSpace.resolveCoord([space, property]);
+
+						if (index >= 0) {
+							return obj[index];
+						}
+					}
+
+					return Reflect.get(obj, property, receiver);
+				},
+				set: (obj, property, value, receiver) => {
+					if (property && typeof property !== "symbol" && !(property in obj) || property >= 0) {
+						let {index} = ColorSpace.resolveCoord([space, property]);
+
+						if (index >= 0) {
+							obj[index] = value;
+
+							// Update color.coords
+							this.setAll(id, obj);
+
+							return true;
+						}
+					}
+
+					return Reflect.set(obj, property, value, receiver);
+				},
+			});
+		},
+		// Convert coords in another colorspace to internal coords and set them
+		// Target colorspace: this.spaceId
+		// Source colorspace: id
+		set (coords) {
+			this.setAll(id, coords);
+		},
+		configurable: true,
+		enumerable: true
+	});
+}
+
+// Import all modules of Color.js
+
+Color.extend(deltaEMethods);
+Color.extend({deltaE});
+Color.extend(variations);
+Color.extend({contrast});
+Color.extend(chromaticity);
+Color.extend(luminance);
+Color.extend(interpolation);
+Color.extend(contrastMethods);
+
+function transparentize(color, amount) {
+    const _color = color;
+    _color.alpha = Math.max(0, Math.min(1, Number(amount)));
+    return _color;
+}
+
+function mix(color, amount, mixColor) {
+    const mixValue = Math.max(0, Math.min(1, Number(amount)));
+    return new Color(color.mix(mixColor, mixValue).toString());
+}
+
+function darken(color, colorSpace, amount) {
+    switch (colorSpace) {
+        case 'lch': {
+            const lightness = color.lch.l;
+            const difference = lightness;
+            const newChroma = Math.max(0, color.lch.c - amount * color.lch.c);
+            const newLightness = Math.max(0, lightness - difference * amount);
+            color.set('lch.l', newLightness);
+            color.set('lch.c', newChroma);
+            return color;
+        }
+        case 'hsl': {
+            const lightness = color.hsl.l;
+            const difference = lightness;
+            const newLightness = Math.max(0, lightness - difference * amount);
+            color.set('hsl.l', newLightness);
+            return color;
+        }
+        case 'p3': {
+            const colorInP3 = color.to('p3');
+            const newRed = Math.max(0, colorInP3.p3.r - amount * colorInP3.p3.r);
+            const newGreen = Math.max(0, colorInP3.p3.g - amount * colorInP3.p3.g);
+            const newBlue = Math.max(0, colorInP3.p3.b - amount * colorInP3.p3.b);
+            colorInP3.set('p3.r', newRed);
+            colorInP3.set('p3.g', newGreen);
+            colorInP3.set('p3.b', newBlue);
+            return colorInP3;
+        }
+        case 'srgb': {
+            const newRed = Math.max(0, color.srgb.r - amount * color.srgb.r);
+            const newGreen = Math.max(0, color.srgb.g - amount * color.srgb.g);
+            const newBlue = Math.max(0, color.srgb.b - amount * color.srgb.b);
+            color.set('srgb.r', newRed);
+            color.set('srgb.g', newGreen);
+            color.set('srgb.b', newBlue);
+            return color;
+        }
+        default: {
+            return color.darken(amount);
+        }
+    }
+}
+
+function lighten(color, colorSpace, amount) {
+    switch (colorSpace) {
+        case 'lch': {
+            const lightness = color.lch.l;
+            const difference = 100 - lightness;
+            const newChroma = Math.max(0, color.lch.c - amount * color.lch.c);
+            const newLightness = Math.min(100, lightness + difference * amount);
+            color.set('lch.l', newLightness);
+            color.set('lch.c', newChroma);
+            return color;
+        }
+        case 'hsl': {
+            const lightness = color.hsl.l;
+            const difference = 100 - lightness;
+            const newLightness = Math.min(100, lightness + difference * amount);
+            color.set('hsl.l', newLightness);
+            return color;
+        }
+        case 'p3': {
+            const colorInP3 = color.to('p3');
+            const newRed = Math.min(1, colorInP3.p3.r + amount * (1 - colorInP3.p3.r));
+            const newGreen = Math.min(1, colorInP3.p3.g + amount * (1 - colorInP3.p3.g));
+            const newBlue = Math.min(1, colorInP3.p3.b + amount * (1 - colorInP3.p3.b));
+            colorInP3.set('p3.r', newRed);
+            colorInP3.set('p3.g', newGreen);
+            colorInP3.set('p3.b', newBlue);
+            return colorInP3;
+        }
+        case 'srgb': {
+            const newRed = Math.min(1, color.srgb.r + amount * (1 - color.srgb.r));
+            const newGreen = Math.min(1, color.srgb.g + amount * (1 - color.srgb.g));
+            const newBlue = Math.min(1, color.srgb.b + amount * (1 - color.srgb.b));
+            color.set('srgb.r', newRed);
+            color.set('srgb.g', newGreen);
+            color.set('srgb.b', newBlue);
+            return color;
+        }
+        default: {
+            return color.lighten(amount);
+        }
+    }
+}
+
+function modifyColor(baseColor, modifier) {
+    if (baseColor === undefined) {
+        return baseColor;
+    }
+    const color = new Color(baseColor);
+    let returnedColor = color;
+    try {
+        switch (modifier.type) {
+            case 'lighten':
+                returnedColor = lighten(color, modifier.space, Number(modifier.value));
+                break;
+            case 'darken':
+                returnedColor = darken(color, modifier.space, Number(modifier.value));
+                break;
+            case 'mix':
+                returnedColor = mix(color, Number(modifier.value), new Color(modifier.color));
+                break;
+            case 'alpha': {
+                returnedColor = transparentize(color, Number(modifier.value));
+                break;
+            }
+            default:
+                returnedColor = color;
+                break;
+        }
+        returnedColor = returnedColor.to(modifier.space);
+        if (modifier.format && ['lch', 'srgb', 'p3', 'hsl'].includes(modifier.format)) {
+            returnedColor = returnedColor.to(modifier.format);
+        }
+        return returnedColor.toString({
+            inGamut: true,
+            precision: 3,
+            format: modifier.format,
+        });
+    }
+    catch (e) {
+        return baseColor;
+    }
+}
+
+/**
+ * Helper: Transforms color tokens with tokens studio color modifiers
+ */
+function transformColorModifiers(token) {
+    /** @type {ColorModifier} */
+    const modifier = token.$extensions['studio.tokens']?.modify;
+    return modifyColor(token.value, modifier);
+}
+
+/**
+ * Helper: Transforms letter spacing % to em
+ */
+function transformLetterSpacing(value) {
+    if (value === undefined) {
+        return value;
+    }
+    if (value.endsWith('%')) {
+        const percentValue = value.slice(0, -1);
+        return `${parseFloat(percentValue) / 100}em`;
+    }
+    return value;
+}
+
+/**
+ * Helper: Transforms line-height % to unit-less decimal value
+ * @example
+ * 150% -> 1.5
+ */
+function transformLineHeight(value) {
+    if (value === undefined) {
+        return value;
+    }
+    if (value.endsWith('%')) {
+        const percentValue = value.slice(0, -1);
+        return parseFloat(percentValue) / 100;
+    }
+    return value;
+}
+
+/**
+ * Helper: Transforms boxShadow object to shadow shorthand
+ * This currently works fine if every value uses an alias,
+ * but if any one of these use a raw value, it will not be transformed.
+ */
+function transformShadow(shadow) {
+    if (shadow === undefined) {
+        return shadow;
+    }
+    const { x, y, blur, spread, color } = shadow;
+    return `${x} ${y} ${blur} ${spread} ${color}`;
+}
+
+/**
+ * Helper: Transforms typography object to typography shorthand for CSS
+ * This currently works fine if every value uses an alias, but if any one of these use a raw value, it will not be transformed.
+ * If you'd like to output all typography values, you'd rather need to return the typography properties itself
+ */
+function transformTypographyForCSS(value) {
+    if (value === undefined) {
+        return value;
+    }
+    const { fontWeight, fontSize, lineHeight, fontFamily } = value;
+    return `${fontWeight} ${fontSize}/${lineHeight} ${fontFamily}`;
+}
+
+/**
+ * Helper: Transforms typography object to typography shorthand for Jetpack Compose
+ */
+function transformTypographyForCompose(value) {
+    if (value === undefined) {
+        return value;
+    }
+    /**
+     * Mapping between https://docs.tokens.studio/available-tokens/typography-tokens
+     * and https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle
+     * Unsupported property:
+     *  - paragraphSpacing
+     */
+    const textStylePropertiesMapping = {
+        fontFamily: 'fontFamily',
+        fontWeight: 'fontWeight',
+        lineHeight: 'lineHeight',
+        fontSize: 'fontSize',
+        letterSpacing: 'letterSpacing',
+        paragraphIndent: 'textIndent',
+    };
+    /**
+     * Constructs a `TextStyle`, e.g.
+     * TextStyle(
+     *  fontSize = 16.dp
+     * )
+     */
+    return `${Object.entries(value).reduce((acc, [propName, val]) => `${acc}${textStylePropertiesMapping[propName] ? `${val}\n` : ''}`, 'TextStyle(\n')})`;
+}
+
+/**
+ * Helper: Maps the token description to a style dictionary comment attribute - this will be picked up by some Style Dictionary
+ * formats and automatically output as code comments
+ */
+function mapDescriptionToComment(token) {
+    // intentional mutation of the original object
+    const _t = token;
+    _t.comment = _t.description;
+    return _t;
+}
+
+const isBrowser = typeof window === 'object';
+/**
+ * typecasting since this will need to work in browser environment, so we cannot
+ * import style-dictionary as it depends on nodejs env
+ */
+async function registerTransforms(sd) {
+    let _sd = sd;
+    // NodeJS env and no passed SD? let's register on our installed SD
+    // We're in ESM, but style-dictionary is CJS only, so we need module.createRequire
+    if (!isBrowser && _sd === undefined) {
+        const module = await Promise.resolve(/* import() */).then(__nccwpck_require__.t.bind(__nccwpck_require__, 8188, 23));
+        const mod = module.default;
+        const require$1 = mod.createRequire((typeof document === 'undefined' ? (__nccwpck_require__(7310).pathToFileURL)(__filename).href : (document.currentScript && document.currentScript.src || new URL('index.cjs', document.baseURI).href)));
+        _sd = require$1('style-dictionary');
+    }
+    _sd.registerTransform({
+        name: 'ts/size/px',
+        type: 'value',
+        transitive: true,
+        matcher: token => ['sizing', 'spacing', 'borderRadius', 'borderWidth', 'fontSizes', 'dimension'].includes(token.type),
+        transformer: token => transformDimension(token.value),
+    });
+    _sd.registerTransform({
+        name: 'ts/color/hexrgba',
+        type: 'value',
+        transitive: true,
+        matcher: token => typeof token.value === 'string' && token.value.startsWith('rgba(#'),
+        transformer: token => transformHEXRGBa(token.value),
+    });
+    _sd.registerTransform({
+        name: 'ts/color/modifiers',
+        type: 'value',
+        transitive: true,
+        matcher: token => token.type === 'color' && token.$extensions && token.$extensions['studio.tokens']?.modify,
+        transformer: token => transformColorModifiers(token),
+    });
+    _sd.registerTransform({
+        name: 'ts/shadow/shorthand',
+        type: 'value',
+        transitive: true,
+        matcher: token => ['boxShadow'].includes(token.type),
+        transformer: token => Array.isArray(token.original.value)
+            ? token.original.value.map(single => transformShadow(single)).join(', ')
+            : transformShadow(token.original.value),
+    });
+    _sd.registerTransform({
+        name: 'ts/type/fontWeight',
+        type: 'value',
+        transitive: true,
+        matcher: token => token.type === 'fontWeights',
+        transformer: token => transformFontWeights(token.value),
+    });
+    _sd.registerTransform({
+        name: 'ts/size/letterspacing',
+        type: 'value',
+        transitive: true,
+        matcher: token => token.type === 'letterSpacing',
+        transformer: token => transformLetterSpacing(token.value),
+    });
+    _sd.registerTransform({
+        name: 'ts/size/lineheight',
+        type: 'value',
+        transitive: true,
+        matcher: token => token.type === 'lineHeights',
+        transformer: token => transformLineHeight(token.value),
+    });
+    _sd.registerTransform({
+        name: 'ts/typography/css/shorthand',
+        type: 'value',
+        transitive: true,
+        matcher: token => token.type === 'typography',
+        transformer: token => transformTypographyForCSS(token.original.value),
+    });
+    _sd.registerTransform({
+        name: 'ts/typography/compose/shorthand',
+        type: 'value',
+        transitive: true,
+        matcher: token => token.type === 'typography',
+        transformer: token => transformTypographyForCompose(token.original.value),
+    });
+    _sd.registerTransform({
+        name: 'ts/resolveMath',
+        type: 'value',
+        transitive: true,
+        matcher: token => typeof token.value === 'string',
+        // Putting this in strings seems to be required
+        transformer: token => `${checkAndEvaluateMath(token.value)}`,
+    });
+    _sd.registerTransform({
+        name: 'ts/descriptionToComment',
+        type: 'attribute',
+        matcher: token => token.description,
+        transformer: token => mapDescriptionToComment(token),
+    });
+    _sd.registerTransformGroup({
+        name: 'tokens-studio',
+        transforms: [
+            'ts/descriptionToComment',
+            'ts/resolveMath',
+            'ts/size/px',
+            'ts/size/letterspacing',
+            'ts/size/lineheight',
+            'ts/type/fontWeight',
+            'ts/color/hexrgba',
+            'ts/color/modifiers',
+            'ts/typography/css/shorthand',
+            'ts/shadow/shorthand',
+            // by default we go with camel, as having no default will likely give the user
+            // errors straight away. This can be overridden by manually passing an array of transforms
+            // instead of this transformGroup, or by doing a name conversion in your custom format
+            'name/cti/camel',
+        ],
+    });
+}
+
+exports.checkAndEvaluateMath = checkAndEvaluateMath;
+exports.mapDescriptionToComment = mapDescriptionToComment;
+exports.registerTransforms = registerTransforms;
+exports.transformColorModifiers = transformColorModifiers;
+exports.transformDimension = transformDimension;
+exports.transformFontWeights = transformFontWeights;
+exports.transformHEXRGBa = transformHEXRGBa;
+exports.transformLetterSpacing = transformLetterSpacing;
+exports.transformLineHeight = transformLineHeight;
+exports.transformShadow = transformShadow;
+exports.transformTypographyForCSS = transformTypographyForCSS;
+exports.transformTypographyForCompose = transformTypographyForCompose;
+
+
+/***/ }),
+
 /***/ 6272:
 /***/ ((module) => {
 
@@ -30330,6 +36998,64 @@ module.exports = {"i8":"3.7.2"};
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	(() => {
+/******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
+/******/ 		var leafPrototypes;
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 16: return value when it's Promise-like
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__nccwpck_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if(typeof value === 'object' && value) {
+/******/ 				if((mode & 4) && value.__esModule) return value;
+/******/ 				if((mode & 16) && typeof value.then === 'function') return value;
+/******/ 			}
+/******/ 			var ns = Object.create(null);
+/******/ 			__nccwpck_require__.r(ns);
+/******/ 			var def = {};
+/******/ 			leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
+/******/ 			for(var current = mode & 2 && value; typeof current == 'object' && !~leafPrototypes.indexOf(current); current = getProto(current)) {
+/******/ 				Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
+/******/ 			}
+/******/ 			def['default'] = () => (value);
+/******/ 			__nccwpck_require__.d(ns, def);
+/******/ 			return ns;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/node module decorator */
 /******/ 	(() => {
 /******/ 		__nccwpck_require__.nmd = (module) => {
@@ -30351,47 +37077,115 @@ var __webpack_exports__ = {};
 var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const promises_1 = __nccwpck_require__(3977);
+const path = __nccwpck_require__(1017);
 const StyleDictionary = __nccwpck_require__(7189);
 const config_1 = __nccwpck_require__(8685);
-const promises_1 = __nccwpck_require__(3977);
+const capital_case_1 = __nccwpck_require__(8824);
+const android_formatters_1 = __nccwpck_require__(9193);
+const ios_formatters_1 = __nccwpck_require__(2726);
+const sd_transforms_1 = __nccwpck_require__(7986);
 const core_1 = __nccwpck_require__(2186);
-const path = __nccwpck_require__(1017);
-const { transformTokens } = __nccwpck_require__(1234);
-async function transformAndWriteTokens(tokensOutput) {
-    const transformerOptions = {
-        expandTypography: false,
-        expandShadow: false,
-        expandComposition: false,
-        expandBorder: false,
-        preserveRawValue: false,
-        throwErrorWhenNotResolved: false,
-        resolveReferences: false,
-    };
-    const tempDirectoryPath = 'build/tokens';
-    await (0, promises_1.mkdir)(tempDirectoryPath, { recursive: true });
-    const styleDictionaryTokensPath = `${tempDirectoryPath}/sd_tokens.json`;
-    const styleDictionaryTokens = transformTokens(JSON.parse(tokensOutput), [], [], transformerOptions);
-    await (0, promises_1.writeFile)(styleDictionaryTokensPath, JSON.stringify(styleDictionaryTokens, null, 2));
-    return styleDictionaryTokensPath;
-}
+run().catch(error => console.log('Failed to run weaver: ', error));
 async function run() {
-    try {
-        const tokensInputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('tokens_path', { required: true }));
-        const outputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('output_path', { required: true }));
-        // Transform tokens
-        const tokensData = await (0, promises_1.readFile)(tokensInputPath, {
+    // Get input and output path
+    const inputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('tokens_path', { required: true }));
+    const outputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('output_path', { required: true }));
+    const projectName = (0, capital_case_1.capitalCase)('App');
+    const version = '1';
+    await configStyleDictionary(projectName, version);
+    const themes = await readThemes(inputPath);
+    await Promise.all([
+        generateCoreTokens(inputPath, outputPath, projectName, themes),
+        generateThemes(inputPath, outputPath, projectName, themes),
+    ]);
+}
+async function readThemes(inputPath) {
+    let themes;
+    if (inputPath.endsWith('.json')) {
+        const inputContent = await (0, promises_1.readFile)(inputPath, {
             encoding: 'utf-8',
             flag: 'r',
         });
-        const styleDictionaryTokensPath = await transformAndWriteTokens(tokensData);
-        // Run Style Dictionary
-        StyleDictionary.extend((0, config_1.config)(styleDictionaryTokensPath, outputPath)).buildAllPlatforms();
+        themes = JSON.parse(inputContent)['$themes'];
     }
-    catch (e) {
-        console.log(e);
+    else {
+        const themesFileContent = await (0, promises_1.readFile)(path.join(inputPath, '$themes.json'), { encoding: 'utf-8', flag: 'r' });
+        themes = JSON.parse(themesFileContent);
+    }
+    return themes;
+}
+async function generateCoreTokens(inputPath, outputPath, projectName, themes) {
+    // Combine all theme tokens to create a single theme token file
+    const themeTokens = {};
+    for (const theme of themes) {
+        const themeContent = await (0, promises_1.readFile)(`${inputPath}/theme/${theme.name}.json`, {
+            encoding: 'utf-8',
+            flag: 'r',
+        });
+        const themeJson = JSON.parse(themeContent);
+        for (const key in themeJson) {
+            if (!themeTokens[key])
+                themeTokens[key] = themeJson[key];
+        }
+    }
+    // Write temp file with unified theme tokens to use it for Style Dictionary
+    await (0, promises_1.writeFile)(path.join(inputPath, 'theme_tokens.json'), JSON.stringify(themeTokens));
+    runStyleDictionary((0, config_1.coreTokensConfig)([`${inputPath}/theme_tokens.json`, `${inputPath}/core.json`], path.join(outputPath, 'core')));
+}
+async function generateThemes(inputPath, outputPath, projectName, themes) {
+    for (const theme of themes) {
+        runStyleDictionary((0, config_1.themesConfig)([`${inputPath}/theme/${theme.name}.json`, `${inputPath}/core.json`], path.join(outputPath, theme.name), theme.name, projectName));
     }
 }
-run();
+function runStyleDictionary(config) {
+    StyleDictionary.extend(config).buildAllPlatforms();
+}
+async function configStyleDictionary(projectName, version) {
+    // Formats
+    StyleDictionary.registerFormat({
+        name: 'androidThemeAttrsFormat',
+        formatter: args => (0, android_formatters_1.androidThemeAttrsFormat)(args),
+    })
+        .registerFormat({
+        name: 'androidThemeFormat',
+        formatter: args => (0, android_formatters_1.androidThemeFormat)(args),
+    })
+        .registerFormat({
+        name: 'iOSBaseColorsFormatter',
+        formatter: args => (0, ios_formatters_1.iOSBaseColorsFormatter)(args),
+    })
+        .registerFormat({
+        name: 'iOSThemeColorsProtocolFormatter',
+        formatter: args => (0, ios_formatters_1.iOSThemeColorsProtocolFormatter)(args),
+    })
+        .registerFormat({
+        name: 'iOSThemeColorsProtocolFormatter',
+        formatter: args => (0, ios_formatters_1.iOSThemeColorsProtocolFormatter)(args),
+    })
+        .registerFormat({
+        name: 'iOSThemeProtocolFormatter',
+        formatter: args => (0, ios_formatters_1.iOSThemeProtocolFormatter)(args),
+    })
+        .registerFormat({
+        name: 'iOSThemeColorsFormatter',
+        formatter: args => (0, ios_formatters_1.iOSThemeColorsFormatter)(args),
+    })
+        .registerFormat({
+        name: 'iOSThemeFormatter',
+        formatter: args => (0, ios_formatters_1.iOSThemeFormatter)(args),
+    });
+    // Transforms
+    await (0, sd_transforms_1.registerTransforms)(StyleDictionary);
+    // File Headers
+    StyleDictionary.registerFileHeader({
+        name: 'weaverFileHeader',
+        fileHeader: () => weaverFileHeader(version),
+    });
+}
+function weaverFileHeader(version) {
+    return ['Generated file', 'Do not edit directly', `Version: ${version}`];
+}
 //# sourceMappingURL=index.js.map
 })();
 

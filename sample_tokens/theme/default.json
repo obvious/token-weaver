@@ -1,0 +1,26 @@
+{
+  "primary": {
+    "value": "{color.purple.500}",
+    "type": "color"
+  },
+  "primary_dark": {
+    "value": "{color.purple.800}",
+    "type": "color"
+  },
+  "primary_subtle": {
+    "value": "{color.purple.200}",
+    "type": "color"
+  },
+  "text_primary": {
+    "value": "{color.black}",
+    "type": "color"
+  },
+  "bg_primary": {
+    "value": "{color.white}",
+    "type": "color"
+  },
+  "headline1": {
+    "value": "{typography.headline1}",
+    "type": "typography"
+  }
+}

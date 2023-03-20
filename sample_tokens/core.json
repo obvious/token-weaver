@@ -1,0 +1,114 @@
+{
+  "color": {
+    "black": {
+      "value": "#000000",
+      "type": "color"
+    },
+    "white": {
+      "value": "#ffffff",
+      "type": "color"
+    },
+    "red": {
+      "100": {
+        "value": "#fff5f5",
+        "type": "color"
+      },
+      "200": {
+        "value": "#fed7d7",
+        "type": "color"
+      },
+      "300": {
+        "value": "#feb2b2",
+        "type": "color"
+      },
+      "400": {
+        "value": "#fc8181",
+        "type": "color"
+      },
+      "500": {
+        "value": "#f56565",
+        "type": "color"
+      },
+      "600": {
+        "value": "#e53e3e",
+        "type": "color"
+      },
+      "700": {
+        "value": "#c53030",
+        "type": "color"
+      },
+      "800": {
+        "value": "#9b2c2c",
+        "type": "color"
+      },
+      "900": {
+        "value": "#742a2a",
+        "type": "color"
+      }
+    },
+    "purple": {
+      "100": {
+        "value": "#faf5ff",
+        "type": "color"
+      },
+      "200": {
+        "value": "#e9d8fd",
+        "type": "color"
+      },
+      "300": {
+        "value": "#d6bcfa",
+        "type": "color"
+      },
+      "400": {
+        "value": "#b794f4",
+        "type": "color"
+      },
+      "500": {
+        "value": "#9f7aea",
+        "type": "color"
+      },
+      "600": {
+        "value": "#805ad5",
+        "type": "color"
+      },
+      "700": {
+        "value": "#6b46c1",
+        "type": "color"
+      },
+      "800": {
+        "value": "#553c9a",
+        "type": "color"
+      },
+      "900": {
+        "value": "#44337a",
+        "type": "color"
+      }
+    }
+  },
+  "typography": {
+    "headline1": {
+      "value": {
+        "fontSize": "96",
+        "fontWeight": "Regular",
+        "letterSpacing": "-0.015625"
+      },
+      "type": "typography"
+    },
+    "body1": {
+      "value": {
+        "fontSize": "16",
+        "fontWeight": "Regular",
+        "letterSpacing": "0.03125"
+      },
+      "type": "typography"
+    },
+    "button": {
+      "value": {
+        "fontSize": "14",
+        "fontWeight": "Bold",
+        "letterSpacing": "0.0892857143"
+      },
+      "type": "typography"
+    }
+  }
+}

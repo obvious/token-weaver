@@ -1,15 +1,17 @@
 import {camelCase} from 'camel-case';
-import {equalsCheck} from '../utils/utils';
 import {FormatterArguments} from 'style-dictionary/types/Format';
-import {
-  _colorTokens,
-  _themeColorTokens,
-  _themeTypographyTokens,
-} from './common';
-import {TransformedToken} from 'style-dictionary';
+import {_themeColorTokens, _themeTypographyTokens} from './common';
+import {File, TransformedToken} from 'style-dictionary';
+import {snakeCase} from 'snake-case';
+import * as StyleDictionary from 'style-dictionary';
 
-function _themeTokenName(themeToken: string, category: string): string {
-  return camelCase(themeToken.replace(`${category}_`, ''));
+const {fileHeader} = StyleDictionary.formatHelpers;
+
+function xmlFileHeader(file: File): string {
+  return fileHeader({
+    file: file,
+    commentStyle: 'xml',
+  });
 }
 
 function _themeTokenFormat(themeTokenType: string): string {
@@ -30,42 +32,33 @@ function _themeTokenFormat(themeTokenType: string): string {
   return themeTokenFormat;
 }
 
+// TODO: Add support for typography
 export function androidThemeFormat(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
-  const colorTokens = _colorTokens(args.dictionary);
-
-  // TODO: Handle typography tokens
-  const colorThemeItems = themeColorTokens
-    .filter(themeToken => {
-      return themeToken.original.type === 'color';
-    })
+  const themeColorItems = themeColorTokens
     .map(themeToken => {
-      const colorValue = colorTokens.filter(colorToken => {
-        const themeColorPath = themeToken.original.value
-          .replace(/[{}']+/g, '')
-          .split('.');
-        return equalsCheck(colorToken.path, themeColorPath);
-      })[0];
+      const themeColorTokenName = camelCase('color_' + themeToken.name);
 
-      const themeColorTokenName = _themeTokenName(
-        'color_' + themeToken.name,
-        themeToken.attributes?.category as string
+      const colorRefName = snakeCase(
+        themeToken.original.value.replace(/[{}]/g, '')
       );
 
       return (
         '    ' +
-        `<item name="${themeColorTokenName}">@color/${colorValue.name}</item>`
+        `<item name="${themeColorTokenName}">@color/${colorRefName}</item>`
       );
     })
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Do not edit directly -->
+${xmlFileHeader(args.file)}
 <resources>
 
-  <style name="Base.Theme.Dls" parent="">
-${colorThemeItems}
+  <style name="Theme.${args.options.projectName}.${
+    args.file.className
+  }" parent="">
+${themeColorItems}
   </style>
 </resources>
 `;
@@ -73,16 +66,13 @@ ${colorThemeItems}
 
 export function androidThemeAttrsFormat(args: FormatterArguments) {
   let themeTokens: TransformedToken[];
-  let themeAttrsStyleableName: string;
 
-  switch (args.options.type) {
+  switch (args.options.attrsType) {
     case 'color':
       themeTokens = _themeColorTokens(args.dictionary);
-      themeAttrsStyleableName = 'DlsTheme';
       break;
     case 'typography':
       themeTokens = _themeTypographyTokens(args.dictionary);
-      themeAttrsStyleableName = 'DlsTypography';
       break;
     default:
       throw new Error(`Unknown attrs type: ${args.options.type}`);
@@ -91,27 +81,19 @@ export function androidThemeAttrsFormat(args: FormatterArguments) {
   const themeItems = themeTokens
     .map(themeToken => {
       const themeTokenType = themeToken.original.type;
-      const themeTokenName = _themeTokenName(
-        `${themeTokenType}_` + themeToken.name,
-        themeToken.attributes?.category as string
-      );
+      const themeTokenName = camelCase(`${themeTokenType}_` + themeToken.name);
 
       const themeTokenFormat = _themeTokenFormat(themeTokenType);
 
-      return (
-        '    ' + `<attr name="${themeTokenName}" format="${themeTokenFormat}"/>`
-      );
+      return `  <attr name="${themeTokenName}" format="${themeTokenFormat}"/>`;
     })
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Do not edit directly -->
+${xmlFileHeader(args.file)}
 <resources>
-
-  <declare-styleable name="${themeAttrsStyleableName}">
 ${themeItems}
-  </declare-styleable>
 </resources>
 `;
 }
