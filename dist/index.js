@@ -34227,11 +34227,19 @@ const capital_case_1 = __nccwpck_require__(8824);
 const android_formatters_1 = __nccwpck_require__(9193);
 const ios_formatters_1 = __nccwpck_require__(2726);
 const sd_transforms_1 = __nccwpck_require__(7986);
-function weaverFileHeader(version) {
-    return ['Generated file', 'Do not edit directly', `Version: ${version}`];
-}
-function runStyleDictionary(config) {
-    StyleDictionary.extend(config).buildAllPlatforms();
+run().catch(error => console.log('Failed to run weaver: ', error));
+async function run() {
+    // Get input and output path
+    const inputPath = path.join(__dirname, '../sample_tokens');
+    const outputPath = path.join(__dirname, '../output');
+    const projectName = (0, capital_case_1.capitalCase)('App');
+    const version = '1';
+    await configStyleDictionary(projectName, version);
+    const themes = await readThemes(inputPath);
+    await Promise.all([
+        generateCoreTokens(inputPath, outputPath, projectName, themes),
+        generateThemes(inputPath, outputPath, projectName, themes),
+    ]);
 }
 async function readThemes(inputPath) {
     let themes;
@@ -34271,6 +34279,9 @@ async function generateThemes(inputPath, outputPath, projectName, themes) {
         runStyleDictionary((0, config_1.themesConfig)([`${inputPath}/theme/${theme.name}.json`, `${inputPath}/core.json`], path.join(outputPath, theme.name), theme.name, projectName));
     }
 }
+function runStyleDictionary(config) {
+    StyleDictionary.extend(config).buildAllPlatforms();
+}
 async function configStyleDictionary(projectName, version) {
     // Formats
     StyleDictionary.registerFormat({
@@ -34305,20 +34316,9 @@ async function configStyleDictionary(projectName, version) {
         fileHeader: () => weaverFileHeader(version),
     });
 }
-async function run() {
-    // Get input and output path
-    const inputPath = path.join(__dirname, '../sample_tokens');
-    const outputPath = path.join(__dirname, '../output');
-    const projectName = (0, capital_case_1.capitalCase)('App');
-    const version = '1';
-    await configStyleDictionary(projectName, version);
-    const themes = await readThemes(inputPath);
-    await Promise.all([
-        generateCoreTokens(inputPath, outputPath, projectName, themes),
-        generateThemes(inputPath, outputPath, projectName, themes),
-    ]);
+function weaverFileHeader(version) {
+    return ['Generated file', 'Do not edit directly', `Version: ${version}`];
 }
-run().catch(error => console.log('Failed to run weaver: ', error));
 //# sourceMappingURL=index.js.map
 })();
 

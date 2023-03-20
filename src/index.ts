@@ -17,12 +17,23 @@ import {
 } from './formatters/ios_formatters';
 import {registerTransforms} from '@tokens-studio/sd-transforms';
 
-function weaverFileHeader(version: string): string[] {
-  return ['Generated file', 'Do not edit directly', `Version: ${version}`];
-}
+run().catch(error => console.log('Failed to run weaver: ', error));
 
-function runStyleDictionary(config: Config) {
-  StyleDictionary.extend(config).buildAllPlatforms();
+async function run() {
+  // Get input and output path
+  const inputPath = path.join(__dirname, '../sample_tokens');
+  const outputPath = path.join(__dirname, '../output');
+  const projectName = capitalCase('App');
+  const version = '1';
+
+  await configStyleDictionary(projectName, version);
+
+  const themes = await readThemes(inputPath);
+
+  await Promise.all([
+    generateCoreTokens(inputPath, outputPath, projectName, themes),
+    generateThemes(inputPath, outputPath, projectName, themes),
+  ]);
 }
 
 async function readThemes(inputPath: string): Promise<Theme[]> {
@@ -97,6 +108,10 @@ async function generateThemes(
   }
 }
 
+function runStyleDictionary(config: Config) {
+  StyleDictionary.extend(config).buildAllPlatforms();
+}
+
 async function configStyleDictionary(projectName: string, version: string) {
   // Formats
   StyleDictionary.registerFormat({
@@ -134,21 +149,6 @@ async function configStyleDictionary(projectName: string, version: string) {
   });
 }
 
-async function run() {
-  // Get input and output path
-  const inputPath = path.join(__dirname, '../sample_tokens');
-  const outputPath = path.join(__dirname, '../output');
-  const projectName = capitalCase('App');
-  const version = '1';
-
-  await configStyleDictionary(projectName, version);
-
-  const themes = await readThemes(inputPath);
-
-  await Promise.all([
-    generateCoreTokens(inputPath, outputPath, projectName, themes),
-    generateThemes(inputPath, outputPath, projectName, themes),
-  ]);
+function weaverFileHeader(version: string): string[] {
+  return ['Generated file', 'Do not edit directly', `Version: ${version}`];
 }
-
-run().catch(error => console.log('Failed to run weaver: ', error));
