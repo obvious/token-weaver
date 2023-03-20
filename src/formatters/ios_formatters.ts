@@ -3,10 +3,12 @@ import {_themeColorTokens} from './common';
 import {File} from 'style-dictionary';
 import * as StyleDictionary from 'style-dictionary';
 import camelCase from 'camelcase';
+import {compileTemplate} from '../utils/utils';
+import Handlebars = require('handlebars');
 
 const {fileHeader} = StyleDictionary.formatHelpers;
 
-function _swiftImports(imports: string[] | undefined): string {
+function swiftImports(imports: string[] | undefined): string {
   if (typeof imports === 'undefined') {
     imports = ['UIKit'];
   }
@@ -26,103 +28,61 @@ function swiftFileHeader(file: File): string {
 }
 
 export function iOSBaseColorsFormatter(args: FormatterArguments) {
-  const colorTokens = args.dictionary.allTokens;
-  const colorTokensCase = colorTokens
-    .map(token => {
-      return '   ' + `case ${token.name}`;
-    })
-    .join('\n');
+  const template = compileTemplate('/templates/ios/base_colors.hbs');
 
-  const colorTokensWithHexCode = colorTokens
-    .map(token => {
-      return '    ' + `case .${token.name}:\n       return ${token.value}`;
-    })
-    .join('\n');
-
-  const imports = _swiftImports(args.options.imports);
-  return `${imports}
-
-${swiftFileHeader(args.file)}
-// Represet all colors supported by the DLS
-public enum BaseColor {
-
-${colorTokensCase}
-
-  public var uiColor: UIColor {
-    switch self {
-${colorTokensWithHexCode}
-    }
-  }
-
-  public var cgColor: CGColor {
-    uiColor.cgColor
-  }
-}
-`;
+  return template({
+    imports: swiftImports(args.options.imports),
+    header: swiftFileHeader(args.file),
+    color_tokens: args.dictionary.allTokens,
+  });
 }
 
 export function iOSThemeColorsProtocolFormatter(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
-  const themeColors = themeColorTokens
-    .map(token => {
-      return '   ' + `var ${token.name}: BaseColor { get }`;
-    })
-    .join('\n');
+  const template = compileTemplate('/templates/ios/theme_colors_protocol.hbs');
 
-  const imports = _swiftImports(args.options.imports);
-  return `${imports}
-
-${swiftFileHeader(args.file)}
-public protocol ThemeColors {
-
-${themeColors}
-}
-`;
+  return template({
+    imports: swiftImports(args.options.imports),
+    header: swiftFileHeader(args.file),
+    color_tokens: themeColorTokens,
+  });
 }
 
 // TODO: Add support for typography
 export function iOSThemeProtocolFormatter(args: FormatterArguments) {
-  const imports = _swiftImports(args.options.imports);
-  return `${imports}
+  const template = compileTemplate('/templates/ios/theme_protocol.hbs');
 
-${swiftFileHeader(args.file)}
-public protocol Theme {
-  var colors: ThemeColors { get }
-}
-`;
+  return template({
+    imports: swiftImports(args.options.imports),
+    header: swiftFileHeader(args.file),
+  });
 }
 
 export function iOSThemeColorsFormatter(args: FormatterArguments) {
+  Handlebars.registerHelper('colorRefName', originalTokenValue => {
+    const originalColorRef = originalTokenValue.toString().replace(/[{}]/g, '');
+    return camelCase(originalColorRef);
+  });
+
   const themeColorTokens = _themeColorTokens(args.dictionary);
-  const themeColorItems = themeColorTokens
-    .map(themeToken => {
-      const originalColorRef = themeToken.original.value.replace(/[{}]/g, '');
-      const colorRefName = camelCase(originalColorRef);
+  const template = compileTemplate('/templates/ios/theme_colors.hbs');
 
-      return (
-        '   ' + `public var ${themeToken.name}: BaseColor = .${colorRefName}`
-      );
-    })
-    .join('\n');
-
-  const imports = _swiftImports(args.options.imports);
-  return `${imports}
-
-${swiftFileHeader(args.file)}
-public class ${args.file.className} : ${args.options.implements} {
-${themeColorItems}
-}
-`;
+  return template({
+    imports: swiftImports(args.options.imports),
+    header: swiftFileHeader(args.file),
+    color_tokens: themeColorTokens,
+    class_name: args.file.className,
+  });
 }
 
 // TODO: Add support for typography
 export function iOSThemeFormatter(args: FormatterArguments) {
-  const imports = _swiftImports(args.options.imports);
-  return `${imports}
+  const template = compileTemplate('/templates/ios/theme.hbs');
 
-${swiftFileHeader(args.file)}
-public class ${args.file.className} : ${args.options.implements} {
-   public var colors: ThemeColors = ${args.options.themeColorsClass}()
-}
-`;
+  return template({
+    imports: swiftImports(args.options.imports),
+    header: swiftFileHeader(args.file),
+    class_name: args.file.className,
+    theme_colors_class: args.options.themeColorsClass,
+  });
 }

@@ -1,0 +1,8 @@
+{{imports}}
+
+{{header}}
+public class {{class_name}} : ThemeColors {
+  {{#each color_tokens}}
+  public var {{name}}: BaseColor = .{{colorRefName original.value}};
+  {{/each}}
+}

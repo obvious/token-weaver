@@ -141,7 +141,6 @@ export function themesConfig(
             filter: token => token.type === 'color',
             className: `${formattedThemeName}ThemeColors`,
             options: {
-              implements: 'ThemeColors',
               fileHeader: 'weaverFileHeader',
             },
           },
@@ -150,7 +149,6 @@ export function themesConfig(
             format: 'iOSThemeFormatter',
             className: `${formattedThemeName}Theme`,
             options: {
-              implements: 'Theme',
               themeColorsClass: `${formattedThemeName}ThemeColors`,
               fileHeader: 'weaverFileHeader',
             },

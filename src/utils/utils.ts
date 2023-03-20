@@ -1,6 +1,7 @@
 import {readdir} from 'node:fs/promises';
 import * as path from 'path';
-import {lstatSync} from 'fs';
+import {lstatSync, readFileSync} from 'fs';
+import Handlebars = require('handlebars');
 
 export function equalsCheck(a: any[], b: any[]): Boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);
@@ -26,5 +27,13 @@ export async function getAllFilesInDir(
       file.endsWith('.json') &&
       !file.includes('$themes.json') &&
       !file.includes('$metadata.json')
+  );
+}
+
+export function compileTemplate(templatePath: string) {
+  return Handlebars.compile(
+    readFileSync(path.join(__dirname, '..' + templatePath), {
+      encoding: 'utf-8',
+    })
   );
 }

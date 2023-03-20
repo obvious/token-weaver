@@ -1,0 +1,9 @@
+{{imports}}
+
+{{header}}
+public protocol ThemeColors {
+
+  {{#each color_tokens}}
+  var {{name}}: BaseColor { get };
+  {{/each}}
+}
