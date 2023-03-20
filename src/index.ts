@@ -16,13 +16,20 @@ import {
   iOSThemeProtocolFormatter,
 } from './formatters/ios_formatters';
 import {registerTransforms} from '@tokens-studio/sd-transforms';
+import {getInput} from '@actions/core';
 
 run().catch(error => console.log('Failed to run weaver: ', error));
 
 async function run() {
   // Get input and output path
-  const inputPath = path.join(__dirname, '../sample_tokens');
-  const outputPath = path.join(__dirname, '../output');
+  const inputPath = path.join(
+    process.env.GITHUB_WORKSPACE as string,
+    getInput('tokens_path', {required: true})
+  );
+  const outputPath = path.join(
+    process.env.GITHUB_WORKSPACE as string,
+    getInput('output_path', {required: true})
+  );
   const projectName = capitalCase('App');
   const version = '1';
 
