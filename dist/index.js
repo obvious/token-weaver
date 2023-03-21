@@ -45519,11 +45519,12 @@ const core_1 = __nccwpck_require__(2186);
 const android_xml_tyopgraphy_1 = __nccwpck_require__(3102);
 run().catch(error => console.log('Failed to run weaver: ', error));
 async function run() {
+    var _a, _b;
     // Get input and output path
     const inputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('tokens_path', { required: true }));
     const outputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('output_path', { required: true }));
-    const projectName = (0, capital_case_1.capitalCase)('App');
-    const version = '1';
+    const projectName = (0, capital_case_1.capitalCase)((_a = (0, core_1.getInput)('project_name')) !== null && _a !== void 0 ? _a : 'App');
+    const version = parseInt((_b = (0, core_1.getInput)('version')) !== null && _b !== void 0 ? _b : '1');
     await configStyleDictionary(projectName, version);
     const themes = await readThemes(inputPath);
     await Promise.all([
