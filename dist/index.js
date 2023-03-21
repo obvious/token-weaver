@@ -436,8 +436,7 @@ exports.transformTypographyForXml = transformTypographyForXml;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.compileTemplate = exports.getAllFilesInDir = exports.equalsCheck = void 0;
-const promises_1 = __nccwpck_require__(3977);
+exports.compileTemplate = exports.equalsCheck = void 0;
 const path = __nccwpck_require__(1017);
 const fs_1 = __nccwpck_require__(7147);
 const Handlebars = __nccwpck_require__(7492);
@@ -445,23 +444,6 @@ function equalsCheck(a, b) {
     return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 exports.equalsCheck = equalsCheck;
-async function getAllFilesInDir(inputPath, arrayOfFiles = []) {
-    let filePaths = arrayOfFiles || [];
-    const files = await (0, promises_1.readdir)(inputPath);
-    for (const filePath of files) {
-        const fullFilePath = path.join(inputPath, filePath);
-        if ((0, fs_1.lstatSync)(fullFilePath).isDirectory()) {
-            filePaths = await getAllFilesInDir(fullFilePath, filePaths);
-        }
-        else {
-            filePaths.push(fullFilePath);
-        }
-    }
-    return filePaths.filter(file => file.endsWith('.json') &&
-        !file.includes('$themes.json') &&
-        !file.includes('$metadata.json'));
-}
-exports.getAllFilesInDir = getAllFilesInDir;
 function compileTemplate(templatePath) {
     return Handlebars.compile((0, fs_1.readFileSync)(path.join(__dirname, '..' + templatePath), {
         encoding: 'utf-8',
