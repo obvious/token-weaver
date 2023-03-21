@@ -28,7 +28,7 @@ function swiftFileHeader(file: File): string {
 }
 
 export function iOSBaseColorsFormatter(args: FormatterArguments) {
-  const template = compileTemplate('/templates/ios/base_colors.hbs');
+  const template = compileTemplate('templates/ios/base_colors.hbs');
 
   return template({
     imports: swiftImports(args.options.imports),
@@ -39,7 +39,7 @@ export function iOSBaseColorsFormatter(args: FormatterArguments) {
 
 export function iOSThemeColorsProtocolFormatter(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
-  const template = compileTemplate('/templates/ios/theme_colors_protocol.hbs');
+  const template = compileTemplate('templates/ios/theme_colors_protocol.hbs');
 
   return template({
     imports: swiftImports(args.options.imports),
@@ -50,7 +50,7 @@ export function iOSThemeColorsProtocolFormatter(args: FormatterArguments) {
 
 // TODO: Add support for typography
 export function iOSThemeProtocolFormatter(args: FormatterArguments) {
-  const template = compileTemplate('/templates/ios/theme_protocol.hbs');
+  const template = compileTemplate('templates/ios/theme_protocol.hbs');
 
   return template({
     imports: swiftImports(args.options.imports),
@@ -65,7 +65,7 @@ export function iOSThemeColorsFormatter(args: FormatterArguments) {
   });
 
   const themeColorTokens = _themeColorTokens(args.dictionary);
-  const template = compileTemplate('/templates/ios/theme_colors.hbs');
+  const template = compileTemplate('templates/ios/theme_colors.hbs');
 
   return template({
     imports: swiftImports(args.options.imports),
@@ -77,7 +77,7 @@ export function iOSThemeColorsFormatter(args: FormatterArguments) {
 
 // TODO: Add support for typography
 export function iOSThemeFormatter(args: FormatterArguments) {
-  const template = compileTemplate('/templates/ios/theme.hbs');
+  const template = compileTemplate('templates/ios/theme.hbs');
 
   return template({
     imports: swiftImports(args.options.imports),

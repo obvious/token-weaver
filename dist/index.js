@@ -197,7 +197,7 @@ function _themeTokenFormat(themeTokenType) {
     return themeTokenFormat;
 }
 function androidTypographyFormatter(args) {
-    const template = (0, utils_1.compileTemplate)('/templates/android/android_typography.hbs');
+    const template = (0, utils_1.compileTemplate)('templates/android/android_typography.hbs');
     return template({
         header: xmlFileHeader(args.file),
         class_name: args.file.className,
@@ -208,7 +208,7 @@ exports.androidTypographyFormatter = androidTypographyFormatter;
 function androidThemeFormatter(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
     const themeTypographyTokens = (0, common_1._themeTypographyTokens)(args.dictionary);
-    const template = (0, utils_1.compileTemplate)('/templates/android/android_theme.hbs');
+    const template = (0, utils_1.compileTemplate)('templates/android/android_theme.hbs');
     Handlebars.registerHelper('colorTokenName', tokenName => {
         return (0, camel_case_1.camelCase)('color_' + tokenName);
     });
@@ -243,7 +243,7 @@ function androidThemeAttrsFormatter(args) {
         default:
             throw new Error(`Unknown attrs type: ${args.options.type}`);
     }
-    const template = (0, utils_1.compileTemplate)('/templates/android/android_theme_attrs.hbs');
+    const template = (0, utils_1.compileTemplate)('templates/android/android_theme_attrs.hbs');
     Handlebars.registerHelper('attrName', (tokenType, tokenName) => {
         return (0, camel_case_1.camelCase)(`${tokenType}_` + tokenName);
     });
@@ -323,7 +323,7 @@ function swiftFileHeader(file) {
     });
 }
 function iOSBaseColorsFormatter(args) {
-    const template = (0, utils_1.compileTemplate)('/templates/ios/base_colors.hbs');
+    const template = (0, utils_1.compileTemplate)('templates/ios/base_colors.hbs');
     return template({
         imports: swiftImports(args.options.imports),
         header: swiftFileHeader(args.file),
@@ -333,7 +333,7 @@ function iOSBaseColorsFormatter(args) {
 exports.iOSBaseColorsFormatter = iOSBaseColorsFormatter;
 function iOSThemeColorsProtocolFormatter(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
-    const template = (0, utils_1.compileTemplate)('/templates/ios/theme_colors_protocol.hbs');
+    const template = (0, utils_1.compileTemplate)('templates/ios/theme_colors_protocol.hbs');
     return template({
         imports: swiftImports(args.options.imports),
         header: swiftFileHeader(args.file),
@@ -343,7 +343,7 @@ function iOSThemeColorsProtocolFormatter(args) {
 exports.iOSThemeColorsProtocolFormatter = iOSThemeColorsProtocolFormatter;
 // TODO: Add support for typography
 function iOSThemeProtocolFormatter(args) {
-    const template = (0, utils_1.compileTemplate)('/templates/ios/theme_protocol.hbs');
+    const template = (0, utils_1.compileTemplate)('templates/ios/theme_protocol.hbs');
     return template({
         imports: swiftImports(args.options.imports),
         header: swiftFileHeader(args.file),
@@ -356,7 +356,7 @@ function iOSThemeColorsFormatter(args) {
         return (0, camelcase_1.default)(originalColorRef);
     });
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
-    const template = (0, utils_1.compileTemplate)('/templates/ios/theme_colors.hbs');
+    const template = (0, utils_1.compileTemplate)('templates/ios/theme_colors.hbs');
     return template({
         imports: swiftImports(args.options.imports),
         header: swiftFileHeader(args.file),
@@ -367,7 +367,7 @@ function iOSThemeColorsFormatter(args) {
 exports.iOSThemeColorsFormatter = iOSThemeColorsFormatter;
 // TODO: Add support for typography
 function iOSThemeFormatter(args) {
-    const template = (0, utils_1.compileTemplate)('/templates/ios/theme.hbs');
+    const template = (0, utils_1.compileTemplate)('templates/ios/theme.hbs');
     return template({
         imports: swiftImports(args.options.imports),
         header: swiftFileHeader(args.file),
@@ -437,7 +437,6 @@ exports.transformTypographyForXml = transformTypographyForXml;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.compileTemplate = exports.equalsCheck = void 0;
-const path = __nccwpck_require__(1017);
 const fs_1 = __nccwpck_require__(7147);
 const Handlebars = __nccwpck_require__(7492);
 function equalsCheck(a, b) {
@@ -445,7 +444,7 @@ function equalsCheck(a, b) {
 }
 exports.equalsCheck = equalsCheck;
 function compileTemplate(templatePath) {
-    return Handlebars.compile((0, fs_1.readFileSync)(path.join(__dirname, '..' + templatePath), {
+    return Handlebars.compile((0, fs_1.readFileSync)(templatePath, {
         encoding: 'utf-8',
     }));
 }

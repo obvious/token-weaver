@@ -36,7 +36,7 @@ function _themeTokenFormat(themeTokenType: string): string {
 }
 
 export function androidTypographyFormatter(args: FormatterArguments) {
-  const template = compileTemplate('/templates/android/android_typography.hbs');
+  const template = compileTemplate('templates/android/android_typography.hbs');
 
   return template({
     header: xmlFileHeader(args.file),
@@ -49,7 +49,7 @@ export function androidThemeFormatter(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
   const themeTypographyTokens = _themeTypographyTokens(args.dictionary);
 
-  const template = compileTemplate('/templates/android/android_theme.hbs');
+  const template = compileTemplate('templates/android/android_theme.hbs');
 
   Handlebars.registerHelper('colorTokenName', tokenName => {
     return camelCase('color_' + tokenName);
@@ -93,9 +93,7 @@ export function androidThemeAttrsFormatter(args: FormatterArguments) {
       throw new Error(`Unknown attrs type: ${args.options.type}`);
   }
 
-  const template = compileTemplate(
-    '/templates/android/android_theme_attrs.hbs'
-  );
+  const template = compileTemplate('templates/android/android_theme_attrs.hbs');
 
   Handlebars.registerHelper('attrName', (tokenType, tokenName) => {
     return camelCase(`${tokenType}_` + tokenName);

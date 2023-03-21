@@ -1,0 +1,23 @@
+{{imports}}
+
+{{header}}
+// Represent all colors supported by the DLS
+public enum BaseColor {
+
+  {{#each color_tokens}}
+  case {{name}};
+  {{/each}}
+
+  public var uiColor: UIColor {
+    switch self {
+    {{#each color_tokens}}
+    case .{{name}}:
+        return {{value}};
+    {{/each}}
+    }
+  }
+
+  public var cgColor: CGColor {
+    uiColor.cgColor
+  }
+}

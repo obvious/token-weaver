@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {readFileSync} from 'fs';
 import Handlebars = require('handlebars');
 
@@ -8,7 +7,7 @@ export function equalsCheck(a: any[], b: any[]): Boolean {
 
 export function compileTemplate(templatePath: string) {
   return Handlebars.compile(
-    readFileSync(path.join(__dirname, '..' + templatePath), {
+    readFileSync(templatePath, {
       encoding: 'utf-8',
     })
   );
