@@ -13,7 +13,7 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
     return {
         source: tokensPath,
         platforms: {
-            android: {
+            'core/android': {
                 transforms: [
                     'attribute/cti',
                     'name/cti/snake',
@@ -71,7 +71,7 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
                     },
                 ],
             },
-            ios: {
+            'core/ios': {
                 transforms: ['attribute/cti', 'name/cti/camel', 'color/UIColorSwift'],
                 buildPath: `${outputPath}/ios/`,
                 files: [
@@ -113,7 +113,7 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
     return {
         source: tokensPath,
         platforms: {
-            android: {
+            'theme/android': {
                 transformGroup: 'android',
                 buildPath: `${outputPath}/android/`,
                 files: [
@@ -129,7 +129,7 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
                     },
                 ],
             },
-            ios: {
+            'theme/ios': {
                 transforms: ['attribute/cti', 'name/cti/camel'],
                 buildPath: `${outputPath}/ios/`,
                 files: [
