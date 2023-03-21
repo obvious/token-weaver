@@ -35,7 +35,7 @@ function _themeTokenFormat(themeTokenType: string): string {
   return themeTokenFormat;
 }
 
-export function androidTypographyFormat(args: FormatterArguments) {
+export function androidTypographyFormatter(args: FormatterArguments) {
   const template = compileTemplate('/templates/android/android_typography.hbs');
 
   return template({
@@ -45,7 +45,7 @@ export function androidTypographyFormat(args: FormatterArguments) {
   });
 }
 
-export function androidThemeFormat(args: FormatterArguments) {
+export function androidThemeFormatter(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
   const themeTypographyTokens = _themeTypographyTokens(args.dictionary);
 
@@ -79,7 +79,7 @@ export function androidThemeFormat(args: FormatterArguments) {
   });
 }
 
-export function androidThemeAttrsFormat(args: FormatterArguments) {
+export function androidThemeAttrsFormatter(args: FormatterArguments) {
   let themeTokens: TransformedToken[];
 
   switch (args.options.attrsType) {

@@ -167,7 +167,7 @@ exports.themesConfig = themesConfig;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.androidThemeAttrsFormat = exports.androidThemeFormat = exports.androidTypographyFormat = void 0;
+exports.androidThemeAttrsFormatter = exports.androidThemeFormatter = exports.androidTypographyFormatter = void 0;
 const camel_case_1 = __nccwpck_require__(3638);
 const common_1 = __nccwpck_require__(6520);
 const snake_case_1 = __nccwpck_require__(6213);
@@ -196,7 +196,7 @@ function _themeTokenFormat(themeTokenType) {
     }
     return themeTokenFormat;
 }
-function androidTypographyFormat(args) {
+function androidTypographyFormatter(args) {
     const template = (0, utils_1.compileTemplate)('/templates/android/android_typography.hbs');
     return template({
         header: xmlFileHeader(args.file),
@@ -204,8 +204,8 @@ function androidTypographyFormat(args) {
         text_styles: args.dictionary.allTokens,
     });
 }
-exports.androidTypographyFormat = androidTypographyFormat;
-function androidThemeFormat(args) {
+exports.androidTypographyFormatter = androidTypographyFormatter;
+function androidThemeFormatter(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
     const themeTypographyTokens = (0, common_1._themeTypographyTokens)(args.dictionary);
     const template = (0, utils_1.compileTemplate)('/templates/android/android_theme.hbs');
@@ -230,8 +230,8 @@ function androidThemeFormat(args) {
         typography_tokens: themeTypographyTokens,
     });
 }
-exports.androidThemeFormat = androidThemeFormat;
-function androidThemeAttrsFormat(args) {
+exports.androidThemeFormatter = androidThemeFormatter;
+function androidThemeAttrsFormatter(args) {
     let themeTokens;
     switch (args.options.attrsType) {
         case 'color':
@@ -255,7 +255,7 @@ function androidThemeAttrsFormat(args) {
         theme_tokens: themeTokens,
     });
 }
-exports.androidThemeAttrsFormat = androidThemeAttrsFormat;
+exports.androidThemeAttrsFormatter = androidThemeAttrsFormatter;
 //# sourceMappingURL=android_formatters.js.map
 
 /***/ }),
@@ -45595,15 +45595,15 @@ async function configStyleDictionary(projectName, version) {
     // Formats
     StyleDictionary.registerFormat({
         name: 'androidTypographyFormat',
-        formatter: args => (0, android_formatters_1.androidTypographyFormat)(args),
+        formatter: args => (0, android_formatters_1.androidTypographyFormatter)(args),
     })
         .registerFormat({
         name: 'androidThemeAttrsFormat',
-        formatter: args => (0, android_formatters_1.androidThemeAttrsFormat)(args),
+        formatter: args => (0, android_formatters_1.androidThemeAttrsFormatter)(args),
     })
         .registerFormat({
         name: 'androidThemeFormat',
-        formatter: args => (0, android_formatters_1.androidThemeFormat)(args),
+        formatter: args => (0, android_formatters_1.androidThemeFormatter)(args),
     })
         .registerFormat({
         name: 'iOSBaseColorsFormatter',

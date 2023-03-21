@@ -7,9 +7,9 @@ import {Token} from './models/token';
 import {capitalCase} from 'capital-case';
 import {Config} from 'style-dictionary';
 import {
-  androidThemeAttrsFormat,
-  androidThemeFormat,
-  androidTypographyFormat,
+  androidThemeAttrsFormatter,
+  androidThemeFormatter,
+  androidTypographyFormatter,
 } from './formatters/android_formatters';
 import {
   iOSBaseColorsFormatter,
@@ -128,15 +128,15 @@ async function configStyleDictionary(projectName: string, version: string) {
   // Formats
   StyleDictionary.registerFormat({
     name: 'androidTypographyFormat',
-    formatter: args => androidTypographyFormat(args),
+    formatter: args => androidTypographyFormatter(args),
   })
     .registerFormat({
       name: 'androidThemeAttrsFormat',
-      formatter: args => androidThemeAttrsFormat(args),
+      formatter: args => androidThemeAttrsFormatter(args),
     })
     .registerFormat({
       name: 'androidThemeFormat',
-      formatter: args => androidThemeFormat(args),
+      formatter: args => androidThemeFormatter(args),
     })
     .registerFormat({
       name: 'iOSBaseColorsFormatter',
