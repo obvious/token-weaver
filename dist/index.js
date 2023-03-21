@@ -38,7 +38,7 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
                     },
                     {
                         destination: 'res/typography.xml',
-                        format: 'androidTypographyFormat',
+                        format: 'android/text_appearance',
                         className: projectName,
                         filter: {
                             attributes: {
@@ -51,7 +51,7 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
                     },
                     {
                         destination: 'res/theme_attrs.xml',
-                        format: 'androidThemeAttrsFormat',
+                        format: 'android/attrs',
                         className: 'ThemeAttrs',
                         filter: token => token.type === 'color',
                         options: {
@@ -61,7 +61,7 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
                     },
                     {
                         destination: 'res/theme_typography_attrs.xml',
-                        format: 'androidThemeAttrsFormat',
+                        format: 'android/attrs',
                         className: 'TypographyAttrs',
                         filter: token => token.type === 'typography',
                         options: {
@@ -77,7 +77,7 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
                 files: [
                     {
                         destination: 'BaseColor.swift',
-                        format: 'iOSBaseColorsFormatter',
+                        format: 'ios/base_colors',
                         filter: {
                             attributes: {
                                 category: 'color',
@@ -89,7 +89,7 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
                     },
                     {
                         destination: 'ThemeColors.swift',
-                        format: 'iOSThemeColorsProtocolFormatter',
+                        format: 'ios/theme_colors_protocol',
                         filter: token => token.type === 'color',
                         options: {
                             fileHeader: 'weaverFileHeader',
@@ -97,7 +97,7 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
                     },
                     {
                         destination: 'Theme.swift',
-                        format: 'iOSThemeProtocolFormatter',
+                        format: 'ios/theme_protocol',
                         options: {
                             fileHeader: 'weaverFileHeader',
                         },
@@ -119,7 +119,7 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
                 files: [
                     {
                         destination: `res/${themeName}_theme.xml`,
-                        format: 'androidThemeFormat',
+                        format: 'android/theme',
                         filter: token => token.type === 'color' || token.type === 'typography',
                         className: `${formattedThemeName}`,
                         options: {
@@ -135,7 +135,7 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
                 files: [
                     {
                         destination: `${formattedThemeName}ThemeColors.swift`,
-                        format: 'iOSThemeColorsFormatter',
+                        format: 'ios/theme_colors',
                         filter: token => token.type === 'color',
                         className: `${formattedThemeName}ThemeColors`,
                         options: {
@@ -144,7 +144,7 @@ function themesConfig(tokensPath, outputPath, themeName, projectName) {
                     },
                     {
                         destination: `${formattedThemeName}Theme.swift`,
-                        format: 'iOSThemeFormatter',
+                        format: 'ios/theme',
                         className: `${formattedThemeName}Theme`,
                         options: {
                             themeColorsClass: `${formattedThemeName}ThemeColors`,
@@ -45594,39 +45594,35 @@ function runStyleDictionary(config) {
 async function configStyleDictionary(projectName, version) {
     // Formats
     StyleDictionary.registerFormat({
-        name: 'androidTypographyFormat',
+        name: 'android/text_appearance',
         formatter: args => (0, android_formatters_1.androidTypographyFormatter)(args),
     })
         .registerFormat({
-        name: 'androidThemeAttrsFormat',
+        name: 'android/attrs',
         formatter: args => (0, android_formatters_1.androidThemeAttrsFormatter)(args),
     })
         .registerFormat({
-        name: 'androidThemeFormat',
+        name: 'android/theme',
         formatter: args => (0, android_formatters_1.androidThemeFormatter)(args),
     })
         .registerFormat({
-        name: 'iOSBaseColorsFormatter',
+        name: 'ios/base_colors',
         formatter: args => (0, ios_formatters_1.iOSBaseColorsFormatter)(args),
     })
         .registerFormat({
-        name: 'iOSThemeColorsProtocolFormatter',
+        name: 'ios/theme_colors_protocol',
         formatter: args => (0, ios_formatters_1.iOSThemeColorsProtocolFormatter)(args),
     })
         .registerFormat({
-        name: 'iOSThemeColorsProtocolFormatter',
-        formatter: args => (0, ios_formatters_1.iOSThemeColorsProtocolFormatter)(args),
-    })
-        .registerFormat({
-        name: 'iOSThemeProtocolFormatter',
+        name: 'ios/theme_protocol',
         formatter: args => (0, ios_formatters_1.iOSThemeProtocolFormatter)(args),
     })
         .registerFormat({
-        name: 'iOSThemeColorsFormatter',
+        name: 'ios/theme_colors',
         formatter: args => (0, ios_formatters_1.iOSThemeColorsFormatter)(args),
     })
         .registerFormat({
-        name: 'iOSThemeFormatter',
+        name: 'ios/theme',
         formatter: args => (0, ios_formatters_1.iOSThemeFormatter)(args),
     });
     // Transforms

@@ -127,39 +127,35 @@ function runStyleDictionary(config: Config) {
 async function configStyleDictionary(projectName: string, version: string) {
   // Formats
   StyleDictionary.registerFormat({
-    name: 'androidTypographyFormat',
+    name: 'android/text_appearance',
     formatter: args => androidTypographyFormatter(args),
   })
     .registerFormat({
-      name: 'androidThemeAttrsFormat',
+      name: 'android/attrs',
       formatter: args => androidThemeAttrsFormatter(args),
     })
     .registerFormat({
-      name: 'androidThemeFormat',
+      name: 'android/theme',
       formatter: args => androidThemeFormatter(args),
     })
     .registerFormat({
-      name: 'iOSBaseColorsFormatter',
+      name: 'ios/base_colors',
       formatter: args => iOSBaseColorsFormatter(args),
     })
     .registerFormat({
-      name: 'iOSThemeColorsProtocolFormatter',
+      name: 'ios/theme_colors_protocol',
       formatter: args => iOSThemeColorsProtocolFormatter(args),
     })
     .registerFormat({
-      name: 'iOSThemeColorsProtocolFormatter',
-      formatter: args => iOSThemeColorsProtocolFormatter(args),
-    })
-    .registerFormat({
-      name: 'iOSThemeProtocolFormatter',
+      name: 'ios/theme_protocol',
       formatter: args => iOSThemeProtocolFormatter(args),
     })
     .registerFormat({
-      name: 'iOSThemeColorsFormatter',
+      name: 'ios/theme_colors',
       formatter: args => iOSThemeColorsFormatter(args),
     })
     .registerFormat({
-      name: 'iOSThemeFormatter',
+      name: 'ios/theme',
       formatter: args => iOSThemeFormatter(args),
     });
 
