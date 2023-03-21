@@ -21,6 +21,8 @@ with:
 
 - `tokens_path` (**Required**): Path to the Figma Token Studio `tokens.json` file
 - `output_path` (**Required**): Path to write the generated files to
+- `project_name`: Name of the project/app (default: `App`)
+- `version`: Version for the styles (default: `1`)
 
 #### Expected JSON Structure
 
@@ -68,6 +70,15 @@ Fix lint & formatting issues
 npm run fix
 ```
 
+### Packaging
+
+Project uses [vercel/ncc] to compile the project into a single JS file required for GH Actions. You can use
+the following command to create the `dist` folder with required files.
+
+```
+npm run package
+```
+
 [Figma Token Studio]: https://tokens.studio/
 
 [Node JS]: https://nodejs.org/en/download/
@@ -77,3 +88,5 @@ npm run fix
 [GitHub Action]: https://github.com/features/actions
 
 [`test_build_tokens`]: https://github.com/obvious/weaver/actions/workflows/test_build_tokens.yml
+
+[vercel/ncc]: https://github.com/vercel/ncc
