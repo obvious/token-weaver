@@ -388,11 +388,26 @@ exports.iOSThemeFormatter = iOSThemeFormatter;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.transformTypographyForXml = void 0;
 const capital_case_1 = __nccwpck_require__(8824);
-// TODO: Handle percentage based letter spacing
-function formatValue(value, propName) {
+function transformPercentValue(value, base) {
+    let val;
+    if (value.endsWith('%')) {
+        const valueInPx = (parseFloat(value.replace('%', '')) / 100) * parseFloat(base);
+        val = valueInPx.toFixed(2);
+    }
+    else {
+        val = value;
+    }
+    return val;
+}
+function formatValue(value, propName, fontSize) {
     let val;
     switch (propName) {
         case 'lineHeight':
+            val = transformPercentValue(value, fontSize) + 'sp';
+            break;
+        case 'android:letterSpacing':
+            val = transformPercentValue(value, fontSize);
+            break;
         case 'android:textSize':
             val = parseFloat(value).toFixed(2) + 'sp';
             break;
@@ -401,8 +416,8 @@ function formatValue(value, propName) {
     }
     return val;
 }
-function textStyleItem(textStyleProperty, value) {
-    return `    <item name="${textStyleProperty}">${formatValue(value, textStyleProperty)}</item>\n`;
+function textStyleItem(textStyleProperty, value, fontSize) {
+    return `    <item name="${textStyleProperty}">${formatValue(value, textStyleProperty, fontSize)}</item>\n`;
 }
 function transformTypographyForXml(projectName, name, value) {
     if (value === undefined) {
@@ -422,7 +437,9 @@ function transformTypographyForXml(projectName, name, value) {
      */
     return `${Object.entries(value).reduce((acc, [propName, val]) => {
         const textStyleProperty = textStylePropertiesMapping.get(propName);
-        return `${acc}${textStyleProperty ? textStyleItem(textStyleProperty, val) : ''}`;
+        return `${acc}${textStyleProperty
+            ? textStyleItem(textStyleProperty, val, value.fontSize)
+            : ''}`;
     }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}  </style>\n`;
 }
 exports.transformTypographyForXml = transformTypographyForXml;

@@ -1,10 +1,30 @@
 import {capitalCase} from 'capital-case';
 
-// TODO: Handle percentage based letter spacing
-function formatValue(value: string, propName: string): string {
+function transformPercentValue(value: string, base: string): string {
+  let val: string;
+  if (value.endsWith('%')) {
+    const valueInPx =
+      (parseFloat(value.replace('%', '')) / 100) * parseFloat(base);
+    val = valueInPx.toFixed(2);
+  } else {
+    val = value;
+  }
+  return val;
+}
+
+function formatValue(
+  value: string,
+  propName: string,
+  fontSize: string
+): string {
   let val: string;
   switch (propName) {
     case 'lineHeight':
+      val = transformPercentValue(value, fontSize) + 'sp';
+      break;
+    case 'android:letterSpacing':
+      val = transformPercentValue(value, fontSize);
+      break;
     case 'android:textSize':
       val = parseFloat(value).toFixed(2) + 'sp';
       break;
@@ -15,10 +35,15 @@ function formatValue(value: string, propName: string): string {
   return val;
 }
 
-function textStyleItem(textStyleProperty: string, value: string): string {
+function textStyleItem(
+  textStyleProperty: string,
+  value: string,
+  fontSize: string
+): string {
   return `    <item name="${textStyleProperty}">${formatValue(
     value,
-    textStyleProperty
+    textStyleProperty,
+    fontSize
   )}</item>\n`;
 }
 
@@ -48,7 +73,9 @@ export function transformTypographyForXml(
   return `${Object.entries(value).reduce((acc, [propName, val]) => {
     const textStyleProperty = textStylePropertiesMapping.get(propName);
     return `${acc}${
-      textStyleProperty ? textStyleItem(textStyleProperty, val) : ''
+      textStyleProperty
+        ? textStyleItem(textStyleProperty, val, value.fontSize)
+        : ''
     }`;
   }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}  </style>\n`;
 }
