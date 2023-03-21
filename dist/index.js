@@ -173,6 +173,8 @@ const common_1 = __nccwpck_require__(6520);
 const snake_case_1 = __nccwpck_require__(6213);
 const capital_case_1 = __nccwpck_require__(8824);
 const StyleDictionary = __nccwpck_require__(7189);
+const utils_1 = __nccwpck_require__(2440);
+const Handlebars = __nccwpck_require__(7492);
 const { fileHeader } = StyleDictionary.formatHelpers;
 function xmlFileHeader(file) {
     return fileHeader({
@@ -195,52 +197,38 @@ function _themeTokenFormat(themeTokenType) {
     return themeTokenFormat;
 }
 function androidTypographyFormat(args) {
-    const textStyles = args.dictionary.allTokens
-        .map(token => token.value)
-        .join('\n');
-    return `<?xml version="1.0" encoding="UTF-8"?>
-
-${xmlFileHeader(args.file)}
-<resources>
-
-<style name="TextAppearance.${args.file.className}" parent="" />
-
-${textStyles}
-</resources>
-`;
+    const template = (0, utils_1.compileTemplate)('/templates/android/android_typography.hbs');
+    return template({
+        header: xmlFileHeader(args.file),
+        class_name: args.file.className,
+        text_styles: args.dictionary.allTokens,
+    });
 }
 exports.androidTypographyFormat = androidTypographyFormat;
 function androidThemeFormat(args) {
     const themeColorTokens = (0, common_1._themeColorTokens)(args.dictionary);
-    const themeColorItems = themeColorTokens
-        .map(themeToken => {
-        const themeColorTokenName = (0, camel_case_1.camelCase)('color_' + themeToken.name);
-        const colorRefName = (0, snake_case_1.snakeCase)(themeToken.original.value.replace(/[{}]/g, ''));
-        return ('    ' +
-            `<item name="${themeColorTokenName}">@color/${colorRefName}</item>`);
-    })
-        .join('\n');
     const themeTypographyTokens = (0, common_1._themeTypographyTokens)(args.dictionary);
-    const themeTypographyItems = themeTypographyTokens.map(themeToken => {
-        const themeTypographyTokenName = (0, camel_case_1.camelCase)('typography_' + themeToken.name);
-        const typographyRef = `TextAppearance.${args.options.projectName}.` +
-            (0, capital_case_1.capitalCase)(themeToken.original.value
-                .replace(/[{}]/g, '')
-                .replace('typography.', ''));
-        return ('    ' +
-            `<item name="${themeTypographyTokenName}">@style/${typographyRef}</item>`);
+    const template = (0, utils_1.compileTemplate)('/templates/android/android_theme.hbs');
+    Handlebars.registerHelper('colorTokenName', tokenName => {
+        return (0, camel_case_1.camelCase)('color_' + tokenName);
     });
-    return `<?xml version="1.0" encoding="UTF-8"?>
-
-${xmlFileHeader(args.file)}
-<resources>
-
-  <style name="Theme.${args.options.projectName}.${args.file.className}" parent="">
-${themeColorItems}
-${themeTypographyItems}
-  </style>
-</resources>
-`;
+    Handlebars.registerHelper('colorRefName', originalTokenValue => {
+        return (0, snake_case_1.snakeCase)(originalTokenValue.replace(/[{}]/g, ''));
+    });
+    Handlebars.registerHelper('typographyTokenName', tokenName => {
+        return (0, camel_case_1.camelCase)('typography_' + tokenName);
+    });
+    Handlebars.registerHelper('typographyRefName', originalTokenValue => {
+        return (0, capital_case_1.capitalCase)(originalTokenValue.replace(/[{}]/g, '').replace('typography.', ''));
+    });
+    return template({
+        header: xmlFileHeader(args.file),
+        project_name: args.options.projectName,
+        theme_name: args.file.className,
+        parent_theme: '',
+        color_tokens: themeColorTokens,
+        typography_tokens: themeTypographyTokens,
+    });
 }
 exports.androidThemeFormat = androidThemeFormat;
 function androidThemeAttrsFormat(args) {
@@ -255,21 +243,17 @@ function androidThemeAttrsFormat(args) {
         default:
             throw new Error(`Unknown attrs type: ${args.options.type}`);
     }
-    const themeItems = themeTokens
-        .map(themeToken => {
-        const themeTokenType = themeToken.original.type;
-        const themeTokenName = (0, camel_case_1.camelCase)(`${themeTokenType}_` + themeToken.name);
-        const themeTokenFormat = _themeTokenFormat(themeTokenType);
-        return `  <attr name="${themeTokenName}" format="${themeTokenFormat}"/>`;
-    })
-        .join('\n');
-    return `<?xml version="1.0" encoding="UTF-8"?>
-
-${xmlFileHeader(args.file)}
-<resources>
-${themeItems}
-</resources>
-`;
+    const template = (0, utils_1.compileTemplate)('/templates/android/android_theme_attrs.hbs');
+    Handlebars.registerHelper('attrName', (tokenType, tokenName) => {
+        return (0, camel_case_1.camelCase)(`${tokenType}_` + tokenName);
+    });
+    Handlebars.registerHelper('attrFormat', tokenType => {
+        return _themeTokenFormat(tokenType);
+    });
+    return template({
+        header: xmlFileHeader(args.file),
+        theme_tokens: themeTokens,
+    });
 }
 exports.androidThemeAttrsFormat = androidThemeAttrsFormat;
 //# sourceMappingURL=android_formatters.js.map
@@ -418,7 +402,7 @@ function formatValue(value, propName) {
     return val;
 }
 function textStyleItem(textStyleProperty, value) {
-    return `  <item name="${textStyleProperty}">${formatValue(value, textStyleProperty)}</item>\n`;
+    return `    <item name="${textStyleProperty}">${formatValue(value, textStyleProperty)}</item>\n`;
 }
 function transformTypographyForXml(projectName, name, value) {
     if (value === undefined) {
@@ -439,7 +423,7 @@ function transformTypographyForXml(projectName, name, value) {
     return `${Object.entries(value).reduce((acc, [propName, val]) => {
         const textStyleProperty = textStylePropertiesMapping.get(propName);
         return `${acc}${textStyleProperty ? textStyleItem(textStyleProperty, val) : ''}`;
-    }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}</style>\n`;
+    }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}  </style>\n`;
 }
 exports.transformTypographyForXml = transformTypographyForXml;
 //# sourceMappingURL=android_xml_tyopgraphy.js.map

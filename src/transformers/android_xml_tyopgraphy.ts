@@ -16,7 +16,7 @@ function formatValue(value: string, propName: string): string {
 }
 
 function textStyleItem(textStyleProperty: string, value: string): string {
-  return `  <item name="${textStyleProperty}">${formatValue(
+  return `    <item name="${textStyleProperty}">${formatValue(
     value,
     textStyleProperty
   )}</item>\n`;
@@ -50,5 +50,5 @@ export function transformTypographyForXml(
     return `${acc}${
       textStyleProperty ? textStyleItem(textStyleProperty, val) : ''
     }`;
-  }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}</style>\n`;
+  }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}  </style>\n`;
 }
