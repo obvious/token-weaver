@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+{{{header}}}
+<resources>
+
+  <style name="Theme.{{project_name}}.{{theme_name}}" parent="{{parent_theme}}">
+    <!-- Colors -->
+    {{#each color_tokens}}
+    <item name="{{colorTokenName name}}">@color/{{colorRefName original.value}}</item>
+    {{/each}}
+
+    <!-- Typography -->
+    {{#each typography_tokens}}
+    <item name="{{typographyTokenName name}}">@style/TextAppearance.{{@root.project_name}}.{{typographyRefName original.value}}</item>
+    {{/each}}
+  </style>
+
+</resources>

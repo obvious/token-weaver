@@ -5,6 +5,8 @@ import {File, TransformedToken} from 'style-dictionary';
 import {snakeCase} from 'snake-case';
 import {capitalCase} from 'capital-case';
 import * as StyleDictionary from 'style-dictionary';
+import {compileTemplate} from '../utils/utils';
+import Handlebars = require('handlebars');
 
 const {fileHeader} = StyleDictionary.formatHelpers;
 
@@ -34,70 +36,47 @@ function _themeTokenFormat(themeTokenType: string): string {
 }
 
 export function androidTypographyFormat(args: FormatterArguments) {
-  const textStyles = args.dictionary.allTokens
-    .map(token => token.value)
-    .join('\n');
+  const template = compileTemplate('/templates/android/android_typography.hbs');
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-
-${xmlFileHeader(args.file)}
-<resources>
-
-<style name="TextAppearance.${args.file.className}" parent="" />
-
-${textStyles}
-</resources>
-`;
+  return template({
+    header: xmlFileHeader(args.file),
+    class_name: args.file.className,
+    text_styles: args.dictionary.allTokens,
+  });
 }
 
 export function androidThemeFormat(args: FormatterArguments) {
   const themeColorTokens = _themeColorTokens(args.dictionary);
-  const themeColorItems = themeColorTokens
-    .map(themeToken => {
-      const themeColorTokenName = camelCase('color_' + themeToken.name);
-
-      const colorRefName = snakeCase(
-        themeToken.original.value.replace(/[{}]/g, '')
-      );
-
-      return (
-        '    ' +
-        `<item name="${themeColorTokenName}">@color/${colorRefName}</item>`
-      );
-    })
-    .join('\n');
-
   const themeTypographyTokens = _themeTypographyTokens(args.dictionary);
-  const themeTypographyItems = themeTypographyTokens.map(themeToken => {
-    const themeTypographyTokenName = camelCase('typography_' + themeToken.name);
 
-    const typographyRef =
-      `TextAppearance.${args.options.projectName}.` +
-      capitalCase(
-        themeToken.original.value
-          .replace(/[{}]/g, '')
-          .replace('typography.', '')
-      );
+  const template = compileTemplate('/templates/android/android_theme.hbs');
 
-    return (
-      '    ' +
-      `<item name="${themeTypographyTokenName}">@style/${typographyRef}</item>`
+  Handlebars.registerHelper('colorTokenName', tokenName => {
+    return camelCase('color_' + tokenName);
+  });
+
+  Handlebars.registerHelper('colorRefName', originalTokenValue => {
+    return snakeCase(originalTokenValue.replace(/[{}]/g, ''));
+  });
+
+  Handlebars.registerHelper('typographyTokenName', tokenName => {
+    return camelCase('typography_' + tokenName);
+  });
+
+  Handlebars.registerHelper('typographyRefName', originalTokenValue => {
+    return capitalCase(
+      originalTokenValue.replace(/[{}]/g, '').replace('typography.', '')
     );
   });
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-
-${xmlFileHeader(args.file)}
-<resources>
-
-  <style name="Theme.${args.options.projectName}.${
-    args.file.className
-  }" parent="">
-${themeColorItems}
-${themeTypographyItems}
-  </style>
-</resources>
-`;
+  return template({
+    header: xmlFileHeader(args.file),
+    project_name: args.options.projectName,
+    theme_name: args.file.className,
+    parent_theme: '',
+    color_tokens: themeColorTokens,
+    typography_tokens: themeTypographyTokens,
+  });
 }
 
 export function androidThemeAttrsFormat(args: FormatterArguments) {
@@ -114,22 +93,20 @@ export function androidThemeAttrsFormat(args: FormatterArguments) {
       throw new Error(`Unknown attrs type: ${args.options.type}`);
   }
 
-  const themeItems = themeTokens
-    .map(themeToken => {
-      const themeTokenType = themeToken.original.type;
-      const themeTokenName = camelCase(`${themeTokenType}_` + themeToken.name);
+  const template = compileTemplate(
+    '/templates/android/android_theme_attrs.hbs'
+  );
 
-      const themeTokenFormat = _themeTokenFormat(themeTokenType);
+  Handlebars.registerHelper('attrName', (tokenType, tokenName) => {
+    return camelCase(`${tokenType}_` + tokenName);
+  });
 
-      return `  <attr name="${themeTokenName}" format="${themeTokenFormat}"/>`;
-    })
-    .join('\n');
+  Handlebars.registerHelper('attrFormat', tokenType => {
+    return _themeTokenFormat(tokenType);
+  });
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-
-${xmlFileHeader(args.file)}
-<resources>
-${themeItems}
-</resources>
-`;
+  return template({
+    header: xmlFileHeader(args.file),
+    theme_tokens: themeTokens,
+  });
 }
