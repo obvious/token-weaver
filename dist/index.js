@@ -450,15 +450,16 @@ function transformTypographyForXml(value) {
         ['letterSpacing', 'android:letterSpacing'],
     ]);
     /**
-     * Constructs a text appearance XML, e.g.
-     * <style name="TextAppearance.App.Heading1">
-     *    <item name="android:textSize">24sp</item>
-     * </style>
+     * Constructs a text appearance child items, e.g.
+     *
+     * <item name="android:textSize">24sp</item>
+     *
      */
-    return `${Object.entries(value).reduce((acc, [propName, val]) => {
-        const textStyleProperty = textStylePropertiesMapping.get(propName);
-        return `${acc}${textStyle(textStyleProperty, val, value.fontSize)}`;
-    }, '')}`;
+    const entries = Object.entries(value).map(([prop, val]) => {
+        const textStyleProperty = textStylePropertiesMapping.get(prop);
+        return textStyle(textStyleProperty, val, value.fontSize);
+    });
+    return entries.join('').trimEnd();
 }
 exports.transformTypographyForXml = transformTypographyForXml;
 //# sourceMappingURL=android_xml_tyopgraphy.js.map
