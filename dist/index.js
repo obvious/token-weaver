@@ -198,6 +198,9 @@ function _themeTokenFormat(themeTokenType) {
 }
 function androidTypographyFormatter(args) {
     const template = (0, utils_1.compileTemplate)('templates/android/android_typography.hbs');
+    Handlebars.registerHelper('textAppearanceName', name => {
+        return (0, capital_case_1.capitalCase)(name.replace('typography_', ''));
+    });
     return template({
         header: xmlFileHeader(args.file),
         class_name: args.file.className,
@@ -381,13 +384,12 @@ exports.iOSThemeFormatter = iOSThemeFormatter;
 /***/ }),
 
 /***/ 3102:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.transformTypographyForXml = void 0;
-const capital_case_1 = __nccwpck_require__(8824);
 function transformPercentValue(value, base) {
     let val;
     if (value.endsWith('%')) {
@@ -434,7 +436,7 @@ function textStyle(textStyleProperty, value, fontSize) {
     }
     return styleItem;
 }
-function transformTypographyForXml(projectName, name, value) {
+function transformTypographyForXml(value) {
     if (value === undefined) {
         return value;
     }
@@ -442,7 +444,6 @@ function transformTypographyForXml(projectName, name, value) {
         // input value doesn't contain the object which has typogrpahy information or it's already transformed
         return value;
     }
-    const textAppearanceName = (0, capital_case_1.capitalCase)(name.replace('typography_', ''));
     const textStylePropertiesMapping = new Map([
         ['lineHeight', 'lineHeight'],
         ['fontSize', 'android:textSize'],
@@ -457,7 +458,7 @@ function transformTypographyForXml(projectName, name, value) {
     return `${Object.entries(value).reduce((acc, [propName, val]) => {
         const textStyleProperty = textStylePropertiesMapping.get(propName);
         return `${acc}${textStyle(textStyleProperty, val, value.fontSize)}`;
-    }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}  </style>\n`;
+    }, '')}`;
 }
 exports.transformTypographyForXml = transformTypographyForXml;
 //# sourceMappingURL=android_xml_tyopgraphy.js.map
@@ -45648,7 +45649,7 @@ async function configStyleDictionary(projectName, version) {
         type: 'value',
         transitive: true,
         matcher: token => token.type === 'typography',
-        transformer: token => (0, android_xml_tyopgraphy_1.transformTypographyForXml)(projectName, token.name, token.value),
+        transformer: token => (0, android_xml_tyopgraphy_1.transformTypographyForXml)(token.value),
     });
     // File Headers
     StyleDictionary.registerFileHeader({

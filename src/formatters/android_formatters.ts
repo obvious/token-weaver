@@ -38,6 +38,10 @@ function _themeTokenFormat(themeTokenType: string): string {
 export function androidTypographyFormatter(args: FormatterArguments) {
   const template = compileTemplate('templates/android/android_typography.hbs');
 
+  Handlebars.registerHelper('textAppearanceName', name => {
+    return capitalCase(name.replace('typography_', ''));
+  });
+
   return template({
     header: xmlFileHeader(args.file),
     class_name: args.file.className,

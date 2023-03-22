@@ -1,5 +1,3 @@
-import {capitalCase} from 'capital-case';
-
 function transformPercentValue(value: string, base: string): string {
   let val: string;
   if (value.endsWith('%')) {
@@ -66,8 +64,6 @@ function textStyle(
 }
 
 export function transformTypographyForXml(
-  projectName: string,
-  name: string,
   value: Record<string, string> | undefined
 ): string | undefined {
   if (value === undefined) {
@@ -78,8 +74,6 @@ export function transformTypographyForXml(
     // input value doesn't contain the object which has typogrpahy information or it's already transformed
     return value;
   }
-
-  const textAppearanceName = capitalCase(name.replace('typography_', ''));
 
   const textStylePropertiesMapping = new Map<string, string>([
     ['lineHeight', 'lineHeight'],
@@ -96,5 +90,5 @@ export function transformTypographyForXml(
   return `${Object.entries(value).reduce((acc, [propName, val]) => {
     const textStyleProperty = textStylePropertiesMapping.get(propName);
     return `${acc}${textStyle(textStyleProperty, val, value.fontSize)}`;
-  }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}  </style>\n`;
+  }, '')}`;
 }

@@ -167,8 +167,7 @@ async function configStyleDictionary(projectName: string, version: number) {
     type: 'value',
     transitive: true,
     matcher: token => token.type === 'typography',
-    transformer: token =>
-      transformTypographyForXml(projectName, token.name, token.value),
+    transformer: token => transformTypographyForXml(token.value),
   });
 
   // File Headers

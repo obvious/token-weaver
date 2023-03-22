@@ -6,7 +6,9 @@
   <style name="TextAppearance.{{class_name}}" parent=""/>
 
   {{#each text_styles}}
-  {{{value}}}
+  <style name="TextAppearance.{{@root.class_name}}.{{textAppearanceName name}}">
+{{{value}}}
+  </style>
   {{/each}}
 
 </resources>
