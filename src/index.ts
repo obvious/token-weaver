@@ -56,10 +56,10 @@ async function readThemes(inputPath: string): Promise<Theme[]> {
     });
     themes = JSON.parse(inputContent)['$themes'];
   } else {
-    const themesFileContent = await readFile(
-      path.join(inputPath, '$themes.json'),
-      {encoding: 'utf-8', flag: 'r'}
-    );
+    const themesFileContent = await readFile(`${inputPath}/$themes.json`, {
+      encoding: 'utf-8',
+      flag: 'r',
+    });
     themes = JSON.parse(themesFileContent);
   }
   return themes;
@@ -89,14 +89,14 @@ async function generateCoreTokens(
 
   // Write temp file with unified theme tokens to use it for Style Dictionary
   await writeFile(
-    path.join(inputPath, 'theme_tokens.json'),
+    `${inputPath}/theme_tokens.json`,
     JSON.stringify(themeTokens)
   );
 
   runStyleDictionary(
     coreTokensConfig(
       [`${inputPath}/theme_tokens.json`, `${inputPath}/core.json`],
-      path.join(outputPath, 'core'),
+      `${outputPath}/core`,
       projectName
     )
   );
@@ -112,7 +112,7 @@ async function generateThemes(
     runStyleDictionary(
       themesConfig(
         [`${inputPath}/theme/${theme.name}.json`, `${inputPath}/core.json`],
-        path.join(outputPath, theme.name),
+        `${outputPath}/${theme.name}`,
         theme.name,
         projectName
       )

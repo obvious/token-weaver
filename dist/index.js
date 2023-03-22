@@ -45577,7 +45577,10 @@ async function readThemes(inputPath) {
         themes = JSON.parse(inputContent)['$themes'];
     }
     else {
-        const themesFileContent = await (0, promises_1.readFile)(path.join(inputPath, '$themes.json'), { encoding: 'utf-8', flag: 'r' });
+        const themesFileContent = await (0, promises_1.readFile)(`${inputPath}/$themes.json`, {
+            encoding: 'utf-8',
+            flag: 'r',
+        });
         themes = JSON.parse(themesFileContent);
     }
     return themes;
@@ -45597,12 +45600,12 @@ async function generateCoreTokens(inputPath, outputPath, projectName, themes) {
         }
     }
     // Write temp file with unified theme tokens to use it for Style Dictionary
-    await (0, promises_1.writeFile)(path.join(inputPath, 'theme_tokens.json'), JSON.stringify(themeTokens));
-    runStyleDictionary((0, config_1.coreTokensConfig)([`${inputPath}/theme_tokens.json`, `${inputPath}/core.json`], path.join(outputPath, 'core'), projectName));
+    await (0, promises_1.writeFile)(`${inputPath}/theme_tokens.json`, JSON.stringify(themeTokens));
+    runStyleDictionary((0, config_1.coreTokensConfig)([`${inputPath}/theme_tokens.json`, `${inputPath}/core.json`], `${outputPath}/core`, projectName));
 }
 async function generateThemes(inputPath, outputPath, projectName, themes) {
     for (const theme of themes) {
-        runStyleDictionary((0, config_1.themesConfig)([`${inputPath}/theme/${theme.name}.json`, `${inputPath}/core.json`], path.join(outputPath, theme.name), theme.name, projectName));
+        runStyleDictionary((0, config_1.themesConfig)([`${inputPath}/theme/${theme.name}.json`, `${inputPath}/core.json`], `${outputPath}/${theme.name}`, theme.name, projectName));
     }
 }
 function runStyleDictionary(config) {
