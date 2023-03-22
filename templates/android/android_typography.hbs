@@ -7,7 +7,9 @@
 
   {{#each text_styles}}
   <style name="TextAppearance.{{@root.class_name}}.{{textAppearanceName name}}">
-{{{value}}}
+    {{#each value}}
+    {{{this}}}
+    {{/each}}
   </style>
   {{/each}}
 

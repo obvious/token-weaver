@@ -34,30 +34,27 @@ function textStyleItem(
   value: string,
   fontSize: string
 ): string {
-  return `    <item name="${textStyleProperty}">${transformValue(
+  return `<item name="${textStyleProperty}">${transformValue(
     value,
     textStyleProperty,
     fontSize
-  )}</item>\n`;
+  )}</item>`;
 }
 
 function textStyle(
-  textStyleProperty: string | undefined,
+  textStyleProperty: string,
   value: string,
   fontSize: string
-): string {
-  if (textStyleProperty === undefined) {
-    return '';
-  }
-
-  let styleItem: string;
+): string[] {
+  let styleItem: string[];
   if (textStyleProperty.includes('lineHeight')) {
     // Assigning app:lineHeight and android:lineHeight incase `AppCompatTextView` is not used
-    styleItem =
-      textStyleItem('lineHeight', value, fontSize) +
-      textStyleItem('android:lineHeight', value, fontSize);
+    styleItem = [
+      textStyleItem('lineHeight', value, fontSize),
+      textStyleItem('android:lineHeight', value, fontSize),
+    ];
   } else {
-    styleItem = textStyleItem(textStyleProperty, value, fontSize);
+    styleItem = [textStyleItem(textStyleProperty, value, fontSize)];
   }
 
   return styleItem;
@@ -65,7 +62,7 @@ function textStyle(
 
 export function transformTypographyForXml(
   value: Record<string, string> | undefined
-): string | undefined {
+): string[] | undefined {
   if (value === undefined) {
     return value;
   }
@@ -87,10 +84,10 @@ export function transformTypographyForXml(
    * <item name="android:textSize">24sp</item>
    *
    */
-  const entries = Object.entries(value).map(([prop, val]) => {
-    const textStyleProperty = textStylePropertiesMapping.get(prop);
-    return textStyle(textStyleProperty, val, value.fontSize);
-  });
-
-  return entries.join('').trimEnd();
+  return Object.entries(value)
+    .filter(([prop]) => textStylePropertiesMapping.get(prop))
+    .flatMap(([prop, val]) => {
+      const textStyleProperty = textStylePropertiesMapping.get(prop)!;
+      return textStyle(textStyleProperty, val, value.fontSize);
+    });
 }

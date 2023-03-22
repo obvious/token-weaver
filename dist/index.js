@@ -418,21 +418,19 @@ function transformValue(value, propName, fontSize) {
     return val;
 }
 function textStyleItem(textStyleProperty, value, fontSize) {
-    return `    <item name="${textStyleProperty}">${transformValue(value, textStyleProperty, fontSize)}</item>\n`;
+    return `<item name="${textStyleProperty}">${transformValue(value, textStyleProperty, fontSize)}</item>`;
 }
 function textStyle(textStyleProperty, value, fontSize) {
-    if (textStyleProperty === undefined) {
-        return '';
-    }
     let styleItem;
     if (textStyleProperty.includes('lineHeight')) {
         // Assigning app:lineHeight and android:lineHeight incase `AppCompatTextView` is not used
-        styleItem =
-            textStyleItem('lineHeight', value, fontSize) +
-                textStyleItem('android:lineHeight', value, fontSize);
+        styleItem = [
+            textStyleItem('lineHeight', value, fontSize),
+            textStyleItem('android:lineHeight', value, fontSize),
+        ];
     }
     else {
-        styleItem = textStyleItem(textStyleProperty, value, fontSize);
+        styleItem = [textStyleItem(textStyleProperty, value, fontSize)];
     }
     return styleItem;
 }
@@ -455,11 +453,12 @@ function transformTypographyForXml(value) {
      * <item name="android:textSize">24sp</item>
      *
      */
-    const entries = Object.entries(value).map(([prop, val]) => {
+    return Object.entries(value)
+        .filter(([prop]) => textStylePropertiesMapping.get(prop))
+        .flatMap(([prop, val]) => {
         const textStyleProperty = textStylePropertiesMapping.get(prop);
         return textStyle(textStyleProperty, val, value.fontSize);
     });
-    return entries.join('').trimEnd();
 }
 exports.transformTypographyForXml = transformTypographyForXml;
 //# sourceMappingURL=android_xml_tyopgraphy.js.map
