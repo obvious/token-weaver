@@ -438,6 +438,10 @@ function transformTypographyForXml(projectName, name, value) {
     if (value === undefined) {
         return value;
     }
+    if (typeof value !== 'object') {
+        // input value doesn't contain the object which has typogrpahy information or it's already transformed
+        return value;
+    }
     const textAppearanceName = (0, capital_case_1.capitalCase)(name.replace('typography_', ''));
     const textStylePropertiesMapping = new Map([
         ['lineHeight', 'lineHeight'],

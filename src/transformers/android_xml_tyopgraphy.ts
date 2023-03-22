@@ -74,6 +74,11 @@ export function transformTypographyForXml(
     return value;
   }
 
+  if (typeof value !== 'object') {
+    // input value doesn't contain the object which has typogrpahy information or it's already transformed
+    return value;
+  }
+
   const textAppearanceName = capitalCase(name.replace('typography_', ''));
 
   const textStylePropertiesMapping = new Map<string, string>([
