@@ -88,25 +88,15 @@
   "typography": {
     "headline1": {
       "value": {
-        "fontSize": "96",
+        "fontFamily": "Roboto",
         "fontWeight": "Regular",
-        "letterSpacing": "-0.015625"
-      },
-      "type": "typography"
-    },
-    "body1": {
-      "value": {
-        "fontSize": "16",
-        "fontWeight": "Regular",
-        "letterSpacing": "0.03125"
-      },
-      "type": "typography"
-    },
-    "button": {
-      "value": {
-        "fontSize": "14",
-        "fontWeight": "Bold",
-        "letterSpacing": "0.0892857143"
+        "lineHeight": "120%",
+        "fontSize": "60",
+        "letterSpacing": "-0.1%",
+        "paragraphSpacing": "",
+        "paragraphIndent": "",
+        "textCase": "",
+        "textDecoration": ""
       },
       "type": "typography"
     }

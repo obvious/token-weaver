@@ -12,24 +12,20 @@ function transformPercentValue(value: string, base: string): string {
   return val;
 }
 
-function formatValue(
+function transformValue(
   value: string,
   propName: string,
   fontSize: string
 ): string {
   let val: string;
-  switch (propName) {
-    case 'lineHeight':
-      val = transformPercentValue(value, fontSize) + 'sp';
-      break;
-    case 'android:letterSpacing':
-      val = transformPercentValue(value, fontSize);
-      break;
-    case 'android:textSize':
-      val = parseFloat(value).toFixed(2) + 'sp';
-      break;
-    default:
-      val = value;
+  if (propName.includes('textSize')) {
+    val = parseFloat(value).toFixed(2) + 'sp';
+  } else if (propName.includes('lineHeight')) {
+    val = transformPercentValue(value, fontSize) + 'sp';
+  } else if (propName.includes('letterSpacing')) {
+    val = transformPercentValue(value, fontSize);
+  } else {
+    val = value;
   }
 
   return val;
@@ -40,11 +36,33 @@ function textStyleItem(
   value: string,
   fontSize: string
 ): string {
-  return `    <item name="${textStyleProperty}">${formatValue(
+  return `    <item name="${textStyleProperty}">${transformValue(
     value,
     textStyleProperty,
     fontSize
   )}</item>\n`;
+}
+
+function textStyle(
+  textStyleProperty: string | undefined,
+  value: string,
+  fontSize: string
+): string {
+  if (textStyleProperty === undefined) {
+    return '';
+  }
+
+  let styleItem: string;
+  if (textStyleProperty.includes('lineHeight')) {
+    // Assigning app:lineHeight and android:lineHeight incase `AppCompatTextView` is not used
+    styleItem =
+      textStyleItem('lineHeight', value, fontSize) +
+      textStyleItem('android:lineHeight', value, fontSize);
+  } else {
+    styleItem = textStyleItem(textStyleProperty, value, fontSize);
+  }
+
+  return styleItem;
 }
 
 export function transformTypographyForXml(
@@ -72,10 +90,6 @@ export function transformTypographyForXml(
    */
   return `${Object.entries(value).reduce((acc, [propName, val]) => {
     const textStyleProperty = textStylePropertiesMapping.get(propName);
-    return `${acc}${
-      textStyleProperty
-        ? textStyleItem(textStyleProperty, val, value.fontSize)
-        : ''
-    }`;
+    return `${acc}${textStyle(textStyleProperty, val, value.fontSize)}`;
   }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}  </style>\n`;
 }

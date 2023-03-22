@@ -399,25 +399,40 @@ function transformPercentValue(value, base) {
     }
     return val;
 }
-function formatValue(value, propName, fontSize) {
+function transformValue(value, propName, fontSize) {
     let val;
-    switch (propName) {
-        case 'lineHeight':
-            val = transformPercentValue(value, fontSize) + 'sp';
-            break;
-        case 'android:letterSpacing':
-            val = transformPercentValue(value, fontSize);
-            break;
-        case 'android:textSize':
-            val = parseFloat(value).toFixed(2) + 'sp';
-            break;
-        default:
-            val = value;
+    if (propName.includes('textSize')) {
+        val = parseFloat(value).toFixed(2) + 'sp';
+    }
+    else if (propName.includes('lineHeight')) {
+        val = transformPercentValue(value, fontSize) + 'sp';
+    }
+    else if (propName.includes('letterSpacing')) {
+        val = transformPercentValue(value, fontSize);
+    }
+    else {
+        val = value;
     }
     return val;
 }
 function textStyleItem(textStyleProperty, value, fontSize) {
-    return `    <item name="${textStyleProperty}">${formatValue(value, textStyleProperty, fontSize)}</item>\n`;
+    return `    <item name="${textStyleProperty}">${transformValue(value, textStyleProperty, fontSize)}</item>\n`;
+}
+function textStyle(textStyleProperty, value, fontSize) {
+    if (textStyleProperty === undefined) {
+        return '';
+    }
+    let styleItem;
+    if (textStyleProperty.includes('lineHeight')) {
+        // Assigning app:lineHeight and android:lineHeight incase `AppCompatTextView` is not used
+        styleItem =
+            textStyleItem('lineHeight', value, fontSize) +
+                textStyleItem('android:lineHeight', value, fontSize);
+    }
+    else {
+        styleItem = textStyleItem(textStyleProperty, value, fontSize);
+    }
+    return styleItem;
 }
 function transformTypographyForXml(projectName, name, value) {
     if (value === undefined) {
@@ -437,9 +452,7 @@ function transformTypographyForXml(projectName, name, value) {
      */
     return `${Object.entries(value).reduce((acc, [propName, val]) => {
         const textStyleProperty = textStylePropertiesMapping.get(propName);
-        return `${acc}${textStyleProperty
-            ? textStyleItem(textStyleProperty, val, value.fontSize)
-            : ''}`;
+        return `${acc}${textStyle(textStyleProperty, val, value.fontSize)}`;
     }, `<style name="TextAppearance.${projectName}.${textAppearanceName}">\n`)}  </style>\n`;
 }
 exports.transformTypographyForXml = transformTypographyForXml;
