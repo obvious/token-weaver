@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transform typography transforms ignores unknown properties in typography object 1`] = `
+[
+  "<item name="android:textSize">20.00sp</item>",
+  "<item name="lineHeight">24pxsp</item>",
+  "<item name="android:lineHeight">24pxsp</item>",
+]
+`;
+
+exports[`transform typography transforms typography object to typography shorthand 1`] = `
+[
+  "<item name="android:textSize">20.00sp</item>",
+  "<item name="lineHeight">24pxsp</item>",
+  "<item name="android:lineHeight">24pxsp</item>",
+  "<item name="android:letterSpacing">0.8</item>",
+]
+`;
