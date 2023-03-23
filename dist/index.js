@@ -41876,7 +41876,7 @@ async function run() {
     const inputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('tokens_path', { required: true }));
     const outputPath = path.join(process.env.GITHUB_WORKSPACE, (0, core_1.getInput)('output_path', { required: true }));
     const projectName = (0, capital_case_1.capitalCase)((_a = (0, core_1.getInput)('project_name')) !== null && _a !== void 0 ? _a : 'App');
-    const version = parseInt((_b = (0, core_1.getInput)('version')) !== null && _b !== void 0 ? _b : '1');
+    const version = (_b = (0, core_1.getInput)('version')) !== null && _b !== void 0 ? _b : undefined;
     await configStyleDictionary(projectName, version);
     const themes = await readThemes(inputPath);
     await Promise.all([
@@ -41978,7 +41978,11 @@ async function configStyleDictionary(projectName, version) {
     });
 }
 function weaverFileHeader(version) {
-    return ['Generated file', 'Do not edit directly', `Version: ${version}`];
+    const header = ['Generated file', 'Do not edit directly'];
+    if (version !== undefined) {
+        header.push(`Version: ${version}`);
+    }
+    return header;
 }
 //# sourceMappingURL=index.js.map
 })();

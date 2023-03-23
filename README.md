@@ -22,7 +22,7 @@ with:
 - `tokens_path` (**Required**): Path to the Figma Token Studio `tokens.json` file
 - `output_path` (**Required**): Path to write the generated files to
 - `project_name`: Name of the project/app (default: `App`)
-- `version`: Version for the styles (default: `1`)
+- `version`: Version for the styles (default: `null`)
 
 #### Expected JSON Structure
 

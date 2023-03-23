@@ -35,7 +35,7 @@ async function run() {
     getInput('output_path', {required: true})
   );
   const projectName = capitalCase(getInput('project_name') ?? 'App');
-  const version = parseInt(getInput('version') ?? '1');
+  const version: string | undefined = getInput('version') ?? undefined;
 
   await configStyleDictionary(projectName, version);
 
@@ -124,7 +124,10 @@ function runStyleDictionary(config: Config) {
   StyleDictionary.extend(config).buildAllPlatforms();
 }
 
-async function configStyleDictionary(projectName: string, version: number) {
+async function configStyleDictionary(
+  projectName: string,
+  version: string | undefined
+) {
   // Formats
   StyleDictionary.registerFormat({
     name: 'android/text_appearance',
@@ -177,6 +180,10 @@ async function configStyleDictionary(projectName: string, version: number) {
   });
 }
 
-function weaverFileHeader(version: number): string[] {
-  return ['Generated file', 'Do not edit directly', `Version: ${version}`];
+function weaverFileHeader(version: string | undefined): string[] {
+  const header = ['Generated file', 'Do not edit directly'];
+  if (version !== undefined) {
+    header.push(`Version: ${version}`);
+  }
+  return header;
 }
