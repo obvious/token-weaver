@@ -16,3 +16,25 @@ exports[`transform typography transforms typography object to typography shortha
   "<item name="android:letterSpacing">0.8</item>",
 ]
 `;
+
+exports[`transform typography transforms typography object with font details to include font ref with font family and weight name 1`] = `
+[
+  "<item name="android:textSize">20.00sp</item>",
+  "<item name="lineHeight">24pxsp</item>",
+  "<item name="android:lineHeight">24pxsp</item>",
+  "<item name="android:letterSpacing">0.8</item>",
+  "<item name="fontFamily">@font/roboto_medium_italic</item>",
+  "<item name="android:fontFamily">@font/roboto_medium_italic</item>",
+]
+`;
+
+exports[`transform typography transforms typography object with font details to include font ref with font family and weight value 1`] = `
+[
+  "<item name="android:textSize">20.00sp</item>",
+  "<item name="lineHeight">24pxsp</item>",
+  "<item name="android:lineHeight">24pxsp</item>",
+  "<item name="android:letterSpacing">0.8</item>",
+  "<item name="fontFamily">@font/rubik_semi_bold</item>",
+  "<item name="android:fontFamily">@font/rubik_semi_bold</item>",
+]
+`;
