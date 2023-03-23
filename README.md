@@ -61,13 +61,13 @@ Project follows [gts] style guide. Couple of important commands we use are
 Check lint & formatting issues
 
 ```
-npm run lint
+yarn run lint
 ```
 
 Fix lint & formatting issues
 
 ```
-npm run fix
+yarn run fix
 ```
 
 ### Packaging
@@ -76,7 +76,7 @@ Project uses [vercel/ncc] to compile the project into a single JS file required 
 the following command to create the `dist` folder with required files.
 
 ```
-npm run package
+yarn run package
 ```
 
 [Figma Token Studio]: https://tokens.studio/
