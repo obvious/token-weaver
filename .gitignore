@@ -3,3 +3,4 @@ build
 .DS_Store
 output
 sample_tokens
+yarn-error.log

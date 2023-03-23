@@ -21,6 +21,9 @@
     "handlebars": "^4.7.7",
     "style-dictionary": "^3.7.2"
   },
+  "resolutions": {
+    "@typescript-eslint/typescript-estree": "5.56.0"
+  },
   "scripts": {
     "lint": "gts lint",
     "clean": "gts clean",
