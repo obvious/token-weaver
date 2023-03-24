@@ -83,6 +83,12 @@
         "value": "#44337a",
         "type": "color"
       }
+    },
+    "decorative": {
+      "1": {
+        "value": "linear-gradient(180deg, $color.red.500 0%, $color.red.100 100%)",
+        "type": "color"
+      }
     }
   },
   "typography": {
