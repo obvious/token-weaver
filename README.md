@@ -26,7 +26,9 @@ with:
 
 #### Expected JSON Structure
 
-TBD
+You can find the sample JSON strucutre we are using in [sample_tokens] folder. We have a `core` file which contains
+all of our global tokens, like colors, typography. Then we have individual theme files which has theme strucutre
+and reference the core tokens.
 
 ### Output
 
@@ -36,15 +38,17 @@ then be used to upload to the workflow or open PRs directly.
 For example, the [`test_build_tokens`] workflow generates these outputs that are uploaded as an workflow artifact.
 
 ```
-android
+core/android
 ✔︎ ../output/android/res/colors.xml
 ✔︎ ../output/android/res/base_theme.xml
 ✔︎ ../output/android/res/theme_attrs.xml
+...
 
-ios
+core/ios
 ✔︎ ../output/iOS/BaseColor.swift
 ✔︎ ../output/iOS/ThemeColors.swift
 ✔︎ ../output/iOS/Theme.swift
+...
 ```
 
 ## Contributing
@@ -90,3 +94,5 @@ yarn run package
 [`test_build_tokens`]: https://github.com/obvious/weaver/actions/workflows/test_build_tokens.yml
 
 [vercel/ncc]: https://github.com/vercel/ncc
+
+[sample_tokens]: sample_tokens
