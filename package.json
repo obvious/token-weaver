@@ -1,6 +1,6 @@
 {
   "name": "weaver",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "build/index.js",
   "repository": "git@github.com:obvious/weaver.git",
   "author": "Sasikanth Miriyampalli <sasikanth@obvious.in>",
