@@ -1,4 +1,4 @@
-# Weaver [WIP]
+# Weaver
 
 ![CI-MAIN](https://github.com/obvious/weaver/actions/workflows/ci.yml/badge.svg?branch=main)
 ![CHECK-DIST](https://github.com/obvious/weaver/actions/workflows/check_dist.yml/badge.svg)
@@ -82,6 +82,12 @@ the following command to create the `dist` folder with required files.
 ```
 yarn run package
 ```
+
+## Pending Tasks
+
+- [ ] Typography support for iOS
+- [ ] Gradient colors support
+- [ ] Jetpack Compose support
 
 [Figma Token Studio]: https://tokens.studio/
 
