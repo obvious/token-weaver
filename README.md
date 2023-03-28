@@ -6,7 +6,7 @@
 
 Weaver is a [GitHub Action] that enables syncing of tokens from your design system Figma to code. It automates the process of updating your design system tokens in code each time a Figma token is updated. Hence, reducing developer intervention needed in maintaining tokens across platforms. 
 
-The action integrates with Figma [Token Studio](https://www.figma.com/community/plugin/843461159747178978/Tokens-Studio-for-Figma-(Figma-Tokens)) plugin to transform the token's JSON the plugin creates. The action supports Android and iOS platforms. 
+The action integrates with [Figma Token Studio] plugin to transform the token's JSON the plugin creates. The action supports Android and iOS platforms. 
 
 ## Usage
 
@@ -44,7 +44,7 @@ with:
 
 #### Expected JSON Structure
 
-You can find the sample JSON structure we are using in [sample_tokens] folder. We have a `core` file which contains
+You can find a sample JSON structure in [sample_tokens] folder. We have a `core` file which contains
 all of our global tokens, like colors, typography. Then we have individual theme files which has theme strucutre
 and reference the core tokens.
 
@@ -75,7 +75,7 @@ core/ios
 
 Project requires NodeJS and `npm` to build. 
 
-If you already have Node installed, skip this step. If not you can download the [Node JS]
+If you already have Node installed, skip this step. If not you can download [Node JS]
 
 ### Code styles
 
