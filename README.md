@@ -4,31 +4,54 @@
 ![CHECK-DIST](https://github.com/obvious/weaver/actions/workflows/check_dist.yml/badge.svg)
 [![Code Style: Google](https://img.shields.io/badge/code%20style-google-blueviolet.svg)](https://github.com/google/gts)
 
-Weaver is a [GitHub Action] that enables syncing of tokens from your design system Figma to code. It automates the process of updating your design system tokens in code each time a Figma token is updated. Hence, reducing developer intervention needed in maintaining tokens across platforms. 
+Weaver is a [GitHub Action] that enables syncing of tokens from your design system Figma to code. It automates the
+process of updating your design system tokens in code each time a Figma token is updated. Hence, reducing developer
+intervention needed in maintaining tokens across platforms.
 
-The action integrates with [Figma Token Studio] plugin to transform the token's JSON the plugin creates. The action supports Android and iOS platforms. 
+The action integrates with [Figma Token Studio] plugin to transform the token's JSON the plugin creates. The action
+supports Android and iOS platforms.
+
+## Prerequisites
+
+Make sure you have synced your design system tokens from Figma Token Studio to a GitHub repo. You
+can follow [this](https://docs.tokens.studio/sync/github) guide to set it up.
+
+Once that is done, we need to setup GitHub Actions in that repo to generate the files using
+Weaver. If you're not familiar with setting up GitHub Actions, you can refer to their
+[quickstart](https://docs.github.com/en/actions/quickstart) guide before moving on.
 
 ## Usage
 
-Add the following Github action to your CI workflow.
+Now that you have the tokens repo and GitHub Actions setup. Let's add Weaver to it to generate files.
 
-```yaml
-uses: obvious/weaver@v0.0.1
-with:
-  tokens_path: 'tokens'
-  output_path: 'output'
-
-# Raise PRs adding the generated files
-```
+1. Create a new GitHub Action called `run_weaver.yml`
+2. Add a step to checkout your GitHub repo
+   ```yaml
+   - uses: actions/checkout@v3
+     with:
+       fetch-depth: 0
+   ```
+3. Add a step to run Weaver
+   ```yaml
+   - uses: obvious/weaver@v0.0.1
+     with:
+       # For example, let's say you have a repo called `figma_tokens` and you have saved your tokens
+       # in a folder called `tokens` in that repo (`figma_tokens/tokens/`). You can just pass `tokens`,
+       # since you have checked out the repo in 2nd step.
+       tokens_path: 'path_to_your_tokens'
+       output_path: 'output_path'
+   ```
+4. Access the generated files from the output directory passed to `output_path`. From here you can upload
+   the files or raise a PR to appropriate repos
 
 **Required parameters**
 
-- `tokens_path` : Local absolute path to the Figma Token Studio `tokens.json` file
-- `output_path` : Local absolute path where the generated files are written. 
+- `tokens_path` : Pass in the folder path where your Figma Token Studio tokens are present.
+- `output_path` : Pass in the output folder path, where the files need to be generated
 
 **Optional parameters**
 
-- `project_name`: Name of the project/app (default: `App`)
+- `project_name`: Name of the project/app (default: `App`). This would impact the Android XML style naming
 - `version`: Version for the styles (default: `null`)
 
 **Sample**
@@ -36,11 +59,9 @@ with:
 ```yaml
 uses: obvious/weaver@v0.0.1
 with:
-  tokens_path: '/Users/tokens.json'
+  tokens_path: 'tokens'
   output_path: 'output'
 ```
-
-
 
 #### Expected JSON Structure
 
@@ -73,7 +94,7 @@ core/ios
 
 ### Pre-requisites
 
-Project requires NodeJS and `npm` to build. 
+Project requires NodeJS and `npm` to build.
 
 If you already have Node installed, skip this step. If not you can download [Node JS]
 
@@ -135,8 +156,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
-## References 
 
 [Figma Token Studio]: https://tokens.studio/
 
