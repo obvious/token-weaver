@@ -1,5 +1,5 @@
-name: 'Weaver'
-description: 'Weaver is a tool to transform the Figma Token Studio tokens to platform specific theme files using Amazon Style Dictionary'
+name: 'Token Weaver'
+description: 'Token Weaver transforms the Figma Token Studio tokens to platform specific theme files using Amazon Style Dictionary'
 runs:
   using: 'node16'
   main: 'dist/index.js'
