@@ -1,10 +1,10 @@
-# Weaver
+# Token Weaver
 
-![CI-MAIN](https://github.com/obvious/weaver/actions/workflows/ci.yml/badge.svg?branch=main)
-![CHECK-DIST](https://github.com/obvious/weaver/actions/workflows/check_dist.yml/badge.svg)
+![CI-MAIN](https://github.com/obvious/token-weaver/actions/workflows/ci.yml/badge.svg?branch=main)
+![CHECK-DIST](https://github.com/obvious/token-weaver/actions/workflows/check_dist.yml/badge.svg)
 [![Code Style: Google](https://img.shields.io/badge/code%20style-google-blueviolet.svg)](https://github.com/google/gts)
 
-Weaver is a [GitHub Action] that enables syncing of tokens from your design system Figma to code. It automates the
+Token Weaver is a [GitHub Action] that enables syncing of tokens from your design system Figma to code. It automates the
 process of updating your design system tokens in code each time a Figma token is updated. Hence, reducing developer
 intervention needed in maintaining tokens across platforms.
 
@@ -22,18 +22,18 @@ Weaver. If you're not familiar with setting up GitHub Actions, you can refer to 
 
 ## Usage
 
-Now that you have the tokens repo and GitHub Actions setup. Let's add Weaver to it to generate files.
+Now that you have the tokens repo and GitHub Actions setup. Let's add Token Weaver to it to generate files.
 
-1. Create a new GitHub Action called `run_weaver.yml`
+1. Create a new GitHub Action called `run_token_weaver.yml`
 2. Add a step to checkout your GitHub repo
    ```yaml
    - uses: actions/checkout@v3
      with:
        fetch-depth: 0
    ```
-3. Add a step to run Weaver
+3. Add a step to run Token Weaver
    ```yaml
-   - uses: obvious/weaver@v0.0.1
+   - uses: obvious/token-weaver@v0.0.1
      with:
        # For example, let's say you have a repo called `figma_tokens` and you have saved your tokens
        # in a folder called `tokens` in that repo (`figma_tokens/tokens/`). You can just pass `tokens`,
@@ -57,7 +57,7 @@ Now that you have the tokens repo and GitHub Actions setup. Let's add Weaver to 
 **Sample**
 
 ```yaml
-uses: obvious/weaver@v0.0.1
+uses: obvious/token-weaver@v0.0.1
 with:
   tokens_path: 'tokens'
   output_path: 'output'
