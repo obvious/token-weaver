@@ -25,6 +25,7 @@ jobs:
         with:
           tokens_path: 'sample_tokens'
           output_path: 'output'
+          project_name: 'App'
 
       - name: Upload files
         uses: actions/upload-artifact@v3
