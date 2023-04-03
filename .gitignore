@@ -2,5 +2,7 @@ node_modules
 build
 .DS_Store
 output
-sample_tokens
+dist/sample_tokens
+dist/tokens.json
 yarn-error.log
+temp_tokens
