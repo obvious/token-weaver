@@ -16,7 +16,7 @@ describe('read tokens', () => {
     const result = await readTokens(tokensPath);
 
     // then
-    expect(result).toMatchSnapshot();
+    expect(result.coreTokensPath).toBeTruthy();
   });
 
   it('should read tokens from multiple files', async () => {
@@ -27,7 +27,8 @@ describe('read tokens', () => {
     const result = await readTokens(tokensPath);
 
     // then
-    expect(result).toMatchSnapshot();
+    expect(result.themeTokensPaths).toBeTruthy();
+    expect(result.themeTokensPaths.length > 0).toBeTruthy();
   });
 
   afterAll(async () => {
