@@ -12,7 +12,6 @@ export const tempTokensDirPath = () =>
   path.join(__dirname, '..', TEMP_TOKENS_FOLDER);
 
 export async function readTokens(tokensPath: string): Promise<{
-  themes: Theme[];
   coreTokensPath: string;
   themeTokensPaths: string[];
 }> {
@@ -31,7 +30,6 @@ export async function readTokens(tokensPath: string): Promise<{
   );
 
   return {
-    themes: themes,
     coreTokensPath: path.join(tokensDirPath, 'core.json'),
     themeTokensPaths: themes.map(theme => {
       return path.join(tokensDirPath, `${themeName(theme)}.json`);

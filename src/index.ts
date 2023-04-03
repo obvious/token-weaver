@@ -1,6 +1,5 @@
 import {readFile, writeFile} from 'node:fs/promises';
 import * as path from 'path';
-import {Theme} from './models/theme';
 import StyleDictionary = require('style-dictionary');
 import {coreTokensConfig, themesConfig} from './config';
 import {Token} from './models/token';

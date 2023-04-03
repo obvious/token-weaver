@@ -411,7 +411,6 @@ async function readTokens(tokensPath) {
         flag: 'r',
     }));
     return {
-        themes: themes,
         coreTokensPath: path.join(tokensDirPath, 'core.json'),
         themeTokensPaths: themes.map(theme => {
             return path.join(tokensDirPath, `${themeName(theme)}.json`);
