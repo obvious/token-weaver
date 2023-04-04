@@ -18,3 +18,6 @@ jobs:
 
       - name: Check Lint
         run: yarn run lint
+
+      - name: Run Tests
+        run: yarn jest
