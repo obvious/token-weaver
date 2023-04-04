@@ -1,6 +1,5 @@
 import {readFile, writeFile} from 'node:fs/promises';
 import * as path from 'path';
-import {Theme} from './models/theme';
 import StyleDictionary = require('style-dictionary');
 import {coreTokensConfig, themesConfig} from './config';
 import {Token} from './models/token';
@@ -21,6 +20,7 @@ import {
 import {registerTransforms} from '@tokens-studio/sd-transforms';
 import {getInput} from '@actions/core';
 import {transformTypographyForXml} from './transformers/android_xml_tyopgraphy';
+import {readTokens, tempTokensDirPath} from './reader/tokens_reader';
 
 run().catch(error => console.log('Failed to run weaver: ', error));
 
@@ -39,63 +39,45 @@ async function run() {
 
   await configStyleDictionary(projectName, version);
 
-  const themes = await readThemes(inputPath);
+  const tokens = await readTokens(inputPath);
 
   await Promise.all([
-    generateCoreTokens(inputPath, outputPath, projectName, themes),
-    generateThemes(inputPath, outputPath, projectName, themes),
+    generateCoreTokens(
+      projectName,
+      tokens.coreTokensPath,
+      tokens.themeTokensPaths,
+      outputPath
+    ),
+    generateThemes(projectName, tokens.themeTokensPaths, outputPath),
   ]);
 }
 
-async function readThemes(inputPath: string): Promise<Theme[]> {
-  let themes: Theme[];
-  if (inputPath.endsWith('.json')) {
-    const inputContent = await readFile(inputPath, {
-      encoding: 'utf-8',
-      flag: 'r',
-    });
-    themes = JSON.parse(inputContent)['$themes'];
-  } else {
-    const themesFileContent = await readFile(`${inputPath}/$themes.json`, {
-      encoding: 'utf-8',
-      flag: 'r',
-    });
-    themes = JSON.parse(themesFileContent);
-  }
-  return themes;
-}
-
 async function generateCoreTokens(
-  inputPath: string,
-  outputPath: string,
   projectName: string,
-  themes: Theme[]
+  coreJsonPath: string,
+  themeTokensPaths: string[],
+  outputPath: string
 ) {
   // Combine all theme tokens to create a single theme token file
   const themeTokens = <Token>{};
-  for (const theme of themes) {
-    const themeContent = await readFile(
-      `${inputPath}/theme/${theme.name}.json`,
-      {
-        encoding: 'utf-8',
-        flag: 'r',
-      }
-    );
+  for (const themeTokensPath of themeTokensPaths) {
+    const themeContent = await readFile(themeTokensPath, {
+      encoding: 'utf-8',
+      flag: 'r',
+    });
     const themeJson = JSON.parse(themeContent);
     for (const key in themeJson) {
       if (!themeTokens[key]) themeTokens[key] = themeJson[key];
     }
   }
 
-  // Write temp file with unified theme tokens to use it for Style Dictionary
-  await writeFile(
-    `${inputPath}/theme_tokens.json`,
-    JSON.stringify(themeTokens)
-  );
+  const themeTokensPath = path.join(tempTokensDirPath(), 'theme_tokens.json');
+
+  await writeFile(themeTokensPath, JSON.stringify(themeTokens));
 
   runStyleDictionary(
     coreTokensConfig(
-      [`${inputPath}/theme_tokens.json`, `${inputPath}/core.json`],
+      [themeTokensPath, coreJsonPath],
       `${outputPath}/core`,
       projectName
     )
@@ -103,17 +85,17 @@ async function generateCoreTokens(
 }
 
 async function generateThemes(
-  inputPath: string,
-  outputPath: string,
   projectName: string,
-  themes: Theme[]
+  themeTokensPaths: string[],
+  outputPath: string
 ) {
-  for (const theme of themes) {
+  for (const themeTokensPath of themeTokensPaths) {
+    const themeName = path.basename(themeTokensPath, '.json');
     runStyleDictionary(
       themesConfig(
-        [`${inputPath}/theme/${theme.name}.json`, `${inputPath}/core.json`],
-        `${outputPath}/${theme.name}`,
-        theme.name,
+        [themeTokensPath, `${tempTokensDirPath()}/core.json`],
+        `${outputPath}/${themeName}`,
+        themeName,
         projectName
       )
     );
