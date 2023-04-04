@@ -16,6 +16,7 @@ import {
   iOSThemeColorsProtocolFormatter,
   iOSThemeFormatter,
   iOSThemeProtocolFormatter,
+  iOSTextStyleFormatter,
 } from './formatters/ios_formatters';
 import {registerTransforms} from '@tokens-studio/sd-transforms';
 import {getInput} from '@actions/core';
@@ -126,6 +127,10 @@ async function configStyleDictionary(
     .registerFormat({
       name: 'ios/base_colors',
       formatter: args => iOSBaseColorsFormatter(args),
+    })
+    .registerFormat({
+      name: 'ios/text_style',
+      formatter: args => iOSTextStyleFormatter(args),
     })
     .registerFormat({
       name: 'ios/theme_colors_protocol',
