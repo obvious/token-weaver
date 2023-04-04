@@ -1,0 +1,50 @@
+{{imports}}
+
+{{header}}
+// MARK: - TextStyle
+/// Represents all text styles. You can use extension to add more properties
+/// or to provide a way to create attributed string.
+public enum TextStyle {
+  
+  {{#each typography_tokens}}
+  case {{name}}
+  {{/each}}
+  
+  public static func fromString(_ string: String) -> TextStyle? {
+    switch string {
+      {{#each typography_tokens}}
+      case "{{name}}":
+        return .{{name}}
+      {{/each}}
+      default:
+        return nil
+    }
+  }
+  
+  public var font: UIFont {
+    switch self {
+    {{#each typography_tokens}}
+    case .{{name}}:
+      return UIFont(name: "{{fontNameRef value.fontFamily value.fontWeight}}", size: {{value.fontSize}})!
+    {{/each}}
+    }
+  }
+  
+  public var lineHeight: CGFloat {
+    switch self {
+    {{#each typography_tokens}}
+    case .{{name}}:
+      return {{transformPercentValue value.lineHeight value.fontSize}}
+    {{/each}}
+    }
+  }
+  
+  public var letterSpacing: Double {
+    switch self {
+    {{#each typography_tokens}}
+    case .{{name}}:
+      return {{transformPercentValue value.letterSpacing value.fontSize}}
+    {{/each}}
+    }
+  }
+}

@@ -96,6 +96,14 @@ function coreTokensConfig(tokensPath, outputPath, projectName) {
                         },
                     },
                     {
+                        destination: 'TextStyle.swift',
+                        format: 'ios/text_style',
+                        filter: token => token.type === 'typography',
+                        options: {
+                            fileHeader: 'weaverFileHeader',
+                        },
+                    },
+                    {
                         destination: 'Theme.swift',
                         format: 'ios/theme_protocol',
                         options: {
@@ -302,12 +310,14 @@ exports._colorTokens = _colorTokens;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.iOSThemeFormatter = exports.iOSThemeColorsFormatter = exports.iOSThemeProtocolFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
+exports.iOSThemeFormatter = exports.iOSThemeColorsFormatter = exports.iOSThemeProtocolFormatter = exports.iOSTextStyleFormatter = exports.iOSThemeColorsProtocolFormatter = exports.iOSBaseColorsFormatter = void 0;
 const common_1 = __nccwpck_require__(4102);
 const StyleDictionary = __nccwpck_require__(7189);
 const camelcase_1 = __nccwpck_require__(1362);
 const utils_1 = __nccwpck_require__(1680);
+const transform_utils_1 = __nccwpck_require__(5744);
 const Handlebars = __nccwpck_require__(7492);
+const snake_case_1 = __nccwpck_require__(6213);
 const { fileHeader } = StyleDictionary.formatHelpers;
 function swiftImports(imports) {
     if (typeof imports === 'undefined') {
@@ -344,6 +354,28 @@ function iOSThemeColorsProtocolFormatter(args) {
     });
 }
 exports.iOSThemeColorsProtocolFormatter = iOSThemeColorsProtocolFormatter;
+function iOSTextStyleFormatter(args) {
+    const themeTypographyTokens = (0, common_1._themeTypographyTokens)(args.dictionary);
+    const template = (0, utils_1.compileTemplate)('templates/ios/text_style.hbs');
+    Handlebars.registerHelper('fontNameRef', (fontFamily, fontWeight) => {
+        const fontWeightName = (0, transform_utils_1.transformFontWeight)(fontWeight);
+        return (0, snake_case_1.snakeCase)(`${fontFamily} ${fontWeightName}`, {
+            delimiter: '-',
+            transform: part => {
+                return part.charAt(0).toUpperCase() + part.slice(1);
+            },
+        });
+    });
+    Handlebars.registerHelper('transformPercentValue', (lineHeight, fontSize) => {
+        return (0, transform_utils_1.transformPercentValue)(lineHeight, fontSize);
+    });
+    return template({
+        imports: swiftImports(args.options.imports),
+        header: swiftFileHeader(args.file),
+        typography_tokens: themeTypographyTokens,
+    });
+}
+exports.iOSTextStyleFormatter = iOSTextStyleFormatter;
 // TODO: Add support for typography
 function iOSThemeProtocolFormatter(args) {
     const template = (0, utils_1.compileTemplate)('templates/ios/theme_protocol.hbs');
@@ -457,71 +489,13 @@ function hasSingleTokensFile(tokensPath) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.transformTypographyForXml = void 0;
 const snake_case_1 = __nccwpck_require__(6213);
-// Uses common weight name mapping
-// https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight#common_weight_name_mapping
-function transformFontWeight(weight) {
-    if (weight === undefined) {
-        return '';
-    }
-    if (typeof weight === 'string') {
-        const fontWeightNum = parseInt(weight);
-        if (!fontWeightNum) {
-            return weight;
-        }
-        weight = fontWeightNum;
-    }
-    let weightRet;
-    switch (weight) {
-        case 100:
-            weightRet = 'thin';
-            break;
-        case 200:
-            weightRet = 'extra_light';
-            break;
-        case 300:
-            weightRet = 'light';
-            break;
-        case 400:
-            weightRet = 'normal';
-            break;
-        case 500:
-            weightRet = 'medium';
-            break;
-        case 600:
-            weightRet = 'semi_bold';
-            break;
-        case 700:
-            weightRet = 'bold';
-            break;
-        case 800:
-            weightRet = 'extra_bold';
-            break;
-        case 900:
-            weightRet = 'black';
-            break;
-        default:
-            weightRet = weight.toString(0);
-            break;
-    }
-    return weightRet;
-}
+const transform_utils_1 = __nccwpck_require__(5744);
 function transformFontFamily(name, weight) {
     let fontWeight = '';
     if (weight !== undefined) {
-        fontWeight = transformFontWeight(weight);
+        fontWeight = (0, transform_utils_1.transformFontWeight)(weight);
     }
     return `@font/${(0, snake_case_1.snakeCase)(name + ' ' + fontWeight)}`;
-}
-function transformPercentValue(value, base) {
-    let val;
-    if (value.endsWith('%')) {
-        const valueInPx = (parseFloat(value.replace('%', '')) / 100) * parseFloat(base);
-        val = valueInPx.toFixed(2);
-    }
-    else {
-        val = value;
-    }
-    return val;
 }
 function transformValue(value, propName, tokenValue) {
     let val;
@@ -529,10 +503,10 @@ function transformValue(value, propName, tokenValue) {
         val = parseFloat(value).toFixed(2) + 'sp';
     }
     else if (propName.includes('lineHeight')) {
-        val = transformPercentValue(value, tokenValue.fontSize) + 'sp';
+        val = (0, transform_utils_1.transformPercentValue)(value, tokenValue.fontSize) + 'sp';
     }
     else if (propName.includes('letterSpacing')) {
-        val = transformPercentValue(value, tokenValue.fontSize);
+        val = (0, transform_utils_1.transformPercentValue)(value, tokenValue.fontSize);
     }
     else if (propName.includes('fontFamily')) {
         val = transformFontFamily(value, tokenValue.fontWeight);
@@ -595,6 +569,78 @@ function transformTypographyForXml(value) {
 }
 exports.transformTypographyForXml = transformTypographyForXml;
 //# sourceMappingURL=android_xml_tyopgraphy.js.map
+
+/***/ }),
+
+/***/ 5744:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.transformFontWeight = exports.transformPercentValue = void 0;
+function transformPercentValue(value, base) {
+    let val;
+    if (value.endsWith('%')) {
+        const valueInPx = (parseFloat(value.replace('%', '')) / 100) * parseFloat(base);
+        val = valueInPx.toFixed(2);
+    }
+    else {
+        val = value;
+    }
+    return val;
+}
+exports.transformPercentValue = transformPercentValue;
+// Uses common weight name mapping
+// https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight#common_weight_name_mapping
+function transformFontWeight(weight) {
+    if (weight === undefined) {
+        return '';
+    }
+    if (typeof weight === 'string') {
+        const fontWeightNum = parseInt(weight);
+        if (!fontWeightNum) {
+            return weight;
+        }
+        weight = fontWeightNum;
+    }
+    let weightRet;
+    switch (weight) {
+        case 100:
+            weightRet = 'thin';
+            break;
+        case 200:
+            weightRet = 'extra_light';
+            break;
+        case 300:
+            weightRet = 'light';
+            break;
+        case 400:
+            weightRet = 'normal';
+            break;
+        case 500:
+            weightRet = 'medium';
+            break;
+        case 600:
+            weightRet = 'semi_bold';
+            break;
+        case 700:
+            weightRet = 'bold';
+            break;
+        case 800:
+            weightRet = 'extra_bold';
+            break;
+        case 900:
+            weightRet = 'black';
+            break;
+        default:
+            weightRet = weight.toString(0);
+            break;
+    }
+    return weightRet;
+}
+exports.transformFontWeight = transformFontWeight;
+//# sourceMappingURL=transform_utils.js.map
 
 /***/ }),
 
@@ -43680,6 +43726,10 @@ async function configStyleDictionary(projectName, version) {
         .registerFormat({
         name: 'ios/base_colors',
         formatter: args => (0, ios_formatters_1.iOSBaseColorsFormatter)(args),
+    })
+        .registerFormat({
+        name: 'ios/text_style',
+        formatter: args => (0, ios_formatters_1.iOSTextStyleFormatter)(args),
     })
         .registerFormat({
         name: 'ios/theme_colors_protocol',

@@ -125,7 +125,7 @@ yarn run package
 
 ## Pending Features
 
-- [ ] Typography support for iOS
+- [x] ~~Typography support for iOS~~
 
 - [ ] Gradient colors support
 

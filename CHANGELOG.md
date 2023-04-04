@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support generating iOS text style
+
 ### Fixed
 
 - Reading tokens from single Token Studio JSON file

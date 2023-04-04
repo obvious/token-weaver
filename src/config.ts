@@ -92,6 +92,14 @@ export function coreTokensConfig(
             },
           },
           {
+            destination: 'TextStyle.swift',
+            format: 'ios/text_style',
+            filter: token => token.type === 'typography',
+            options: {
+              fileHeader: 'weaverFileHeader',
+            },
+          },
+          {
             destination: 'Theme.swift',
             format: 'ios/theme_protocol',
             options: {
