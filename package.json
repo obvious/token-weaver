@@ -30,6 +30,6 @@
     "clean": "gts clean",
     "compile": "tsc",
     "fix": "gts fix",
-    "package": "npm run compile && ncc build --source-map --license licenses.txt && copyfiles -a templates/**/*.hbs dist/"
+    "package": "npm run compile && ncc build --source-map --license licenses.txt && rm -r dist/templates && copyfiles -a templates/**/*.hbs dist/"
   }
 }
