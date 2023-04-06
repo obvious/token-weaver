@@ -33,7 +33,7 @@ Now that you have the tokens repo and GitHub Actions setup. Let's add Token Weav
    ```
 3. Add a step to run Token Weaver
    ```yaml
-   - uses: obvious/token-weaver@v0.0.1
+   - uses: obvious/token-weaver@<latest-version>
      with:
        # For example, let's say you have a repo called `figma_tokens` and you have saved your tokens
        # in a folder called `tokens` in that repo (`figma_tokens/tokens/`). You can just pass `tokens`,
@@ -57,7 +57,7 @@ Now that you have the tokens repo and GitHub Actions setup. Let's add Token Weav
 **Sample**
 
 ```yaml
-uses: obvious/token-weaver@v0.0.1
+uses: obvious/token-weaver@<latest-version>
 with:
   tokens_path: 'tokens'
   output_path: 'output'
